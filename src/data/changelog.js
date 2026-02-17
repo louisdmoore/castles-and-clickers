@@ -1,9 +1,17 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.3.2';
+export const CURRENT_VERSION = '0.4.0';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.4.0',
+    title: 'The Full Picture',
+    date: '2026-02-17',
+    changes: [
+      { type: 'improvement', text: 'Restructured game interface for better performance and future layout improvements' },
+    ],
+  },
   {
     version: '0.3.2',
     title: 'Craft My Build',
