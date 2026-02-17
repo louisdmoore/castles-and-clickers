@@ -86,16 +86,16 @@
 
 ---
 
-## Phase 7: v0.4.0 — The Full Picture
+## Phase 7: v0.4.0 — The Full Picture ✅
 *Reference: DESIGN_RETHINK.md Sections 6, 11, 12, 14*
 *Goal: Feels like a real game.*
 *Prereq: Extract `GameLayout.jsx` into composable pieces (architectural prereq #1)*
 
-- [ ] **PREREQ:** Extract `GameLayout.jsx` → `LayoutShell`, `ModalManager`, `DungeonHeader`, `GameOrchestrator`
-- [ ] Layout overhaul — three-column CSS grid for desktop (Section 14)
-- [ ] Passive aura buffs on capstone skills — `partyBuff` field + `statCalculator` (Section 6.2)
-- [ ] Unique conditional leveling + duplicate fusion (Section 11.2, 11.4)
-- [ ] Hero prestige stars — permanent across ascension, +3% per star (Section 12.3)
+- [x] **PREREQ:** Extract `GameLayout.jsx` → `LayoutShell`, `ModalManager`, `DungeonHeader`, `GameOrchestrator`
+- [x] Layout overhaul — three-column CSS grid for desktop (Section 14)
+- [x] Passive aura buffs on capstone skills — `partyBuff` field + `statCalculator` (Section 6.2)
+- [x] Unique conditional leveling + duplicate fusion (Section 11.2, 11.4)
+- [x] Hero prestige stars — permanent across ascension, +3% per star (Section 12.3)
 
 ---
 
@@ -116,6 +116,42 @@
 ## Handoff Notes
 
 *Space for sessions to leave notes for the next session. Most recent first.*
+
+### Session 8 (2026-02-17) — Phase 7 Complete (v0.4.0)
+
+**Completed:** All 5 Phase 7 tasks (1 prereq + 4 features).
+
+**Design decisions:**
+- GameLayout extraction: Split 857-line `GameLayout.jsx` into `LayoutShell.jsx` (CSS grid shell + responsive breakpoints), `ModalManager.jsx` (all 12+ modals), `DungeonHeader.jsx` (zone header bar), and `GameOrchestrator.jsx` (game loop hooks + phase routing). GameLayout is now a thin composition of these four. Three-column CSS grid at 1440px+ with collapsible run stats panel.
+- Capstone auras: Added `partyBuff` field to tier-3 capstone skills in `skillTrees.js` (3 auras: Warlord +10% attack, Iron Fortress +15% defense, Divine Radiance 2% regen). `getPartyAuraBuffs(heroes)` in `skillTrees.js` collects active auras. Applied in `statCalculator.js` via module-level `currentPartyAuras` (same pattern as `currentAscensionCount`). Regen aura applied per-tick in `combatStatusEffects.js`. All aura providers displayed with glow indicator in sidebar.
+- Unique leveling: Kept `ownedUniques` as `string[]` (40+ `.includes()` call sites unchanged) and added separate `uniqueLevels: {}` map. Levels 1-5 with XP table `[0, 500, 2000, 5000, 12000]` and stat scale `[1.0, 1.15, 1.35, 1.60, 2.0]`. Each unique has `conditionalXp: { trigger, description }` for thematic XP bonuses. `scaleUniqueStats` accepts optional `uniqueLevel` parameter.
+- Duplicate fusion: Finding a duplicate unique when below max level fuses it (level+1, shows `unique-fused` notification). At max level, converts to gold (existing behavior, shows `unique-duplicate` notification). New unique initializes `uniqueLevels` entry at level 1.
+- `gainUniqueXp(templateId, amount)` action supports multi-level-up in one call. Triggers stat cache invalidation via `setUniqueLevels()` on level-up.
+- Prestige: `prestigeHero(heroId)` in heroSlice — requires level 25+, not in dungeon. Resets to level 10, clears skills, increments `prestige.count`. +3% all stats per star applied in `statCalculator.js` as multiplier before ascension bonus. Stars survive ascension via spread operator in `resetHero`.
+- Save migration v4→v5: Initializes `uniqueLevels` from existing `ownedUniques`, adds `prestige: { count: 0 }` to all heroes and bench heroes.
+
+**Key files modified:**
+- `src/components/GameLayout.jsx` → extracted into `LayoutShell.jsx`, `ModalManager.jsx`, `DungeonHeader.jsx`, `GameOrchestrator.jsx`
+- `src/data/skillTrees.js` — `partyBuff` on capstones, `getPartyAuraBuffs()`
+- `src/data/uniqueItems.js` — leveling constants, `conditionalXp` on all 33 uniques, `scaleUniqueStats` updated
+- `src/store/helpers/statCalculator.js` — aura buffs, unique level scaling, prestige multiplier, cache key updates
+- `src/store/slices/inventorySlice.js` — `uniqueLevels` state, fusion logic, `gainUniqueXp`
+- `src/store/slices/heroSlice.js` — prestige constants, `prestigeHero` action
+- `src/store/helpers/migrations.js` — `SAVE_VERSION = 5`, migration for uniqueLevels + prestige
+- `src/components/UniqueCollectionScreen.jsx` — level badges, XP bars, conditional XP display
+- `src/components/SkillTreeScreen.jsx` — prestige button + confirmation modal
+- `src/components/LootNotifications.jsx` — `unique-fused` notification type
+- `src/components/Sidebar.jsx`, `HeroCard.jsx`, `PrepScreen.jsx` — prestige star display
+
+**Notes for next session:**
+- The `regenPercent`, `controlResist`, and `healingMultiplier`/`healingReceivedMultiplier` traits are still not wired into combat processing. Carried forward from Session 7.
+- MilestoneWidget duplicate `style` attribute bug still exists. Carried forward.
+- Pre-existing lint errors at ~82. No new errors introduced.
+- Conditional XP triggers (`on_crit`, `on_kill`, `on_heal`, etc.) are defined on unique items but not yet wired into combat — `gainUniqueXp` is callable but no combat code calls it yet. This needs wiring in `combatDamageResolution.js` / `combatSkillExecution.js`.
+- `getPassiveAffixBonuses` performance concern carried forward from Session 7.
+- Three-column layout only activates at 1440px+ — test on various screen sizes.
+
+**Next up:** Phase 8 — Raid difficulty tiers, raid mechanics, 8th party slot, dungeon affixes, achievements, essence/awakening, raid mastery, progressive disclosure.
 
 ### Session 7 (2026-02-17) — Phase 6 Complete (v0.3.2)
 

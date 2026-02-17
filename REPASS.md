@@ -126,6 +126,53 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Combo accessibility — no in-game documentation for what combos exist. Players need to discover them through gameplay or external guides
 - [ ] Monster status combos — combos work for both hero and monster attacks. If a monster stuns a hero, other monsters get +50% Punish damage on that hero. Intentional?
 
+## Layout Overhaul (v0.4.0)
+
+- [ ] Three-column grid only activates at 1440px+ — verify behavior on 1280px, 1366px, and ultrawide monitors
+- [ ] Collapsible run stats panel — does the toggle button/icon make sense? Is "Run Stats" the right label?
+- [ ] GameLayout extraction — verify no regressions in modal stacking order (12+ modals moved to ModalManager)
+- [ ] Mobile layout — sidebar drawer still works after extraction? Test hamburger menu on small screens
+- [ ] DungeonHeader extracted — does zone header still align properly with canvas below it?
+
+## Capstone Auras (v0.4.0)
+
+- [ ] Warlord +10% party attack — is this too strong when stacking with ascension bonuses and prestige? Check actual ATK values at A3+
+- [ ] Iron Fortress +15% party defense — same stacking concern. Verify tanks don't become unkillable
+- [ ] Divine Radiance 2% party regen — this is per-tick regen. Verify it doesn't trivialize early/mid dungeons
+- [ ] Aura stacking — can a party have multiple auras active? If so, is the combined bonus balanced?
+- [ ] Aura display in sidebar — glow indicator on aura providers. Is it visible enough? Does it explain what the aura does?
+- [ ] Aura loss on respec — if a hero with a capstone aura respecs, the aura should disappear. Verify stat cache invalidates
+- [ ] `currentPartyAuras` module-level state in statCalculator — needs to be updated when heroes change skills. Verify all code paths call `setPartyAuras()`
+
+## Unique Item Leveling (v0.4.0)
+
+- [ ] XP table tuning — `[0, 500, 2000, 5000, 12000]` — is the curve too steep or too flat? How many dungeons to max a unique?
+- [ ] Stat scale `[1.0, 1.15, 1.35, 1.60, 2.0]` — 2x stats at level 5 is a huge power spike. Verify it doesn't break game balance
+- [ ] Conditional XP triggers not wired into combat — `on_crit`, `on_kill`, `on_heal` etc. defined but `gainUniqueXp` never called from combat code. This is the core engagement loop and is currently non-functional
+- [ ] Level display on UniqueCollectionScreen — star icon at max level, number for levels 1-4. Clear enough?
+- [ ] XP bar visibility — is the XP progress bar on the detail panel noticeable? Players need to know their unique is gaining XP
+- [ ] Unique level scaling in stat display — does the equipped item tooltip show the leveled-up stats or base stats?
+- [ ] `uniqueLevels` not in partialize exclusion — it's persisted, which is correct. But verify it saves/loads properly
+
+## Duplicate Fusion (v0.4.0)
+
+- [ ] Fusion notification (`unique-fused`) — purple border, "Duplicate fused! Level X" text. Is this clear that it's a good thing?
+- [ ] Max-level duplicate → gold conversion — shows "Max level - converted to Xg". Is the gold amount balanced? Uses `calculateDuplicateValue`
+- [ ] Fusion skips XP entirely — goes straight to level+1. Is this too generous vs. earning XP through gameplay?
+- [ ] Fusion UX — no confirmation dialog. If a player wanted to sell the duplicate for gold instead, they can't. Intentional?
+- [ ] Multiple rapid fusions — finding 3+ duplicates quickly. Does each fusion notification show correctly?
+
+## Hero Prestige Stars (v0.4.0)
+
+- [ ] +3% per star balance — at 5 stars that's +15% all stats. Combined with ascension bonuses, how strong does a hero get?
+- [ ] Prestige resets to level 10 — hero loses all skills but keeps equipment. Is level 10 the right reset point?
+- [ ] Prestige button only in SkillTreeScreen — should it also be accessible from hero card or sidebar?
+- [ ] Prestige disabled during dungeon — verified, but toast message could be more helpful (explain why)
+- [ ] Prestige confirmation modal — does it clearly communicate what's lost vs gained?
+- [ ] Prestige star display in sidebar/HeroCard/PrepScreen — ★ symbols. Do they scale well with 5 stars? Any alignment issues?
+- [ ] Prestige count has no cap — can prestige infinitely for +3% each time. Is there a practical limit (level 25 takes a while after reset to 10)?
+- [ ] Stars survive ascension — verified via spread operator. But test an actual ascension with prestiged heroes to confirm
+
 ## General
 
 - [ ] Lint count crept from ~78 to ~84 — audit whether any are from Phase 1-2 changes
