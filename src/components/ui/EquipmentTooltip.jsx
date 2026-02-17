@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { RARITY } from '../../data/equipment';
 import ItemIcon from '../icons/ItemIcon';
+import { ArrowUpIcon, ArrowDownIcon } from '../icons/ui';
 
 // Stat display names
 const STAT_NAMES = {
@@ -92,8 +93,9 @@ const EquipmentTooltip = ({ item, comparedItem = null, showComparison = true }) 
       {/* Comparison section */}
       {statDiffs && (
         <div className="mt-3 pt-2 border-t border-gray-700">
-          <div className={`text-xs font-bold mb-1 ${isUpgrade ? 'text-green-400' : 'text-red-400'}`}>
-            {isUpgrade ? '▲ UPGRADE' : '▼ DOWNGRADE'}
+          <div className={`text-xs font-bold mb-1 flex items-center gap-1 ${isUpgrade ? 'text-green-400' : 'text-red-400'}`}>
+            {isUpgrade ? <ArrowUpIcon size={12} /> : <ArrowDownIcon size={12} />}
+            {isUpgrade ? 'UPGRADE' : 'DOWNGRADE'}
           </div>
           <div className="text-xs space-y-0.5">
             {Object.entries(statDiffs).map(([stat, diff]) => (

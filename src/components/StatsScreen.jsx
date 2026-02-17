@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { CLASSES } from '../data/classes';
 import { MONSTERS } from '../data/monsters';
-import { TrophyIcon, SkullIcon, GoldIcon, HeartIcon, SwordIcon, ShieldIcon, CrownIcon, ChestIcon, StarIcon, SpeedIcon } from './icons/ui';
+import { TrophyIcon, SkullIcon, GoldIcon, HeartIcon, SwordIcon, ShieldIcon, CrownIcon, ChestIcon, StarIcon, SpeedIcon, CheckIcon } from './icons/ui';
 
 // Journey milestone definitions
 const JOURNEY_MILESTONES = [
@@ -326,7 +326,7 @@ const StatsScreen = () => {
                       : 'bg-[var(--color-surface)] text-[var(--color-text-dim)]'
                   }`}>
                     {milestone.isComplete ? (
-                      <span className="text-lg">✓</span>
+                      <CheckIcon size={18} className="text-[var(--color-green)]" />
                     ) : (
                       <span className="text-xs font-bold">D{milestone.dungeonRequired}</span>
                     )}

@@ -1,9 +1,19 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.1.27';
+export const CURRENT_VERSION = '0.1.28';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.1.28',
+    title: 'Visual Polish',
+    date: '2026-02-16',
+    changes: [
+      { type: 'feature', text: 'Replaced Unicode symbols with crisp pixel-art SVG icons throughout the UI' },
+      { type: 'feature', text: 'Every skill now has a unique icon in the dungeon canvas view (130 total)' },
+      { type: 'fix', text: 'Minor visual cleanup — removed inconsistent inline styles' },
+    ],
+  },
   {
     version: '0.1.27',
     title: 'Player Experience',

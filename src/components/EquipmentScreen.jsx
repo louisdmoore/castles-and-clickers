@@ -6,7 +6,7 @@ import { ITEM_AFFIXES } from '../data/itemAffixes';
 import { scaleUniqueStats } from '../data/uniqueItems';
 import HeroIcon from './icons/HeroIcon';
 import ItemIcon, { WeaponSlotIcon, ArmorSlotIcon, AccessorySlotIcon } from './icons/ItemIcon';
-import { GoldIcon, PartyIcon, StarIcon } from './icons/ui';
+import { GoldIcon, PartyIcon, StarIcon, ArrowUpIcon, SparkleIcon } from './icons/ui';
 import HelpTooltip from './ui/HelpTooltip';
 
 // Helper to get affix descriptions for an item
@@ -141,9 +141,9 @@ const InventoryRow = ({ item, canEquip, onEquip, onSell, comparison, highestPart
       <div className="flex-1 min-w-0">
         <div className="flex items-center gap-1">
           <span className={`text-xs font-medium truncate ${isUnique ? 'unique-text-shimmer' : ''}`} style={isUnique ? {} : { color: item.rarityColor }}>{item.name}</span>
-          {comparison?.isBetter && <span className="text-green-400 text-[10px] font-bold">▲</span>}
+          {comparison?.isBetter && <ArrowUpIcon size={10} />}
           {isUnique && <StarIcon size={10} className="text-cyan-400 flex-shrink-0 unique-sparkle" />}
-          {!isUnique && affixes.length > 0 && <span className="text-purple-400 text-[10px]">✦</span>}
+          {!isUnique && affixes.length > 0 && <SparkleIcon size={10} />}
         </div>
         <div className="text-[10px] text-gray-500">
           {Object.entries(displayStats).map(([s, v]) => `+${v} ${s.replace('maxHp', 'HP')}`).join(' ')}

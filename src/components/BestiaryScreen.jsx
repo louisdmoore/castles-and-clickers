@@ -46,8 +46,7 @@ const MonsterCard = ({ monster, killData, isDiscovered }) => {
 
   return (
     <div
-      className={`pixel-panel p-3 ${isBoss ? 'border-[var(--color-gold)]' : ''}`}
-      style={isBoss ? { backgroundColor: 'rgba(255, 215, 0, 0.1)' } : {}}
+      className={`pixel-panel p-3 ${isBoss ? 'border-[var(--color-gold)] bg-[rgba(255,215,0,0.1)]' : ''}`}
     >
       <div className="flex items-center gap-3">
         <MonsterIcon monsterId={monster.id} size={40} />
@@ -97,8 +96,7 @@ const MonsterCard = ({ monster, killData, isDiscovered }) => {
 const WorldBossCard = ({ boss, killData, isDefeated, isUnlocked }) => {
   return (
     <div
-      className={`pixel-panel p-4 ${isDefeated ? 'border-green-500' : isUnlocked ? 'border-amber-500' : 'opacity-60'}`}
-      style={isDefeated ? { backgroundColor: 'rgba(34, 197, 94, 0.1)' } : {}}
+      className={`pixel-panel p-4 ${isDefeated ? 'border-green-500 bg-green-500/10' : isUnlocked ? 'border-amber-500' : 'opacity-60'}`}
     >
       <div className="flex items-start gap-4">
         {/* Boss portrait */}
@@ -196,8 +194,7 @@ const RaidBossCard = ({ boss, raidName, isFinal, isDiscovered, killData }) => {
 
   return (
     <div
-      className={`pixel-panel p-4 ${isDefeated ? 'border-green-500' : isFinal ? 'border-red-500' : 'border-amber-500'} ${!isDiscovered ? 'opacity-60' : ''}`}
-      style={isDefeated ? { backgroundColor: 'rgba(34, 197, 94, 0.1)' } : isFinal ? { backgroundColor: 'rgba(239, 68, 68, 0.1)' } : {}}
+      className={`pixel-panel p-4 ${isDefeated ? 'border-green-500 bg-green-500/10' : isFinal ? 'border-red-500 bg-red-500/10' : 'border-amber-500'} ${!isDiscovered ? 'opacity-60' : ''}`}
     >
       <div className="flex items-start gap-4">
         {/* Boss portrait */}

@@ -720,6 +720,24 @@ export const ArrowDownIcon = ({ size }) => (
   </IconWrapper>
 );
 
+export const SparkleIcon = ({ size, className = '' }) => (
+  <IconWrapper size={size} className={className}>
+    {/* Four-pointed sparkle */}
+    <P x={7} y={1} w={2} h={3} c="#a855f7" />
+    <P x={7} y={12} w={2} h={3} c="#a855f7" />
+    <P x={1} y={7} w={3} h={2} c="#a855f7" />
+    <P x={12} y={7} w={3} h={2} c="#a855f7" />
+    {/* Diagonal points */}
+    <P x={4} y={4} w={2} h={2} c="#c084fc" />
+    <P x={10} y={4} w={2} h={2} c="#c084fc" />
+    <P x={4} y={10} w={2} h={2} c="#c084fc" />
+    <P x={10} y={10} w={2} h={2} c="#c084fc" />
+    {/* Center glow */}
+    <P x={6} y={6} w={4} h={4} c="#e9d5ff" />
+    <P x={7} y={7} w={2} h={2} c="#f3e8ff" />
+  </IconWrapper>
+);
+
 export const ChevronIcon = ({ size, className = '' }) => (
   <IconWrapper size={size} className={className}>
     {/* Simple chevron pointing up (rotate via CSS for other directions) */}

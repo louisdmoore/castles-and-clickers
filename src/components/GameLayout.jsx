@@ -312,7 +312,7 @@ const GameLayout = () => {
   const memoizedRemoveEffect = useCallback((id) => removeEffect(id), [removeEffect]);
 
   return (
-    <div className="h-screen flex flex-col overflow-hidden" style={{ background: 'var(--color-bg)' }}>
+    <div className="h-screen flex flex-col overflow-hidden bg-[var(--color-bg)]">
       {/* Header */}
       <GameHUD
         activeModal={activeModal}
@@ -578,8 +578,8 @@ const GameLayout = () => {
           ) : (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center pixel-panel p-8">
-                <div className="text-6xl mb-4" style={{ imageRendering: 'pixelated' }}>
-                  <svg width="96" height="96" viewBox="0 0 16 16" style={{ imageRendering: 'pixelated' }}>
+                <div className="text-6xl mb-4">
+                  <svg width="96" height="96" viewBox="0 0 16 16">
                     <rect x="3" y="8" width="10" height="8" fill="#4a4a6a"/>
                     <rect x="4" y="6" width="8" height="2" fill="#5a5a7a"/>
                     <rect x="5" y="4" width="6" height="2" fill="#6a6a8a"/>
@@ -768,7 +768,6 @@ const GameLayout = () => {
                 <svg
                   className="absolute inset-0 w-full h-full"
                   viewBox="0 0 16 16"
-                  style={{ imageRendering: 'pixelated' }}
                 >
                   <rect x="3" y="8" width="10" height="8" fill="#4a4a6a" />
                   <rect x="4" y="6" width="8" height="2" fill="#5a5a7a" />

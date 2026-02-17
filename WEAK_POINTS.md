@@ -490,36 +490,17 @@ If any async operation takes time, the UI freezes with no feedback.
 
 **Severity: Low**
 
-### 9.1 Unicode Symbols Instead of SVG Icons
+### ~~9.1 Unicode Symbols Instead of SVG Icons~~ — **FIXED (v0.1.28)**
 
-6 instances remain where Unicode symbols are used instead of the pixel-art SVG system:
+~~6 instances remain where Unicode symbols are used instead of the pixel-art SVG system.~~ Replaced with pixel-art SVG icons (`ArrowUpIcon`, `SparkleIcon`, `ChevronIcon`, `CheckIcon`, `ArrowDownIcon`). Only `★` in a `title` attribute (plain text tooltip) remains — acceptable since it's not rendered UI.
 
-| File | Line | Symbol | Context |
-|------|------|--------|---------|
-| `EquipmentScreen.jsx` | 51 | `★` | Unique power indicator |
-| `EquipmentScreen.jsx` | 143 | `▲` | "Item is better" indicator |
-| `EquipmentScreen.jsx` | 145 | `✦` | Affix indicator |
-| `RaidSelectorModal.jsx` | 230 | `▲▼` | Expand/collapse toggle |
-| `StatsScreen.jsx` | 329 | `✓` | Milestone completion |
-| `ui/EquipmentTooltip.jsx` | 96 | `▲▼` | Upgrade/downgrade (has text fallback) |
+### ~~9.2 Inline Style Inconsistency~~ — **FIXED (v0.1.28)**
 
-### 9.2 Inline Style Inconsistency
+~~Most components correctly use `pixel-panel` classes + Tailwind, but some use inline styles.~~ Static inline styles in `RaidSelectorModal.jsx`, `GameLayout.jsx`, and `BestiaryScreen.jsx` converted to Tailwind utilities. Remaining inline styles are for truly dynamic values (runtime colors, computed positions, complex gradients).
 
-Most components correctly use `pixel-panel` classes + Tailwind, but some use inline styles:
+### ~~9.3 Canvas Skill Icon Gap~~ — **FIXED (v0.1.28)**
 
-| File | Inline Style Count |
-|------|-------------------|
-| `RaidSelectorModal.jsx` | 18 |
-| `GameLayout.jsx` | 12 |
-| `BestiaryScreen.jsx` | 10 |
-| `DungeonMap.jsx` | 8 |
-| `CurrentZoneIndicator.jsx` | 7 |
-
-Most inline styles are for dynamic values (tier colors, damage numbers) which is acceptable. A few could be converted to Tailwind utilities.
-
-### 9.3 Canvas Skill Icon Gap
-
-All 170 skills have SVG icons (100% coverage), but only 119 have canvas-optimized sprite implementations. The remaining 51 fall back to a generic `power_strike` sprite in the canvas dungeon view. This is a visual-only issue — functionality is unaffected.
+~~All 170 skills have SVG icons (100% coverage), but only 119 have canvas-optimized sprite implementations.~~ All 130 skills now have unique canvas sprite implementations. Added ~55 new drawer functions and updated `SKILL_ICON_MAP` to full coverage.
 
 ---
 
@@ -557,7 +538,7 @@ For context, these systems are solid and should be preserved:
 | 9 | ~~Accessibility (ARIA, keyboard)~~ **MOSTLY DONE** | ~~Medium–Critical~~ | ~~Excludes disabled players~~ | **DONE (v0.1.26)** |
 | 10 | ~~File splitting (useCombat + gameStore)~~ **DONE** | ~~Major~~ | ~~Maintainability~~ | **DONE (v0.1.18 + v0.1.19)** |
 | 11 | Magic numbers | Medium | Balance tuning difficulty | Medium |
-| 12 | Unicode → SVG icons | Low | Art consistency | Low |
+| 12 | ~~Unicode → SVG icons~~ | ~~Low~~ | ~~Art consistency~~ | **DONE (v0.1.28)** |
 | 13 | Zero test coverage | Major | Regression risk | Very High |
 | 14 | ~~Motion safety~~ | ~~Medium~~ | ~~Vestibular/seizure risk~~ | **DONE (v0.1.26)** |
 | 15 | Console logs in production | Low | Performance/noise | Low |

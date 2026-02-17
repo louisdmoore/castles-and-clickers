@@ -3,7 +3,7 @@ import { useGameStore } from '../store/gameStore';
 import { RAIDS, getAllRaids, isRaidUnlocked, getRaidUniqueIds } from '../data/raids';
 import { getUniqueItem } from '../data/uniqueItems';
 import { CLASSES } from '../data/classes';
-import { CrownIcon, LockIcon, SkullIcon, CheckIcon } from './icons/ui';
+import { CrownIcon, LockIcon, SkullIcon, CheckIcon, ChevronIcon } from './icons/ui';
 import { RaidBossIcon } from './icons/raidBosses';
 import ItemIcon from './icons/ItemIcon';
 
@@ -96,7 +96,7 @@ const BossPreview = ({ boss, isOwned, isFinal = false }) => {
 // Raid icon mapping - each raid gets a unique icon
 const RAID_ICONS = {
   sunken_temple: ({ size, className }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" className={className} style={{ imageRendering: 'pixelated' }}>
+    <svg width={size} height={size} viewBox="0 0 16 16" className={className}>
       <rect x="3" y="2" width="10" height="2" fill="currentColor" />
       <rect x="4" y="4" width="2" height="8" fill="currentColor" />
       <rect x="10" y="4" width="2" height="8" fill="currentColor" />
@@ -105,7 +105,7 @@ const RAID_ICONS = {
     </svg>
   ),
   cursed_manor: ({ size, className }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" className={className} style={{ imageRendering: 'pixelated' }}>
+    <svg width={size} height={size} viewBox="0 0 16 16" className={className}>
       <rect x="2" y="10" width="12" height="4" fill="currentColor" />
       <rect x="4" y="6" width="8" height="4" fill="currentColor" />
       <rect x="6" y="2" width="4" height="4" fill="currentColor" />
@@ -115,7 +115,7 @@ const RAID_ICONS = {
     </svg>
   ),
   sky_fortress: ({ size, className }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" className={className} style={{ imageRendering: 'pixelated' }}>
+    <svg width={size} height={size} viewBox="0 0 16 16" className={className}>
       <rect x="6" y="1" width="4" height="3" fill="currentColor" />
       <rect x="4" y="4" width="8" height="2" fill="currentColor" />
       <rect x="3" y="6" width="10" height="4" fill="currentColor" />
@@ -125,7 +125,7 @@ const RAID_ICONS = {
     </svg>
   ),
   the_abyss: ({ size, className }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" className={className} style={{ imageRendering: 'pixelated' }}>
+    <svg width={size} height={size} viewBox="0 0 16 16" className={className}>
       <rect x="6" y="2" width="4" height="2" fill="currentColor" />
       <rect x="4" y="4" width="8" height="2" fill="currentColor" />
       <rect x="2" y="6" width="12" height="3" fill="currentColor" />
@@ -135,7 +135,7 @@ const RAID_ICONS = {
     </svg>
   ),
   void_throne: ({ size, className }) => (
-    <svg width={size} height={size} viewBox="0 0 16 16" className={className} style={{ imageRendering: 'pixelated' }}>
+    <svg width={size} height={size} viewBox="0 0 16 16" className={className}>
       <rect x="2" y="10" width="12" height="4" fill="currentColor" />
       <rect x="2" y="6" width="3" height="4" fill="currentColor" />
       <rect x="11" y="6" width="3" height="4" fill="currentColor" />
@@ -229,7 +229,10 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
           aria-controls={`raid-details-${raid.id}`}
           className="w-full mt-2 pt-2 border-t border-gray-700/50 text-xs text-gray-500 hover:text-gray-300 transition-colors"
         >
-          {isExpanded ? '▲ Hide details' : '▼ Show bosses & drops'}
+          <span className="inline-flex items-center gap-1">
+            <ChevronIcon size={10} className={isExpanded ? '' : 'rotate-180'} />
+            {isExpanded ? 'Hide details' : 'Show bosses & drops'}
+          </span>
         </button>
       </div>
 
@@ -304,13 +307,13 @@ const RaidSelectorModal = ({ onClose }) => {
     <div className="space-y-4">
       {/* Warnings */}
       {!canStart && (
-        <div className="pixel-panel text-sm p-3" style={{ borderColor: 'var(--color-gold)', color: 'var(--color-gold)' }}>
+        <div className="pixel-panel text-sm p-3 border-[var(--color-gold)] text-[var(--color-gold)]">
           You need at least one hero to enter a raid!
         </div>
       )}
 
       {dungeon && !raidState.active && (
-        <div className="pixel-panel text-sm p-3" style={{ borderColor: '#ff8844', color: '#ff8844' }}>
+        <div className="pixel-panel text-sm p-3 border-[#ff8844] text-[#ff8844]">
           Starting a raid will abandon your current dungeon (Level {dungeon.level})
         </div>
       )}

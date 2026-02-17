@@ -228,54 +228,32 @@ Added `@media (prefers-reduced-motion: reduce)` block to `src/index.css` that se
 
 ---
 
-## Phase 6: Polish
+## ~~Phase 6: Polish~~ DONE (v0.1.28)
 
-### 6A. Unicode → SVG Replacements
+### ~~6A. Unicode → SVG Replacements~~ DONE
 
-Replace 6 remaining Unicode symbols with pixel-art SVG icons:
+Replaced 5 Unicode symbols with pixel-art SVG icons (★ in `title` attribute left as-is — plain text, not rendered UI):
 
-| Location | Unicode | Replacement |
-|----------|---------|-------------|
-| `EquipmentScreen.jsx:51` | Star character | `StarIcon` |
-| `EquipmentScreen.jsx:143` | Up triangle | `UpArrowIcon` |
-| `EquipmentScreen.jsx:145` | Four-pointed star | `SparkleIcon` |
-| `RaidSelectorModal.jsx:230` | Up/down triangles | `ChevronUpIcon` / `ChevronDownIcon` |
-| `StatsScreen.jsx:329` | Checkmark | `CheckIcon` |
-| `ui/EquipmentTooltip.jsx:96` | Up/down triangles | `UpArrowIcon` / `DownArrowIcon` |
+- `EquipmentScreen.jsx`: `▲` → `ArrowUpIcon`, `✦` → `SparkleIcon` (new icon created in `ui.jsx`)
+- `RaidSelectorModal.jsx`: `▲▼` → `ChevronIcon` with rotate-180
+- `StatsScreen.jsx`: `✓` → `CheckIcon`
+- `EquipmentTooltip.jsx`: `▲▼` → `ArrowUpIcon`/`ArrowDownIcon`
 
-Add new icons to `src/components/icons/ui.jsx` if they don't already exist. Follow the 16x16 grid pixel art style documented in `CLAUDE.md`.
+### ~~6B. Inline Style Cleanup~~ DONE
 
-### 6B. Inline Style Cleanup
+Converted static inline styles to Tailwind utilities:
+- `RaidSelectorModal.jsx`: Removed 5 redundant `imageRendering: 'pixelated'` (covered by global CSS), converted 2 border/color styles to Tailwind arbitrary values
+- `GameLayout.jsx`: Converted `background: var(--color-bg)` to `bg-[var(--color-bg)]`, removed 3 redundant `imageRendering: 'pixelated'`
+- `BestiaryScreen.jsx`: Converted 3 conditional background inline styles to Tailwind className conditionals
 
-Convert avoidable inline styles to Tailwind utilities in:
-- `RaidSelectorModal.jsx` (18 instances)
-- `GameLayout.jsx` (12 instances)
-- `BestiaryScreen.jsx` (10 instances)
+### ~~6C. Canvas Skill Sprites~~ DONE
 
-Keep inline styles for truly dynamic values (runtime colors, calculated positions).
+Added ~55 new drawer functions to `SKILL_ICON_DRAWERS` and updated `SKILL_ICON_MAP` to cover all 130 skills (10 classes × 13 skills). Removed 11 stale entries referencing old skill IDs. Every skill now has a unique canvas sprite — no more fallback to generic `power_strike`.
 
-### 6C. Canvas Skill Sprites (51 missing)
+### ~~Phase 6 Verification~~ DONE
 
-Add canvas sprite implementations to `src/canvas/sprites/SkillSprites.js` for the 51 skills currently falling back to `power_strike`.
-
-Organized by class:
-| Class | Missing Count |
-|-------|--------------|
-| Cleric | 7 |
-| Druid | 7 |
-| Knight | 7 |
-| Mage | 7 |
-| Necromancer | 7 |
-| Paladin | 8 |
-| Ranger | 7 |
-| Rogue | 6 |
-| Shaman | 8 |
-| Warrior | 8 |
-
-### Phase 6 Verification
-
-1. `npm run build` — no build errors
-2. `npm run lint` — no new lint warnings
+1. `npm run build` — no build errors ✓
+2. `npm run lint` — no new lint warnings ✓
 3. Visual check: all replaced icons render correctly, canvas sprites display for all skills
 
 ---
