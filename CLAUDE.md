@@ -106,7 +106,7 @@ const IconWrapper = ({ children, size = 32, className = '' }) => (
     fill="none"
     xmlns="http://www.w3.org/2000/svg"
     className={className}
-    style={{ imageRendering: 'pixelated' }}
+    style={{ imageRendering: 'pixelated' }}  // Note: global CSS in index.css also applies this to all SVGs
   >
     {children}
   </svg>
@@ -136,6 +136,16 @@ Guidelines for new icons:
 - Add highlights/shading for depth (lighter top-left, darker bottom-right)
 - Keep designs simple and readable at small sizes
 - Export from the appropriate file based on icon category
+- Don't add inline `imageRendering: 'pixelated'` on individual SVGs — the global CSS rule in `index.css` handles this for all `<svg>` elements
+- Unicode symbols in `title` attributes (plain text tooltips) are acceptable since they're not rendered in the UI
+
+### Canvas Skill Sprites
+
+Skills also have canvas-rendered sprites for the dungeon view, defined in `src/canvas/sprites/SkillSprites.js`:
+- `SKILL_ICON_DRAWERS` — Named drawer functions that paint onto an offscreen canvas (e.g., `power_strike`, `heal`, `fireball`)
+- `SKILL_ICON_MAP` — Maps every skill ID (e.g., `warrior_power_strike`) to a drawer name
+- All 130 skills (10 classes × 13 skills, 4 tiers each) have entries in `SKILL_ICON_MAP`
+- When adding a new skill, add both an SVG icon in `skills.jsx` AND a canvas drawer + map entry in `SkillSprites.js`
 
 ### CSS Classes
 
@@ -157,8 +167,7 @@ The UI targets WCAG AA compliance (v0.1.26). When adding new components:
 
 ## Documentation
 
-When completing a phase from `REMEDIATION_PLAN.md`, update these docs:
-- `REMEDIATION_PLAN.md` — Mark the phase as DONE with version number and implementation details
+All 6 phases of `REMEDIATION_PLAN.md` are complete (v0.1.17–v0.1.28). When making significant changes, update:
 - `WEAK_POINTS.md` — Mark resolved items with strikethrough and version number
 - `DEVELOPER_GUIDE.md` — Add/update relevant architecture sections
 - `src/data/changelog.js` — Add player-facing changelog entry
@@ -191,10 +200,8 @@ When importing from game data files, verify actual export names — they don't a
 
 ## Known Technical Debt
 
-See `WEAK_POINTS.md` for detailed analysis. Key issues:
-- ~~useCombat.js needs splitting~~ (DONE - split into 6 files in v0.1.18)
-- ~~gameStore.js still needs splitting into Zustand slices~~ (DONE - split into 5 slices + 5 helpers in v0.1.19)
-- ~~Magic numbers for game balance~~ (DONE - centralized in `src/game/balanceConstants.js` in v0.1.25)
-- ~~Accessibility (ARIA, keyboard, contrast, motion)~~ (DONE - WCAG AA in v0.1.26)
-- No TypeScript despite @types packages installed (removed @types in v0.1.25)
+See `WEAK_POINTS.md` for detailed analysis. Remaining open issues:
 - No test coverage
+- Gold economy has no late-game sinks (post-homestead void)
+- No onboarding/tutorial for new players
+- Speed stat dominance in class balance (intentional design, but noted)
