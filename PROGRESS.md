@@ -1,6 +1,6 @@
 # Implementation Progress — Design Rethink
 
-**Current Phase: Phase 4 — v0.3.0 — A New Chapter**
+**Current Phase: Phase 5 — v0.3.1 — Surprise Me**
 
 ---
 
@@ -55,15 +55,15 @@
 
 ---
 
-## Phase 4: v0.3.0 — A New Chapter
+## Phase 4: v0.3.0 — A New Chapter ✅
 *Reference: DESIGN_RETHINK.md Section 8*
 *Goal: The game opens up with ascension.*
 *Prereq: Versioned save migration system (architectural prereq #3)*
 
 - [x] **PREREQ:** Build versioned save migration system — replace ad-hoc `merge` with `v1_to_v2` pattern
-- [ ] Ascension system (full Section 8) — partial reset, persistent state, stat bonuses, structural unlocks
-- [ ] 7th party slot (Ascension 1 reward) — modify `getMaxPartySize`, add flex slot
-- [ ] Offline progress enhancement — expand `calculateOfflineProgress`, add welcome-back screen
+- [x] Ascension system (full Section 8) — partial reset, persistent state, stat bonuses, structural unlocks
+- [x] 7th party slot (Ascension 1 reward) — modify `getMaxPartySize`, add flex slot
+- [x] Offline progress enhancement — expand `calculateOfflineProgress`, add welcome-back screen
 
 ---
 
@@ -116,6 +116,28 @@
 ## Handoff Notes
 
 *Space for sessions to leave notes for the next session. Most recent first.*
+
+### Session 5 (2026-02-17) — Phase 4 Complete (v0.3.0)
+
+**Completed:** All 4 Phase 4 tasks (1 prereq + 3 features).
+
+**Design decisions:**
+- Save migration v2→v3: Added `ascension: { count: 0 }` and `maxDungeonLevel: 30` to persisted state. Migration system uses numbered functions in `migrations.js` (`SAVE_VERSION = 3`).
+- Ascension system: `performAscension` in dungeonSlice does selective reset — heroes reset to level 10 with skills cleared (equipped gear preserved), gold reset to 10k, inventory cleared, dungeon progress reset to D9/D10. Persistent across ascension: heroes themselves, equipped gear, homestead, uniques, stats, bench heroes. Each ascension grants +10% all stats (multiplicative via `getAscensionStatMultiplier`) and increases dungeon cap (+5 per ascension via `getAscensionDungeonCap`).
+- Stat multiplier uses module-level `currentAscensionCount` in statCalculator.js (avoids threading ascension count through every call site). Initialized in `gameStore.js` merge on load, updated in `performAscension`. Ascension count is part of the cache key (`a${count}`) so stat caches auto-invalidate on ascension.
+- AscensionModal shows current bonuses, what you gain, what resets, what's preserved. Confirmation flow with "I Understand, Ascend" button. Accessible from PrepScreen when at max dungeon level.
+- 7th/8th party slots: Extended PARTY_SLOTS from 4 to 8 entries. Slots 5-6 are role-restricted (DPS at D10, Healer at D20). Slots 7-8 are flex slots (`role: null`, ascensionRequired: 1/3) — any class can fill them. `getClassesByRole(null)` returns all classes. Updated all slot iteration sites (heroSlice, HeroManagement, HeroPortraitBar, HeroRecruitment, NavBar, GameLayout) to use `maxPartySize` instead of `PARTY_SLOTS.length`.
+- `getMaxPartySize(highestDungeonCleared, ascensionCount)` now takes two parameters. All call sites updated.
+- Offline progress: `calculateOfflineProgress` already read `maxDungeonLevel` from state (which is now dynamic from ascension). Added `ascensionCount` to the return object. WelcomeBackModal shows ascension tier when count > 0.
+- Version bumped to v0.3.0 in changelog.js.
+
+**Notes for next session:**
+- The `regenPercent` trait (Enduring), `controlResist` trait (Iron Will), and `healingMultiplier`/`healingReceivedMultiplier` traits (Devoted) are still not wired into combat processing. Carried forward from Session 4 notes.
+- MilestoneWidget has a pre-existing bug: duplicate `style` attribute on the progress bar `div` (line ~146). The second `style` overrides the first. Not a blocker but should be fixed eventually.
+- Pre-existing lint errors (~84) are unchanged. No new errors introduced.
+- `usedSlotDiscounts` array tracks which slots have used their first-recruit discount. Flex slots (7-8) have `cost: 0` so discount tracking doesn't apply to them.
+
+**Next up:** Phase 5 — Room random events, Tower of Trials.
 
 ### Session 4 (2026-02-17) — Phase 3 Complete (v0.2.2)
 
