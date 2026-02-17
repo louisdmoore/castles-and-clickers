@@ -47,6 +47,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { worldBoss: 'forest_ancient' },
+    tags: ['defense', 'offense'],
   },
 
   // Level 20 World Boss - The Fallen King
@@ -73,6 +74,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { worldBoss: 'fallen_king' },
+    tags: ['berserker', 'sustain'],
   },
 
   // Level 25 World Boss - Inferno Lord
@@ -97,6 +99,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { worldBoss: 'inferno_lord' },
+    tags: ['fire', 'dot', 'aoe'],
   },
 
   // Level 30 World Boss - Void Emperor
@@ -121,6 +124,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { worldBoss: 'void_emperor' },
+    tags: ['sustain', 'cheat_death'],
   },
 
   // =====================================================
@@ -148,6 +152,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'sunken_temple', wing: 'temple_entrance' },
+    tags: ['offense', 'sustain'],
   },
 
   serpents_fang: {
@@ -171,6 +176,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'sunken_temple', wing: 'drowned_sanctum' },
+    tags: ['critical', 'offense'],
   },
 
   // =====================================================
@@ -197,6 +203,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'cursed_manor', wing: 'the_foyer' },
+    tags: ['evasion', 'offense'],
   },
 
   banshees_wail: {
@@ -223,6 +230,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'cursed_manor', wing: 'the_ballroom' },
+    tags: ['offense', 'stacking'],
   },
 
   vampires_embrace: {
@@ -245,6 +253,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'cursed_manor', wing: 'the_tower' },
+    tags: ['vampiric', 'sustain'],
   },
 
   // =====================================================
@@ -272,6 +281,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'sky_fortress', wing: 'outer_ramparts' },
+    tags: ['lightning', 'aoe', 'control'],
   },
 
   thunder_guard: {
@@ -294,6 +304,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'sky_fortress', wing: 'thunder_halls' },
+    tags: ['defense', 'thorns'],
   },
 
   eye_of_the_storm: {
@@ -316,6 +327,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'sky_fortress', wing: 'storm_throne' },
+    tags: ['speed', 'evasion'],
   },
 
   // =====================================================
@@ -345,6 +357,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'the_abyss', wing: 'the_depths' },
+    tags: ['offense', 'stacking'],
   },
 
   krakens_grasp: {
@@ -368,6 +381,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'the_abyss', wing: 'the_trench' },
+    tags: ['control', 'offense'],
   },
 
   leviathans_heart: {
@@ -390,6 +404,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'the_abyss', wing: 'the_void_below' },
+    tags: ['defense', 'fortify'],
   },
 
   // =====================================================
@@ -416,6 +431,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'void_throne', wing: 'realitys_edge' },
+    tags: ['offense', 'evasion'],
   },
 
   nullblade: {
@@ -438,6 +454,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'void_throne', wing: 'the_shattered' },
+    tags: ['offense', 'execution'],
   },
 
   cloak_of_nothing: {
@@ -460,6 +477,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'void_throne', wing: 'the_nothing' },
+    tags: ['evasion', 'offense'],
   },
 
   void_gods_crown: {
@@ -484,6 +502,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'void_throne', wing: 'the_throne' },
+    tags: ['defense', 'cheat_death'],
   },
 
   entropy_accessory: {
@@ -506,6 +525,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'void_throne', wing: 'the_throne' },
+    tags: ['offense', 'execution'],
   },
 
   // =====================================================
@@ -534,6 +554,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'dragon_sanctum', wing: 2 },
+    tags: ['fire', 'dot'],
   },
 
   // Rogue Weapons
@@ -557,6 +578,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'shadow_realm', wing: 1 },
+    tags: ['critical', 'evasion'],
   },
 
   // Mage Weapons
@@ -580,6 +602,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'dragon_sanctum', wing: 1 },
+    tags: ['frost', 'control', 'aoe'],
   },
 
   // Ranger Weapons
@@ -603,6 +626,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'dragon_sanctum', wing: 2 },
+    tags: ['speed', 'execution'],
   },
 
   // Necromancer Weapons
@@ -629,6 +653,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'lich_throne', wing: 2 },
+    tags: ['offense', 'stacking'],
   },
 
   // Armor
@@ -653,6 +678,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'lich_throne', wing: 1 },
+    tags: ['defense', 'cheat_death'],
   },
 
   dragonscale_mantle: {
@@ -675,6 +701,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'dragon_sanctum', wing: 2 },
+    tags: ['defense', 'fortify'],
   },
 
   shadow_cloak: {
@@ -696,6 +723,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'shadow_realm', wing: 2 },
+    tags: ['evasion'],
   },
 
   // Accessories
@@ -718,6 +746,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'arcane_tower', wing: 2 },
+    tags: ['offense', 'execution'],
   },
 
   blood_pendant: {
@@ -739,6 +768,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'vampire_castle', wing: 2 },
+    tags: ['sustain', 'support'],
   },
 
   boots_of_blinding_speed: {
@@ -761,6 +791,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'wind_temple', wing: 2 },
+    tags: ['speed'],
   },
 
   amulet_of_reflection: {
@@ -782,6 +813,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'crystal_caverns', wing: 2 },
+    tags: ['defense', 'thorns'],
   },
 
   crown_of_command: {
@@ -803,6 +835,7 @@ export const UNIQUE_ITEMS = {
       },
     },
     dropSource: { raid: 'fallen_kingdom', wing: 2 },
+    tags: ['support'],
   },
 };
 

@@ -8,6 +8,29 @@ This file provides guidance to Claude Code (claude.ai/code) when working with co
 
 Castles & Clickers is an idle dungeon crawler browser game built with React 19, Zustand, and Vite. Heroes explore procedurally generated dungeons, fight monsters with initiative-based combat, collect loot with affixes, and progress through skill trees and homestead upgrades.
 
+## Active Development: Design Rethink
+
+The project is undergoing a major feature expansion defined in `DESIGN_RETHINK.md`. The design philosophy is **RPG-first, idle-friendly** — player choice and visibility over automation.
+
+### Workflow
+- **`SESSION_PROMPT.md`** — Instructions for each Claude session. Read this at the start of every session.
+- **`PROGRESS.md`** — Tracks what's done, what's next, and handoff notes between sessions. **Always read this first** to know the current phase and next task. **Always update this** when completing tasks.
+- **`DESIGN_RETHINK.md`** — The full design spec (~1,070 lines, 19 sections). Each task in PROGRESS.md references a specific section — read that section for the detailed spec and implementation notes before writing code.
+
+### Design Principles (from DESIGN_RETHINK.md)
+1. **Make existing systems visible** before adding new ones. The game has 180 skills, 34 uniques, 18 affixes, 10 classes — surface what's already there.
+2. **Every decision gets feedback within 60 seconds.** If a player changes something, they see the result fast.
+3. **Build systems that remix content, not pipelines that produce content.** Difficulty sliders, affix synergies, stacked modifiers — combinatorial variety from existing data.
+4. **Run the numbers.** Power budgets and cost curves before implementation.
+5. **Idle baseline test:** For every new system, define what happens if the player never touches it. If they fall behind, redesign. If they miss optional depth, it's healthy.
+
+### Key Constraints
+- **No mid-combat player input.** The combat engine is non-interactive. Player expression belongs in pre-combat decisions (party, gear, skills, difficulty) and post-combat feedback (DPS meter, death recap).
+- **No multiplayer.** localStorage + Zustand architecture. Single-player only.
+- **New UI uses existing modal pattern.** New popups/screens should use `ModalOverlay.jsx`. The full layout overhaul is deferred to Phase 7 (v0.4.0).
+- **Save migration required for new persistent state.** Until the versioned migration system is built (Phase 4 prereq), use the existing `merge` function in `gameStore.js` persistence config for backwards compatibility.
+- **Auto-dismiss for idle players.** Any new screen/popup that interrupts the game loop must auto-dismiss after ~5 seconds when auto-advance is on.
+
 ## Version Number
 
 **IMPORTANT: Bump the version number on every git push.**
@@ -67,6 +90,18 @@ Combat uses initiative-based turn order with A* pathfinding for movement. Speed 
 - `src/game/combatStatusEffects.js` - DOT/stun/buff per-turn processing (~310 lines)
 - `src/game/combatMovement.js` - A* pathfinding and directional movement (~140 lines)
 - `src/game/constants.js` - Game balance values, formulas, and utility functions
+
+### Files You'll Modify Often During Design Rethink
+- `src/store/slices/combatSlice.js` - Where `runStats` accumulator lives (DPS meter, death recap, run summary data)
+- `src/store/slices/inventorySlice.js` - Has `compareToEquipped` for item comparison; reforging and affix mutation go here
+- `src/store/slices/dungeonSlice.js` - `endDungeon` logic; prep phase (`POST_RUN`) inserts here
+- `src/store/slices/economySlice.js` - Gold sinks, toast system, offline progress
+- `src/hooks/useGameLoop.js` - Main tick loop; auto-advance logic that needs to pause for prep phase
+- `src/data/itemAffixes.js` - 18 affixes; add `tags` field for synergy system
+- `src/data/dungeonThemes.js` - Dungeon theme definitions; add `favoredAffixes` for loot targeting
+- `src/data/statusEffects.js` - Status effect definitions; add combo table
+- `src/game/statCalculator.js` - `calculateHeroStats`; trait bonuses, affix synergies, ascension multipliers apply here
+- `src/components/GameLayout.jsx` - Main layout (~857 lines, 12 modals); avoid refactoring until Phase 7
 
 ## Performance Patterns
 
@@ -198,10 +233,24 @@ When importing from game data files, verify actual export names — they don't a
 
 `npm run lint` currently reports ~78 pre-existing errors (mostly unused vars in canvas files and React hooks warnings). Do not try to fix these unless specifically asked — just verify your changes don't add new ones.
 
+## Existing Combat Stats Infrastructure
+
+The combat system already tracks per-hero stats that new features build on:
+- `stats.heroStats` tracks `totalDamageDealt`, `totalDamageTaken`, `totalHealingDone`, `totalHealingReceived` (lifetime)
+- `useCombat` computes `totalDamageDealtThisTurn`, `damageTakenByHero`, `healingDoneByHero` per tick
+- These are the foundation for the contribution meter, run summary, and death recap — you're adding per-run aggregation on top of existing per-tick data
+
+## Existing Equipment Infrastructure
+
+- `compareToEquipped` in `inventorySlice.js` already computes per-stat diffs between items
+- `processLootDrop` in inventory handling already has branching logic for auto-equip — the smart auto-equip change is modifying this branch, not replacing it
+- `generateEquipment` handles affix rolling during loot generation — reforging reuses this logic
+- Equipment affix arrays are currently immutable; reforging (Phase 6) requires making them mutable, which is a data model + save migration change
+
 ## Known Technical Debt
 
 See `WEAK_POINTS.md` for detailed analysis. Remaining open issues:
 - No test coverage
-- Gold economy has no late-game sinks (post-homestead void)
-- No onboarding/tutorial for new players
+- Gold economy has no late-game sinks (post-homestead void) — addressed by design rethink Phase 3+
+- No onboarding/tutorial for new players — addressed by progressive disclosure in Phase 8
 - Speed stat dominance in class balance (intentional design, but noted)

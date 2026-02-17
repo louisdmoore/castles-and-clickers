@@ -77,6 +77,7 @@ export const DUNGEON_THEMES = {
       accent: '#06b6d4', // cyan crystals
     },
     props: ['crystal', 'stalactite', 'puddle', 'rocks'],
+    favoredAffixes: ['freezing', 'of_haste'],
   },
   crypt: {
     id: 'crypt',
@@ -90,6 +91,7 @@ export const DUNGEON_THEMES = {
       accent: '#84cc16', // sickly green
     },
     props: ['bones', 'coffin', 'candle', 'cobweb'],
+    favoredAffixes: ['venomous', 'vampiric', 'of_regeneration'],
   },
   forest: {
     id: 'forest',
@@ -103,6 +105,7 @@ export const DUNGEON_THEMES = {
       accent: '#22c55e', // green glow
     },
     props: ['tree', 'mushroom', 'vine', 'flowers'],
+    favoredAffixes: ['venomous', 'savage', 'of_vitality'],
   },
   castle: {
     id: 'castle',
@@ -116,6 +119,7 @@ export const DUNGEON_THEMES = {
       accent: '#f59e0b', // torch orange
     },
     props: ['torch', 'banner', 'armor', 'chains'],
+    favoredAffixes: ['of_fortitude', 'of_warding', 'of_thorns'],
   },
   volcano: {
     id: 'volcano',
@@ -129,6 +133,7 @@ export const DUNGEON_THEMES = {
       accent: '#ef4444', // lava red
     },
     props: ['lava', 'obsidian', 'ember', 'crack'],
+    favoredAffixes: ['blazing', 'berserker', 'of_the_titan'],
   },
   void: {
     id: 'void',
@@ -142,6 +147,7 @@ export const DUNGEON_THEMES = {
       accent: '#a855f7', // purple void
     },
     props: ['portal', 'floatingRock', 'rune', 'voidCrack'],
+    favoredAffixes: ['executioner', 'devastating', 'of_the_phoenix'],
   },
 };
 

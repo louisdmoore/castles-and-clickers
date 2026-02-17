@@ -30,6 +30,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['weapon'],
     minTier: 1,
+    tags: ['fire'],
   },
   venomous: {
     id: 'venomous',
@@ -43,6 +44,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['weapon'],
     minTier: 1,
+    tags: ['poison', 'dot'],
   },
   keen: {
     id: 'keen',
@@ -55,6 +57,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['weapon'],
     minTier: 1,
+    tags: ['critical'],
   },
 
   // Tier 2 Prefixes
@@ -69,6 +72,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['weapon'],
     minTier: 2,
+    tags: ['vampiric', 'sustain'],
   },
   thundering: {
     id: 'thundering',
@@ -83,6 +87,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['weapon'],
     minTier: 2,
+    tags: ['lightning'],
   },
   savage: {
     id: 'savage',
@@ -95,6 +100,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['weapon'],
     minTier: 2,
+    tags: ['critical', 'dot'],
   },
   freezing: {
     id: 'freezing',
@@ -108,6 +114,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['weapon'],
     minTier: 2,
+    tags: ['frost', 'control'],
   },
 
   // Tier 3 Prefixes
@@ -123,6 +130,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['weapon'],
     minTier: 3,
+    tags: ['execution'],
   },
   berserker: {
     id: 'berserker',
@@ -135,6 +143,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['weapon'],
     minTier: 3,
+    tags: ['berserker'],
   },
   devastating: {
     id: 'devastating',
@@ -147,6 +156,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['weapon'],
     minTier: 3,
+    tags: ['critical'],
   },
 
   // === SUFFIXES (Defensive/Utility) ===
@@ -163,6 +173,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['armor'],
     minTier: 1,
+    tags: ['thorns'],
   },
   of_vitality: {
     id: 'of_vitality',
@@ -175,6 +186,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['armor', 'accessory'],
     minTier: 1,
+    tags: ['fortify'],
   },
   of_haste: {
     id: 'of_haste',
@@ -187,6 +199,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['weapon', 'accessory'],
     minTier: 1,
+    tags: ['speed'],
   },
 
   // Tier 2 Suffixes
@@ -201,6 +214,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['armor', 'accessory'],
     minTier: 2,
+    tags: ['healing', 'sustain'],
   },
   of_swiftness: {
     id: 'of_swiftness',
@@ -213,6 +227,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['weapon', 'accessory'],
     minTier: 2,
+    tags: ['speed'],
   },
   of_warding: {
     id: 'of_warding',
@@ -225,6 +240,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['armor', 'accessory'],
     minTier: 2,
+    tags: ['fortify'],
   },
   of_fortitude: {
     id: 'of_fortitude',
@@ -238,6 +254,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['armor'],
     minTier: 2,
+    tags: ['fortify', 'berserker'],
   },
 
   // Tier 3 Suffixes
@@ -253,6 +270,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['armor', 'accessory'],
     minTier: 3,
+    tags: ['healing'],
   },
   of_slaying: {
     id: 'of_slaying',
@@ -265,6 +283,7 @@ export const ITEM_AFFIXES = {
     },
     slots: ['weapon'],
     minTier: 3,
+    tags: ['execution'],
   },
   of_the_titan: {
     id: 'of_the_titan',
@@ -278,7 +297,74 @@ export const ITEM_AFFIXES = {
     },
     slots: ['armor'],
     minTier: 3,
+    tags: ['fortify', 'berserker'],
   },
+};
+
+// Synergy bonuses granted when a hero has 2+ affixes sharing a tag
+// Achievable pairs:
+//   speed: of_haste (weapon/accessory) + of_swiftness (weapon/accessory)
+//   fortify: of_vitality + of_warding + of_fortitude + of_the_titan (armor/accessory combos)
+//   healing: of_regeneration + of_the_phoenix (armor/accessory)
+//   execution: executioner (prefix) + of_slaying (suffix) on same weapon
+//   berserker: berserker (prefix) + of_fortitude or of_the_titan (armor suffix)
+//   sustain: vampiric (prefix) + of_regeneration (armor/accessory suffix)
+export const AFFIX_SYNERGY_BONUSES = {
+  speed: {
+    minCount: 2,
+    label: 'Quicksilver',
+    description: '+10% dodge chance',
+    bonus: { dodgeChance: 0.10 },
+  },
+  fortify: {
+    minCount: 2,
+    label: 'Ironclad',
+    description: '+10% damage reduction',
+    bonus: { damageReduction: 0.10 },
+  },
+  healing: {
+    minCount: 2,
+    label: 'Lifebond',
+    description: '+15% healing received',
+    bonus: { healingReceived: 0.15 },
+  },
+  execution: {
+    minCount: 2,
+    label: 'Headsman',
+    description: '+20% damage to enemies below 30% HP',
+    bonus: { executeBonus: 0.20, executeThreshold: 0.30 },
+  },
+  berserker: {
+    minCount: 2,
+    label: 'Blood Rage',
+    description: '+20% damage when below 50% HP',
+    bonus: { lowHpDamageBonus: 0.20, lowHpThreshold: 0.50 },
+  },
+  sustain: {
+    minCount: 2,
+    label: 'Siphon',
+    description: '+8% lifesteal',
+    bonus: { lifesteal: 0.08 },
+  },
+};
+
+// Count matching affix tags across a hero's equipped items and return active synergies
+export const getActiveSynergies = (affixIds) => {
+  const tagCounts = {};
+  for (const id of affixIds) {
+    const affix = ITEM_AFFIXES[id];
+    if (!affix?.tags) continue;
+    for (const tag of affix.tags) {
+      tagCounts[tag] = (tagCounts[tag] || 0) + 1;
+    }
+  }
+  const active = [];
+  for (const [tag, synergy] of Object.entries(AFFIX_SYNERGY_BONUSES)) {
+    if ((tagCounts[tag] || 0) >= synergy.minCount) {
+      active.push({ tag, ...synergy });
+    }
+  }
+  return active;
 };
 
 // Get affix by ID

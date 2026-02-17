@@ -203,6 +203,80 @@ export const STATUS_EFFECTS = {
   },
 };
 
+// Status effect combo table — interactions checked during damage resolution
+// When attacking a target with specific status effects, apply bonus effects
+// These are build checks (party composition), not execution checks (player input)
+export const STATUS_COMBOS = {
+  // Attacking a Frozen target always crits
+  frozen_shatter: {
+    id: 'frozen_shatter',
+    name: 'Shatter',
+    description: 'Attacks against Frozen targets always crit',
+    requiredStatus: ['freeze'],
+    trigger: 'on_attack',
+    effect: { guaranteedCrit: true },
+    comboMessage: 'SHATTER!',
+  },
+  // Burning + Poisoned on same target increases DOT damage
+  toxic_fire: {
+    id: 'toxic_fire',
+    name: 'Toxic Fire',
+    description: 'Burning + Poisoned enemies take +25% DOT damage',
+    requiredStatus: ['burn', 'poison'],
+    trigger: 'on_dot_tick',
+    effect: { dotDamageMultiplier: 1.25 },
+    comboMessage: 'TOXIC FIRE!',
+  },
+  // Attacking a Stunned target deals bonus damage
+  punish: {
+    id: 'punish',
+    name: 'Punish',
+    description: 'Attacks against Stunned targets deal +50% damage',
+    requiredStatus: ['stun'],
+    trigger: 'on_attack',
+    effect: { damageMultiplier: 1.50 },
+    comboMessage: 'PUNISH!',
+  },
+  // Bleeding target takes a crit — bleed duration refreshes
+  hemorrhage: {
+    id: 'hemorrhage',
+    name: 'Hemorrhage',
+    description: 'Critting a Bleeding target refreshes bleed duration',
+    requiredStatus: ['bleed'],
+    trigger: 'on_crit',
+    effect: { refreshStatus: 'bleed' },
+    comboMessage: 'HEMORRHAGE!',
+  },
+  // Vulnerable + any DOT amplifies the DOT
+  exposed_wound: {
+    id: 'exposed_wound',
+    name: 'Exposed Wound',
+    description: 'DOTs on Vulnerable targets deal +25% damage',
+    requiredStatus: ['vulnerable'],
+    trigger: 'on_dot_tick',
+    effect: { dotDamageMultiplier: 1.25 },
+    comboMessage: 'EXPOSED!',
+  },
+  // Weakened + Slowed target takes bonus damage (double debilitated)
+  cripple: {
+    id: 'cripple',
+    name: 'Cripple',
+    description: 'Weakened + Slowed enemies take +30% damage',
+    requiredStatus: ['weakness', 'slow'],
+    trigger: 'on_attack',
+    effect: { damageMultiplier: 1.30 },
+    comboMessage: 'CRIPPLE!',
+  },
+};
+
+// Find active combos for a target based on its current status effects
+export const getActiveCombos = (targetStatusIds, triggerType) => {
+  return Object.values(STATUS_COMBOS).filter(combo => {
+    if (combo.trigger !== triggerType) return false;
+    return combo.requiredStatus.every(req => targetStatusIds.includes(req));
+  });
+};
+
 // Helper to get status effect by ID
 export const getStatusEffect = (id) => STATUS_EFFECTS[id];
 

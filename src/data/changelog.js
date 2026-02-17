@@ -1,9 +1,23 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.1.28';
+export const CURRENT_VERSION = '0.1.29';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.1.29',
+    title: 'Foundation Work',
+    date: '2026-02-17',
+    changes: [
+      { type: 'feature', text: 'Added affix synergy tags and bonus definitions — matching affixes on gear will grant set bonuses' },
+      { type: 'feature', text: 'Each dungeon theme now has favored affixes that drop more often' },
+      { type: 'feature', text: 'Status effect combos defined — Freeze + attack = Shatter, Burn + Poison = Toxic Fire, and more' },
+      { type: 'feature', text: 'Hero trait system defined — new heroes will roll random traits like Glass Cannon, Lucky, or Iron Will' },
+      { type: 'feature', text: 'Room event system defined — treasure chests, healing springs, and ambushes coming to dungeons' },
+      { type: 'feature', text: 'Achievement system with 30 milestones across combat, progression, collection, and economy' },
+      { type: 'feature', text: 'Ascension milestone rewards planned — party slots, challenge modes, and prestige classes' },
+    ],
+  },
   {
     version: '0.1.28',
     title: 'Visual Polish',
