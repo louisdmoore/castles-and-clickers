@@ -842,6 +842,41 @@ select:focus-visible {
 }
 
 /* ========================================
+   WIDE-SCREEN LAYOUT (3-column grid)
+   ======================================== */
+
+@media (min-width: 1440px) {
+  .game-content-area {
+    display: grid !important;
+    grid-template-columns: 16rem 1fr;
+  }
+  .game-content-area.right-panel-open {
+    grid-template-columns: 16rem 1fr 18rem;
+    transition: grid-template-columns 0.2s ease;
+  }
+}
+
+/* Right panel toggle - only visible on wide screens */
+.right-panel-toggle {
+  display: none !important;
+}
+@media (min-width: 1440px) {
+  .right-panel-toggle {
+    display: flex !important;
+  }
+}
+
+/* Right panel container - hidden on smaller screens */
+.right-panel-container {
+  display: none !important;
+}
+@media (min-width: 1440px) {
+  .right-panel-container {
+    display: flex !important;
+  }
+}
+
+/* ========================================
    MOBILE RESPONSIVE
    ======================================== */
 

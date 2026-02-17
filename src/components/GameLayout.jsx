@@ -15,6 +15,8 @@ import ModalManager from './ModalManager';
 import DungeonTransition from './DungeonTransition';
 import IdleScreen from './IdleScreen';
 import PrepScreen from './PrepScreen';
+import RightPanel from './RightPanel';
+import { ChartIcon } from './icons/ui';
 
 // Floating UI
 import WelcomeBackModal from './WelcomeBackModal';
@@ -70,6 +72,7 @@ const GameLayout = () => {
   const [showResetConfirm, setShowResetConfirm] = useState(false);
   const [dungeonTransition, setDungeonTransition] = useState(null);
   const [showChangelog, setShowChangelog] = useState(false);
+  const [rightPanelOpen, setRightPanelOpen] = useState(false);
   const prevDungeonRef = useRef(dungeon);
   const lastDungeonLevelRef = useRef(dungeon?.level);
   const isInitialMountRef = useRef(true);
@@ -228,8 +231,8 @@ const GameLayout = () => {
         onOpenChangelog={() => setShowChangelog(true)}
       />
 
-      {/* Main content */}
-      <div className="flex-1 flex overflow-hidden">
+      {/* Main content — flex on small/medium, CSS grid on wide (1440px+) */}
+      <div className={`flex-1 flex overflow-hidden game-content-area${rightPanelOpen ? ' right-panel-open' : ''}`}>
         {/* Sidebar - hidden on mobile, shown as drawer */}
         <div className="hidden md:block">
           <Sidebar
@@ -256,7 +259,7 @@ const GameLayout = () => {
         )}
 
         {/* Main area */}
-        <main className="flex-1 p-4 overflow-hidden flex flex-col">
+        <main className="flex-1 p-4 overflow-hidden flex flex-col min-w-0 relative">
           {dungeon && mazeDungeonState ? (
             <>
               <DungeonHeader
@@ -301,7 +304,28 @@ const GameLayout = () => {
               upcomingUnlocks={upcomingUnlocks}
             />
           )}
+
+          {/* Right panel toggle button — wide screens only */}
+          {!rightPanelOpen && (
+            <button
+              onClick={() => setRightPanelOpen(true)}
+              className="right-panel-toggle absolute top-4 right-0 items-center justify-center w-8 h-16 pixel-panel-dark rounded-l cursor-pointer z-10"
+              aria-label="Open details panel"
+              title="Show run stats"
+              style={{ borderRight: 'none', borderRadius: '4px 0 0 4px' }}
+            >
+              <ChartIcon size={16} />
+            </button>
+          )}
         </main>
+
+        {/* Right panel — wide screens only (1440px+), controlled by CSS */}
+        {rightPanelOpen && (
+          <RightPanel
+            dungeon={dungeon}
+            onClose={() => setRightPanelOpen(false)}
+          />
+        )}
       </div>
 
       {/* Modal overlays */}
