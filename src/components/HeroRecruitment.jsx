@@ -32,7 +32,7 @@ const HeroRecruitment = ({ targetSlotIndex = null, compact = false }) => {
 
   // Find the first empty slot if no target specified
   const findFirstEmptySlot = () => {
-    for (let i = 0; i < PARTY_SLOTS.length; i++) {
+    for (let i = 0; i < maxPartySize && i < PARTY_SLOTS.length; i++) {
       if (!heroes[i]) return i;
     }
     return -1;
@@ -62,7 +62,10 @@ const HeroRecruitment = ({ targetSlotIndex = null, compact = false }) => {
   const currentSlot = PARTY_SLOTS[slotIndex];
   const dungeonRequired = currentSlot?.dungeonRequired || 0;
   const requiredRole = currentSlot?.role || null;
-  const slotUnlocked = highestDungeonCleared >= dungeonRequired;
+  const ascensionCount = useGameStore.getState().ascension?.count || 0;
+  const ascensionRequired = currentSlot?.ascensionRequired || 0;
+  const slotUnlocked = highestDungeonCleared >= dungeonRequired &&
+    (!ascensionRequired || ascensionCount >= ascensionRequired);
 
   // Check if this slot's first-recruit discount has been used
   const discountUsed = usedSlotDiscounts.includes(slotIndex);
@@ -71,8 +74,8 @@ const HeroRecruitment = ({ targetSlotIndex = null, compact = false }) => {
     ? BASE_RECRUIT_COSTS[requiredRole] || 150
     : (currentSlot?.cost || 0);
 
-  // Get available classes for the current role
-  const availableClasses = requiredRole ? getClassesByRole(requiredRole) : [];
+  // Get available classes for the current role (flex slots show all classes)
+  const availableClasses = getClassesByRole(requiredRole);
   const roleInfo = requiredRole ? ROLE_INFO[requiredRole] : null;
 
   const canAfford = gold >= recruitCost;

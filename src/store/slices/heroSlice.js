@@ -28,7 +28,7 @@ export const createHeroSlice = (set, get) => ({
     // Find slot index if not provided (first empty slot)
     let targetSlot = slotIndex;
     if (targetSlot === undefined) {
-      for (let i = 0; i < PARTY_SLOTS.length; i++) {
+      for (let i = 0; i < maxPartySize; i++) {
         if (!heroes[i]) {
           targetSlot = i;
           break;
@@ -195,11 +195,9 @@ export const createHeroSlice = (set, get) => ({
     const heroClass = CLASSES[heroOnBench.classId];
     const heroRole = heroClass?.role;
 
-    // Check role requirement for the slot
+    // Check role requirement for the slot (flex slots have no role restriction)
     const slotRequirement = PARTY_SLOTS[slotIndex];
-
-    // Verify role matches slot requirement
-    if (slotRequirement && heroRole !== slotRequirement.role) return false;
+    if (slotRequirement && slotRequirement.role && heroRole !== slotRequirement.role) return false;
 
     // OPTIMIZATION: Clear cache when party composition changes
     clearStatCache();
@@ -257,13 +255,21 @@ export const createHeroSlice = (set, get) => ({
     }
 
     // Only show roles where the player has already recruited their first FREE hero
-    const availableRoles = [];
+    const roleSet = new Set();
     for (let i = 0; i < PARTY_SLOTS.length; i++) {
       const slot = PARTY_SLOTS[i];
       if (usedSlotDiscounts.includes(i)) {
-        availableRoles.push(slot.role);
+        if (slot.role) {
+          roleSet.add(slot.role);
+        } else {
+          // Flex slot — offer all roles
+          roleSet.add('tank');
+          roleSet.add('healer');
+          roleSet.add('dps');
+        }
       }
     }
+    const availableRoles = [...roleSet];
 
     // If no roles have been recruited yet, tavern is empty
     if (availableRoles.length === 0) {
@@ -325,9 +331,9 @@ export const createHeroSlice = (set, get) => ({
       // Trying to place in party
       if (targetSlot >= maxPartySize) return false;
 
-      // Check role matches slot
-      const slotRole = PARTY_SLOTS[targetSlot]?.role;
-      if (slotRole !== tavernHero.role) return false;
+      // Check role matches slot (flex slots accept any role)
+      const slotDef = PARTY_SLOTS[targetSlot];
+      if (slotDef?.role && slotDef.role !== tavernHero.role) return false;
 
       // Check slot is empty (including pending)
       if (heroes[targetSlot] || pendingSlots.includes(targetSlot)) return false;
@@ -335,9 +341,12 @@ export const createHeroSlice = (set, get) => ({
       placingInParty = true;
       actualSlotIndex = targetSlot;
     } else {
-      // Try to find an empty party slot for this role
-      for (let i = 0; i < PARTY_SLOTS.length; i++) {
-        if (PARTY_SLOTS[i].role === tavernHero.role && !heroes[i] && !pendingSlots.includes(i)) {
+      // Try to find an empty party slot for this role (role-restricted first, then flex)
+      for (let i = 0; i < maxPartySize; i++) {
+        const slotDef = PARTY_SLOTS[i];
+        if (!slotDef) continue;
+        const roleMatch = !slotDef.role || slotDef.role === tavernHero.role;
+        if (roleMatch && !heroes[i] && !pendingSlots.includes(i)) {
           placingInParty = true;
           actualSlotIndex = i;
           break;

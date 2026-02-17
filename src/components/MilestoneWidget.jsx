@@ -49,7 +49,7 @@ const MilestoneWidget = () => {
 
     // 2. Next dungeon unlock (hero slot, feature, or raid)
     const allUnlocks = [
-      ...PARTY_SLOTS.slice(1).map(slot => ({
+      ...PARTY_SLOTS.slice(1).filter(s => !s.flex).map(slot => ({
         name: `${slot.role.charAt(0).toUpperCase() + slot.role.slice(1)} Slot`,
         dungeonRequired: slot.dungeonRequired,
       })),

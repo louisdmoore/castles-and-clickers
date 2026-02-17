@@ -235,10 +235,14 @@ const GameLayout = () => {
     startDungeon(level, options);
   }, [startDungeon]);
 
+  const ascensionCount = useGameStore(state => state.ascension?.count || 0);
+
   // Check if there's an unlocked but empty hero slot available
   const hasNewHeroSlotAvailable = useMemo(() => {
-    for (let i = 0; i < PARTY_SLOTS.length; i++) {
+    const maxSize = useGameStore.getState().maxPartySize;
+    for (let i = 0; i < maxSize && i < PARTY_SLOTS.length; i++) {
       const slot = PARTY_SLOTS[i];
+      if (slot.ascensionRequired && ascensionCount < slot.ascensionRequired) continue;
       const isUnlocked = highestDungeonCleared >= slot.dungeonRequired;
       const isEmpty = !heroes[i];
       if (isUnlocked && isEmpty) {
@@ -246,7 +250,7 @@ const GameLayout = () => {
       }
     }
     return false;
-  }, [heroes, highestDungeonCleared]);
+  }, [heroes, highestDungeonCleared, ascensionCount]);
 
   // Find all upcoming unlocks at the next milestone dungeon level
   const upcomingUnlocks = useMemo(() => {
@@ -255,7 +259,7 @@ const GameLayout = () => {
       // Hero slots
       ...(() => {
         const dpsCount = { current: 0 };
-        return PARTY_SLOTS.slice(1).map((slot) => {
+        return PARTY_SLOTS.slice(1).filter(s => !s.flex).map((slot) => {
           let name;
           if (slot.role === 'dps') {
             dpsCount.current++;

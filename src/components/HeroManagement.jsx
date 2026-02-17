@@ -1,9 +1,9 @@
-import { useState } from 'react';
+import { useState, useMemo } from 'react';
 import { useGameStore, calculateHeroStats } from '../store/gameStore';
 import { CLASSES, PARTY_SLOTS, ROLE_INFO, getClassesByRole } from '../data/classes';
 import ClassIcon, { RoleIcon } from './icons/ClassIcon';
 import HeroIcon from './icons/HeroIcon';
-import { LockIcon } from './icons/ui';
+import { LockIcon, StarIcon } from './icons/ui';
 
 // Base costs for re-recruitment (when first-recruit discount is used)
 const BASE_RECRUIT_COSTS = { tank: 100, healer: 150, dps: 200 };
@@ -12,7 +12,9 @@ const HeroManagement = () => {
   const heroes = useGameStore(state => state.heroes);
   const gold = useGameStore(state => state.gold);
   const dungeon = useGameStore(state => state.dungeon);
+  const maxPartySize = useGameStore(state => state.maxPartySize);
   const highestDungeonCleared = useGameStore(state => state.highestDungeonCleared);
+  const ascensionCount = useGameStore(state => state.ascension?.count || 0);
   const usedSlotDiscounts = useGameStore(state => state.usedSlotDiscounts);
   const addHero = useGameStore(state => state.addHero);
   const spendGold = useGameStore(state => state.spendGold);
@@ -20,9 +22,20 @@ const HeroManagement = () => {
 
   const [expandedSlot, setExpandedSlot] = useState(null);
 
-  // Check if a slot is unlocked based on dungeon progress
+  // Build slot list up to maxPartySize
+  const visibleSlots = useMemo(() => {
+    const slots = [];
+    for (let i = 0; i < maxPartySize && i < PARTY_SLOTS.length; i++) {
+      slots.push({ index: i, ...PARTY_SLOTS[i] });
+    }
+    return slots;
+  }, [maxPartySize]);
+
+  // Check if a slot is unlocked based on dungeon progress + ascension
   const isSlotUnlocked = (slotIndex) => {
     const slot = PARTY_SLOTS[slotIndex];
+    if (!slot) return false;
+    if (slot.ascensionRequired && ascensionCount < slot.ascensionRequired) return false;
     return highestDungeonCleared >= slot.dungeonRequired;
   };
 
@@ -31,10 +44,10 @@ const HeroManagement = () => {
     return !usedSlotDiscounts.includes(slotIndex);
   };
 
-  // Get available classes for direct recruitment (basic heroes)
+  // Get available classes for direct recruitment
   const getClassesForSlot = (slotIndex) => {
     const slot = PARTY_SLOTS[slotIndex];
-    return getClassesByRole(slot.role);
+    return getClassesByRole(slot?.role || null);
   };
 
   // Handle direct recruitment of a basic hero (first-recruit or paid)
@@ -43,8 +56,7 @@ const HeroManagement = () => {
     const isFirstRecruit = isFirstRecruitAvailable(slotIndex);
 
     if (!isFirstRecruit) {
-      // Need to pay for re-recruitment
-      const cost = BASE_RECRUIT_COSTS[slot.role] || 150;
+      const cost = slot?.role ? (BASE_RECRUIT_COSTS[slot.role] || 150) : 200;
       if (gold < cost) return false;
       if (!spendGold(cost)) return false;
     }
@@ -60,27 +72,27 @@ const HeroManagement = () => {
 
       {/* Party Slots Grid */}
       <div className="grid grid-cols-2 gap-3">
-        {PARTY_SLOTS.map((slot, index) => {
+        {visibleSlots.map(({ index, role, flex, ascensionRequired }) => {
           const hero = heroes[index];
           const pendingHero = pendingRecruits.find(p => p.slotIndex === index);
-          const roleInfo = ROLE_INFO[slot.role];
+          const roleInfo = role ? ROLE_INFO[role] : null;
           const isExpanded = expandedSlot === index;
           const slotUnlocked = isSlotUnlocked(index);
           const firstRecruitAvailable = isFirstRecruitAvailable(index);
           const availableClasses = getClassesForSlot(index);
-          const recruitCost = BASE_RECRUIT_COSTS[slot.role] || 150;
+          const recruitCost = flex ? 0 : (BASE_RECRUIT_COSTS[role] || 150);
 
           return (
             <div key={index} className={`pixel-panel overflow-hidden ${!slotUnlocked ? 'opacity-60' : ''}`}>
               {/* Slot Header */}
               <div className="flex items-center justify-between px-3 py-2 border-b-2 border-[var(--color-border)]" style={{ background: 'linear-gradient(180deg, #3a3a5a 0%, #2a2a4a 100%)' }}>
                 <div className="flex items-center gap-2">
-                  <RoleIcon role={slot.role} size={18} />
-                  <span className="text-white text-sm font-medium">{roleInfo.name}</span>
+                  {flex ? <StarIcon size={18} /> : <RoleIcon role={role} size={18} />}
+                  <span className="text-white text-sm font-medium">{flex ? 'Flex' : roleInfo?.name}</span>
                 </div>
                 {!slotUnlocked && (
                   <span className="text-xs text-gray-500 flex items-center gap-1">
-                    <LockIcon size={12} /> D{slot.dungeonRequired}
+                    <LockIcon size={12} /> {ascensionRequired ? `A${ascensionRequired}` : `D${PARTY_SLOTS[index]?.dungeonRequired}`}
                   </span>
                 )}
               </div>
@@ -94,7 +106,9 @@ const HeroManagement = () => {
                       <LockIcon size={40} />
                     </div>
                     <div className="text-gray-500 text-sm">
-                      Clear Dungeon {slot.dungeonRequired} to unlock
+                      {ascensionRequired
+                        ? `Ascension ${ascensionRequired} required`
+                        : `Clear Dungeon ${PARTY_SLOTS[index]?.dungeonRequired} to unlock`}
                     </div>
                   </div>
                 ) : pendingHero ? (
@@ -161,8 +175,8 @@ const HeroManagement = () => {
                     >
                       <div className="text-2xl mb-1">+</div>
                       <div className="text-sm">
-                        Recruit {roleInfo.name}
-                        {firstRecruitAvailable && <span className="text-green-400 ml-1">(FREE)</span>}
+                        Recruit {flex ? 'Any Class' : roleInfo?.name}
+                        {(firstRecruitAvailable || flex) && <span className="text-green-400 ml-1">(FREE)</span>}
                         {dungeon && <span className="text-yellow-400 block text-xs mt-1">Joins after dungeon</span>}
                       </div>
                     </button>

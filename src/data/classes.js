@@ -5,12 +5,19 @@ export const ROLES = {
   DPS: 'dps',
 };
 
-// Party slot configuration: 1 tank, 1 healer, 2 DPS
+// Party slot configuration
+// Slots 1-4: role-restricted (core party)
+// Slots 5-6: role-restricted (dungeon milestone unlocks)
+// Slots 7-8: flex — any role (ascension unlocks)
 export const PARTY_SLOTS = [
   { slot: 1, role: ROLES.TANK, cost: 0, dungeonRequired: 0 },
   { slot: 2, role: ROLES.HEALER, cost: 75, dungeonRequired: 1 },
   { slot: 3, role: ROLES.DPS, cost: 1000, dungeonRequired: 3 },
   { slot: 4, role: ROLES.DPS, cost: 5000, dungeonRequired: 4 },
+  { slot: 5, role: ROLES.DPS, cost: 8000, dungeonRequired: 10 },
+  { slot: 6, role: ROLES.HEALER, cost: 12000, dungeonRequired: 20 },
+  { slot: 7, role: null, cost: 0, dungeonRequired: 0, flex: true, ascensionRequired: 1 },
+  { slot: 8, role: null, cost: 0, dungeonRequired: 0, flex: true, ascensionRequired: 3 },
 ];
 
 // Hero classes with base stats and abilities
@@ -309,7 +316,7 @@ export const CLASSES = {
 export const CLASS_LIST = Object.values(CLASSES);
 
 // Get classes filtered by role
-export const getClassesByRole = (role) => CLASS_LIST.filter(cls => cls.role === role);
+export const getClassesByRole = (role) => role ? CLASS_LIST.filter(cls => cls.role === role) : CLASS_LIST;
 
 // Role display info
 export const ROLE_INFO = {

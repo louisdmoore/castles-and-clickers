@@ -53,7 +53,7 @@ const NavBar = ({ activeModal, onOpenModal }) => {
     const BASE_RECRUIT_COSTS = { tank: 100, healer: 150, dps: 200 };
 
     let emptySlotIndex = -1;
-    for (let i = 0; i < PARTY_SLOTS.length; i++) {
+    for (let i = 0; i < maxPartySize && i < PARTY_SLOTS.length; i++) {
       if (!heroes[i]) {
         emptySlotIndex = i;
         break;

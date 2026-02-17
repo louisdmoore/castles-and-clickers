@@ -89,11 +89,15 @@ const HeroPortraitBar = ({ onHeroClick }) => {
   const maxPartySize = useGameStore(state => state.maxPartySize);
   const highestDungeonCleared = useGameStore(state => state.highestDungeonCleared);
 
+  const ascensionCount = useGameStore(state => state.ascension?.count || 0);
+
   // Determine which slots to show (unlocked slots up to maxPartySize)
   const slots = useMemo(() => {
     const result = [];
     for (let i = 0; i < maxPartySize && i < PARTY_SLOTS.length; i++) {
       const slot = PARTY_SLOTS[i];
+      // Check dungeon requirement and ascension requirement
+      if (slot.ascensionRequired && ascensionCount < slot.ascensionRequired) continue;
       const isUnlocked = highestDungeonCleared >= slot.dungeonRequired;
       if (isUnlocked) {
         result.push({
@@ -104,7 +108,7 @@ const HeroPortraitBar = ({ onHeroClick }) => {
       }
     }
     return result;
-  }, [heroes, maxPartySize, highestDungeonCleared]);
+  }, [heroes, maxPartySize, highestDungeonCleared, ascensionCount]);
 
   return (
     <div className="flex items-center gap-1">
