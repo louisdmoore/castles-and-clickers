@@ -102,6 +102,30 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Tower floor display in zone header — shows "Tower Floor X" but no indication of effective dungeon level
 - [ ] Tower with auto-advance on — tower doesn't auto-advance (it's a separate flow), but auto-advance timer on PrepScreen still counts down. Verify no conflict
 
+## Reforging
+
+- [ ] Reforge cost curve tuning — is 2000g base too cheap or too expensive for the stage of the game where rare+ items appear?
+- [ ] Lock-one 2x multiplier — is this enough of a premium? Consider 3x for high-ascension players
+- [ ] Reforging on inventory items — currently only works on equipped items. Should inventory items be reforgeable too?
+- [ ] Reforge result feedback — toast shows "Reforged!" but doesn't show what changed. Should show old vs new affixes
+- [ ] ReforgePanel visibility — only appears when a slot with rare+ gear is selected. May not be discoverable for new players
+
+## Affix Synergies
+
+- [ ] Synergy display in EquipmentScreen — shows active synergies but no indication of "almost active" synergies (1 affix away from a pair)
+- [ ] Synergy bonuses in tooltips — EquipmentTooltip doesn't show what synergies an item contributes to
+- [ ] `getPassiveAffixBonuses` called multiple times per combat tick — called for attacker in attack calc, for defender in dodge calc, and for defender in damage taken calc. Consider per-tick caching
+- [ ] Fortify synergy (Ironclad) calls `getPassiveAffixBonuses` a second time in `resolveHeroTargetDamage` after it's already called at line 305 for `damageTakenMultiplier`. Could share the result
+- [ ] Synergy balance — +10% dodge from Quicksilver is very strong. Verify it doesn't make speed-stacking builds unkillable
+
+## Status Effect Combos
+
+- [ ] Combo messages in combat log — "SHATTER!" etc. May scroll by too fast in rapid combat. Consider visual effect or notification
+- [ ] Hemorrhage (bleed refresh on crit) — refreshes to template duration regardless of remaining duration. Is this always beneficial or could it extend a low-duration bleed?
+- [ ] Toxic Fire requires burn + poison on same target — both are hero weapon affixes. Need two heroes with blazing/venomous to trigger this. Is that achievable?
+- [ ] Combo accessibility — no in-game documentation for what combos exist. Players need to discover them through gameplay or external guides
+- [ ] Monster status combos — combos work for both hero and monster attacks. If a monster stuns a hero, other monsters get +50% Punish damage on that hero. Intentional?
+
 ## General
 
 - [ ] Lint count crept from ~78 to ~84 — audit whether any are from Phase 1-2 changes

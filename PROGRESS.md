@@ -1,6 +1,6 @@
 # Implementation Progress — Design Rethink
 
-**Current Phase: Phase 6 — v0.3.2 — Craft My Build**
+**Current Phase: Phase 7 — v0.4.0 — The Full Picture**
 
 ---
 
@@ -76,13 +76,13 @@
 
 ---
 
-## Phase 6: v0.3.2 — Craft My Build
+## Phase 6: v0.3.2 — Craft My Build ✅
 *Reference: DESIGN_RETHINK.md Sections 5, 6*
 *Goal: Player shapes heroes exactly how they want.*
 
-- [ ] Reforging / enchantment — escalating costs, lock-one-affix option, mutable affix arrays (Section 5.3)
-- [ ] Affix synergy bonuses — tag matching in `calculateHeroStats` (Section 5.2)
-- [ ] Status effect combos — lookup table in `combatDamageResolution` (Section 6.1)
+- [x] Reforging / enchantment — escalating costs, lock-one-affix option, mutable affix arrays (Section 5.3)
+- [x] Affix synergy bonuses — tag matching in `calculateHeroStats` (Section 5.2)
+- [x] Status effect combos — lookup table in `combatDamageResolution` (Section 6.1)
 
 ---
 
@@ -116,6 +116,24 @@
 ## Handoff Notes
 
 *Space for sessions to leave notes for the next session. Most recent first.*
+
+### Session 7 (2026-02-17) — Phase 6 Complete (v0.3.2)
+
+**Completed:** All 3 Phase 6 tasks (reforging, affix synergies, status effect combos).
+
+**Design decisions:**
+- Reforging: `reforgeItem(itemId, lockedAffixIndex)` in inventorySlice.js. Escalating cost curve `[2000, 3000, 5000, 8000, 12000, +5000...]` with ascension scaling `baseCost * (1 + ascensionCount * 0.5)`. Lock-one-affix costs 2x. `reforgeCount` resets to 0 in `endDungeon` (dungeonSlice.js). No save migration needed — `reforgeCount` defaults to 0 via currentState spread. ReforgePanel component in EquipmentScreen.jsx shows below equipment slots for rare+ non-unique equipped items.
+- Affix synergies: Extended `getPassiveAffixBonuses` in affixEngine.js to compute synergy bonuses alongside individual affix bonuses. Added `getHeroSynergies(hero)` and `getHeroAffixIds(hero)` helpers. 6 synergies wired into combat: Quicksilver (+dodge) in dodge calculation, Ironclad (+DR) in damage taken, Lifebond (+healing received) in skill execution healing, Headsman (+execute) stacks with execute affix, Blood Rage (+low HP damage) stacks with berserker affix, Siphon (+lifesteal) in on-hit processing. Active synergies displayed in EquipmentScreen below hero stats.
+- Status effect combos: `getActiveCombos(targetStatusIds, triggerType)` wired into 3 combat code paths. on_attack combos (Shatter, Punish, Cripple) in `calculateBasicAttackDamage` — applies before/alongside crit roll and damage multipliers. on_crit combo (Hemorrhage) refreshes bleed duration on crit. on_dot_tick combos (Toxic Fire, Exposed Wound) in `processStatusEffectDamage` — multiplies DOT damage before application.
+
+**Notes for next session:**
+- The `regenPercent`, `controlResist`, and `healingMultiplier`/`healingReceivedMultiplier` traits are still not wired into combat processing. Carried forward from Session 6.
+- MilestoneWidget duplicate `style` attribute bug still exists. Carried forward.
+- Pre-existing lint errors at ~83. No new errors introduced.
+- `getPassiveAffixBonuses` is now called in more places in combat resolution (dodge, damage taken for synergy bonuses). If performance becomes an issue, consider caching per-tick.
+- Synergy dodge bonus calls `getPassiveAffixBonuses` for the target hero in dodge calculation — this is a second call (already called once for the attacker). Could be optimized.
+
+**Next up:** Phase 7 — Layout overhaul, passive auras, unique leveling, hero prestige stars.
 
 ### Session 6 (2026-02-17) — Phase 5 Complete (v0.3.1)
 
