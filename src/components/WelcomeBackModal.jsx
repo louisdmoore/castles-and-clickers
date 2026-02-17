@@ -77,6 +77,14 @@ const WelcomeBackModal = ({ progress, onClose }) => {
               </div>
             )}
           </div>
+
+          {progress.ascensionCount > 0 && (
+            <div className="mt-3 pt-3 border-t border-[var(--color-border)] text-center">
+              <span className="text-xs" style={{ color: '#f59e0b' }}>
+                Ascension {progress.ascensionCount} — +{progress.ascensionCount * 10}% all stats
+              </span>
+            </div>
+          )}
         </div>
 
         <button

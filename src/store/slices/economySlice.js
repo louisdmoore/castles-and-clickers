@@ -458,6 +458,7 @@ export const createEconomySlice = (set, get) => ({
       levelsProgressed,
       newHighestLevel: newHighestCleared,
       startingLevel: startingHighest,
+      ascensionCount,
     };
   },
 
