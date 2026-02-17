@@ -289,6 +289,12 @@ export const processStatusEffectDamage = (ctx, actor) => {
           } else {
             addCombatLog({ type: 'death', target: { name: actor.name }, isHero: true });
             addEffect({ type: 'death', position: actor.position, isHero: true, classId: actor.classId });
+            if (ctx.heroDeaths) {
+              // Determine DOT source from active status effects
+              const dotEffects = actorEffects.filter(e => e.type === 'burn' || e.type === 'poison' || e.type === 'bleed');
+              const dotName = dotEffects.length > 0 ? dotEffects[0].type.charAt(0).toUpperCase() + dotEffects[0].type.slice(1) : 'DOT';
+              ctx.heroDeaths.push({ heroId: actor.id, heroName: actor.name, classId: actor.classId, killerName: dotName });
+            }
             handleUnitDeath(ctx, actor.id);
             const nextTurn = getNextTurnState(roomCombat, newHeroes, newMonsters);
             updateRoomCombat({

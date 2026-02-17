@@ -623,6 +623,9 @@ export const resolveHeroTargetDamage = (ctx, actor, target, attackResult) => {
             } else {
               addCombatLog({ type: 'death', target: { name: target.name }, isHero: true });
               addEffect({ type: 'death', position: target.position, isHero: true, classId: target.classId });
+              if (ctx.heroDeaths) {
+                ctx.heroDeaths.push({ heroId: target.id, heroName: target.name, classId: target.classId, killerName: actor.name });
+              }
               handleUnitDeath(ctx, target.id);
 
               // Check for vengeance triggers on surviving heroes

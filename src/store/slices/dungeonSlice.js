@@ -37,6 +37,7 @@ export const createDungeonSlice = (set, get) => ({
   },
   pendingRaidRecap: null,
   lastRunSummary: null,
+  lastDeathRecap: null,
   prepPhase: null, // { nextLevel, success, dungeonType }
 
   // Actions
@@ -84,6 +85,7 @@ export const createDungeonSlice = (set, get) => ({
   },
 
   dismissRunSummary: () => set({ lastRunSummary: null }),
+  dismissDeathRecap: () => set({ lastDeathRecap: null }),
 
   dismissPrepPhase: () => set({ prepPhase: null }),
 
@@ -96,7 +98,7 @@ export const createDungeonSlice = (set, get) => ({
   },
 
   endDungeon: (success) => {
-    const { maxDungeonLevel, processPendingRecruits, runStats, heroes } = get();
+    const { maxDungeonLevel, processPendingRecruits, runStats, heroes, deathLog } = get();
 
     // Snapshot run stats for the summary popup before clearing state
     const dungeonLevel = get().dungeon?.level;
@@ -135,6 +137,28 @@ export const createDungeonSlice = (set, get) => ({
     runSummary.biggestHit = biggestHit;
     runSummary.biggestHitHero = biggestHitHero;
 
+    // Build death recap on defeat
+    let deathRecap = null;
+    if (!success && deathLog.length > 0) {
+      deathRecap = {
+        dungeonLevel,
+        timestamp: Date.now(),
+        deaths: deathLog,
+        heroStats: {},
+      };
+      for (const hero of heroes.filter(Boolean)) {
+        const stats = runStats[hero.id];
+        if (!stats) continue;
+        deathRecap.heroStats[hero.id] = {
+          name: hero.name,
+          classId: hero.classId,
+          damageTaken: stats.damageTaken || 0,
+          healingReceived: stats.healingReceived || 0,
+          damageDealt: stats.damageDealt || 0,
+        };
+      }
+    }
+
     set(state => {
       // Determine next dungeon level for prep phase
       const nextLevel = success
@@ -149,6 +173,7 @@ export const createDungeonSlice = (set, get) => ({
         consumables: [], // Clear consumables on dungeon exit
         lastDungeonSuccess: success, // Track victory or defeat for transition screen
         lastRunSummary: totalDamage > 0 ? runSummary : null,
+        lastDeathRecap: deathRecap,
         prepPhase: {
           nextLevel,
           success,

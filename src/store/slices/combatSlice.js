@@ -33,6 +33,8 @@ export const createCombatSlice = (set, get) => ({
   combatPauseUntil: 0,
   // Per-run stats accumulator — initialized on startDungeon, read by contribution meter / run summary / death recap
   runStats: {},
+  // Death log for death recap — records each hero death event during a run
+  deathLog: [],
 
   // Actions
   setCombat: (combat) => set({ combat }),
@@ -45,6 +47,7 @@ export const createCombatSlice = (set, get) => ({
       stats[hero.id] = {
         damageDealt: 0,
         healingDone: 0,
+        healingReceived: 0,
         damageTaken: 0,
         damagePrevented: 0,
         controlTime: 0,
@@ -53,7 +56,7 @@ export const createCombatSlice = (set, get) => ({
         biggestHit: 0,
       };
     });
-    set({ runStats: stats });
+    set({ runStats: stats, deathLog: [] });
   },
 
   // Accumulate run stats for a hero (called per-tick from useCombat)
@@ -70,6 +73,25 @@ export const createCombatSlice = (set, get) => ({
         }
       }
       return { runStats: { ...state.runStats, [heroId]: updated } };
+    });
+  },
+
+  // Record a hero death event for the death recap
+  recordHeroDeath: (heroId, heroName, classId, killerName) => {
+    set(state => {
+      const deathOrder = state.deathLog.length + 1;
+      const heroStats = state.runStats[heroId] || {};
+      return {
+        deathLog: [...state.deathLog, {
+          heroId,
+          heroName,
+          classId,
+          killerName,
+          deathOrder,
+          damageTaken: heroStats.damageTaken || 0,
+          healingReceived: heroStats.healingReceived || 0,
+        }],
+      };
     });
   },
 

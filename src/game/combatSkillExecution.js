@@ -523,6 +523,9 @@ export const executeMonsterAbilityAction = (ctx, actor, target) => {
                 } else {
                   addCombatLog({ type: 'death', target: { name: targetHero.name }, isHero: true });
                   addEffect({ type: 'death', position: targetHero.position, isHero: true, classId: targetHero.classId });
+                  if (ctx.heroDeaths) {
+                    ctx.heroDeaths.push({ heroId: targetHero.id, heroName: targetHero.name, classId: targetHero.classId, killerName: actor.name });
+                  }
                   handleUnitDeath(ctx, targetHero.id);
                 }
               }

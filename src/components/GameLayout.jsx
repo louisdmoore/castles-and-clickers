@@ -25,6 +25,7 @@ import DungeonMap from './DungeonMap';
 import CurrentZoneIndicator from './CurrentZoneIndicator';
 import WelcomeBackModal from './WelcomeBackModal';
 import RunSummary from './RunSummary';
+import DeathRecap from './DeathRecap';
 import PrepScreen from './PrepScreen';
 import GameHUD from './GameHUD';
 import { DUNGEON_TIERS } from '../data/milestones';
@@ -818,6 +819,7 @@ const GameLayout = () => {
       {/* Other modals */}
       <WelcomeBackModal progress={offlineProgress} onClose={() => setOfflineProgress(null)} />
       <RunSummary />
+      <DeathRecap />
       <LootNotifications />
       <ToastContainer />
       <UniqueDropCelebration />

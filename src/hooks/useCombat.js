@@ -75,6 +75,7 @@ export const useCombat = ({ addEffect }) => {
   const consumeResurrectionScroll = useCallback(() => useGameStore.getState().useResurrectionScroll(), []);
   const addConsumable = useCallback((consumable) => useGameStore.getState().addConsumable(consumable), []);
   const updateRunStats = useCallback((heroId, updates) => useGameStore.getState().updateRunStats(heroId, updates), []);
+  const recordHeroDeath = useCallback((heroId, heroName, classId, killerName) => useGameStore.getState().recordHeroDeath(heroId, heroName, classId, killerName), []);
 
   const lastProcessedTurnRef = useRef(null);
 
@@ -222,6 +223,7 @@ export const useCombat = ({ addEffect }) => {
       damageTakenByHero: {},
       healingDoneByHero: {},
       healingReceivedByHero: {},
+      heroDeaths: [], // { heroId, heroName, classId, killerName }
       regenHealAmount: 0,
       regenHeroId: null,
       regenHeroPosition: null,
@@ -512,7 +514,13 @@ export const useCombat = ({ addEffect }) => {
     for (const [heroId, healing] of Object.entries(ctx.healingReceivedByHero)) {
       if (healing > 0) {
         incrementStat('totalHealingReceived', healing, { heroId });
+        updateRunStats(heroId, { healingReceived: healing });
       }
+    }
+
+    // Record hero deaths for death recap
+    for (const death of ctx.heroDeaths) {
+      recordHeroDeath(death.heroId, death.heroName, death.classId, death.killerName);
     }
 
     // Remove dead undead summons
@@ -562,7 +570,7 @@ export const useCombat = ({ addEffect }) => {
     syncHeroHp(heroHpSync);
 
     return true;
-  }, [updateRoomCombat, addCombatLog, addGold, addXpToHero, processLootDrop, incrementStat, updateRunStats, syncHeroHp, addEffect, addConsumable, handleUniqueDrop, hasResurrectionScroll, consumeResurrectionScroll]);
+  }, [updateRoomCombat, addCombatLog, addGold, addXpToHero, processLootDrop, incrementStat, updateRunStats, recordHeroDeath, syncHeroHp, addEffect, addConsumable, handleUniqueDrop, hasResurrectionScroll, consumeResurrectionScroll]);
 
   return {
     getCurrentActor: useCallback((roomCombatOverride = null) => {
