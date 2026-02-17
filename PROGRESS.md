@@ -105,7 +105,7 @@
 - [x] Raid difficulty tiers (Normal/Heroic/Mythic) (Section 10.3)
 - [x] Raid-specific mechanics — Tier 1 data-only first (Section 10.1)
 - [x] 8th party slot (Ascension 3) (Section 6.3) — already implemented in Phase 4
-- [ ] Dungeon affixes (per-run modifiers) (Section 7.3)
+- [x] Dungeon affixes (per-run modifiers) (Section 7.3)
 - [ ] Achievement system with constraint challenges
 - [ ] Essence currency + unique awakening (Section 13.2, 11.2)
 - [ ] Raid mastery tracking (Section 10.2)

@@ -196,6 +196,17 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Hero speed debuff is applied once at setup — if heroes are resurrected or rejoin, do they keep the debuff? Currently yes (baked into stats)
 - [ ] Monster passive DR not visible to the player — no UI indicator shows enemies have damage reduction. Should show as a buff icon or stat overlay
 
+## Dungeon Affixes (v0.5.0)
+
+- [ ] Affix rolling at 2.0x+ difficulty — is the threshold right? Should 1.5x also get occasional affixes?
+- [ ] Bolstering +10% per room — at room 10+, monsters have +100% stats. May snowball too hard in longer dungeons. Needs playtesting
+- [ ] Bolstering scaling applies at combat start — if monsters are pre-placed, their stats in the monsters array won't match the scaled stats shown in combat. Could confuse HP bar display
+- [ ] Bountiful +50% gold — does this feel impactful? Consider showing the bonus in gold drop combat log messages
+- [ ] Affix badges in DungeonHeader — are they visible enough? On narrow screens they may wrap or overlap other elements
+- [ ] Affix preview before entering — player doesn't see which affixes will roll until dungeon starts. Should PrepScreen show a preview?
+- [ ] Affix interaction with raid difficulty tiers — Mythic raids already roll 2 affixes. If a Mythic raid has bountiful, verify gold calculations don't double-dip
+- [ ] No affix display in RunSummary or DeathRecap — player won't see what affixes were active after the run ends
+
 ## General
 
 - [ ] Lint count crept from ~78 to ~84 — audit whether any are from Phase 1-2 changes
