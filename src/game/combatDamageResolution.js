@@ -745,6 +745,11 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
     }
   }
 
+  // Apply passive damage reduction (raid mechanics, dungeon affixes)
+  if (actualDmg > 0 && target.passive?.damageReduction > 0) {
+    actualDmg = Math.max(1, Math.floor(actualDmg * (1 - target.passive.damageReduction)));
+  }
+
   // Handle elite monster shield absorption
   if (targetMonsterIdx !== -1 && actualDmg > 0 && newMonsters[targetMonsterIdx].shield > 0) {
     const shieldAmount = newMonsters[targetMonsterIdx].shield;

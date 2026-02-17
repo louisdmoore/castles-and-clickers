@@ -1,6 +1,6 @@
 import { useState, useMemo, memo } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { RAIDS, getAllRaids, isRaidUnlocked, getRaidUniqueIds, RAID_DIFFICULTY_TIERS } from '../data/raids';
+import { RAIDS, getAllRaids, isRaidUnlocked, getRaidUniqueIds, RAID_DIFFICULTY_TIERS, getRaidMechanic } from '../data/raids';
 import { getUniqueItem } from '../data/uniqueItems';
 import { CLASSES } from '../data/classes';
 import { CrownIcon, LockIcon, SkullIcon, CheckIcon, ChevronIcon, GoldIcon } from './icons/ui';
@@ -210,6 +210,7 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
   const [difficulty, setDifficulty] = useState('normal');
   const raidUniqueIds = useMemo(() => getRaidUniqueIds(raid.id), [raid.id]);
   const ownedCount = raidUniqueIds.filter(id => ownedUniques.includes(id)).length;
+  const raidMechanic = useMemo(() => getRaidMechanic(raid.id), [raid.id]);
 
   const isOwned = (itemId) => ownedUniques.includes(itemId);
 
@@ -246,6 +247,13 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
             <div className="flex-1">
               <h3 className="pixel-subtitle">{raid.name}</h3>
               <p className="text-xs text-gray-400 mt-0.5">{raid.description}</p>
+              {raidMechanic && (
+                <div className="text-xs mt-1 flex items-center gap-1" style={{ color: raidColor }}>
+                  <SkullIcon size={10} />
+                  <span className="font-medium">{raidMechanic.name}:</span>
+                  <span className="text-gray-400">{raidMechanic.description}</span>
+                </div>
+              )}
               <div className="text-xs text-gray-500 mt-1">
                 <span className="text-yellow-500">Lv {raid.recommendedLevel}</span> · {totalBosses} bosses
                 {difficulty !== 'normal' && (

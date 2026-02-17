@@ -42,6 +42,24 @@ export const RAID_DIFFICULTY_TIERS = {
 export const getRaidDifficultyTier = (difficulty) =>
   RAID_DIFFICULTY_TIERS[difficulty] || RAID_DIFFICULTY_TIERS.normal;
 
+// Raid-specific mechanics (Section 10.1 — Tier 1: data-only, no engine changes)
+export const RAID_MECHANICS = {
+  sunken_temple: {
+    id: 'water_curse',
+    name: 'Water Curse',
+    description: 'All heroes start with -20% speed',
+    heroDebuff: { stat: 'speed', multiplier: 0.80, duration: 999 },
+  },
+  cursed_manor: {
+    id: 'ghost_ward',
+    name: 'Ghost Ward',
+    description: 'All enemies take 75% reduced physical damage',
+    monsterPassive: { damageReduction: 0.75 },
+  },
+};
+
+export const getRaidMechanic = (raidId) => RAID_MECHANICS[raidId] || null;
+
 const AI = {
   BOSS: 'boss',
   AGGRESSIVE: 'aggressive',

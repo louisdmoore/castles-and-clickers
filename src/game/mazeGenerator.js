@@ -5,7 +5,7 @@ import { getMonstersByTier, getBossByTier, ELITE_CONFIG, createEliteMonster, get
 import { getThemeForLevel, getThemeForRaid } from '../data/dungeonThemes';
 import { isWorldBossLevel, getWorldBossForLevel } from '../data/worldBosses';
 import { createWorldBossInstance, initBossState } from './bossEngine';
-import { RAIDS } from '../data/raids';
+import { RAIDS, getRaidMechanic } from '../data/raids';
 import { rollRoomEvent } from '../data/roomEvents';
 
 // Tile types for the dungeon grid
@@ -1324,6 +1324,19 @@ export function placeMonsters(dungeon, level, options = {}) {
       const idx = monsters.indexOf(monster);
       if (idx !== -1) {
         monsters[idx] = createEliteMonster(monster);
+      }
+    }
+  }
+
+  // Apply raid-specific monster passives (Section 10.1)
+  if (options.raidId) {
+    const raidMechanic = getRaidMechanic(options.raidId);
+    if (raidMechanic?.monsterPassive) {
+      for (const monster of monsters) {
+        monster.passive = {
+          ...(monster.passive || {}),
+          ...raidMechanic.monsterPassive,
+        };
       }
     }
   }

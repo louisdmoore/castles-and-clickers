@@ -26,6 +26,7 @@ import { resetUniqueStates, processOnCombatStartUniques, processOnRoomStartUniqu
 import { applyStatusEffect } from '../game/statusEngine';
 import { resetBossStates } from '../game/bossEngine';
 import { processRoomEvent } from '../game/roomEventHandlers';
+import { getRaidMechanic } from '../data/raids';
 
 /**
  * Hook for dungeon setup and exploration phase logic
@@ -79,6 +80,7 @@ export const useDungeon = ({ addEffect }) => {
       dungeonType,
       statMultiplier: raidMultiplier * difficultyMultiplier,
       affixes: dungeonProgress?.activeAffixes || [],
+      raidId: isRaid ? dungeon.raidId : undefined,
     });
 
     // Setup heroes with PERSISTED HP from store
@@ -99,6 +101,9 @@ export const useDungeon = ({ addEffect }) => {
       }
     }
 
+    // Get raid mechanic for hero debuffs
+    const raidMechanic = isRaid ? getRaidMechanic(dungeon.raidId) : null;
+
     const combatHeroes = sortedHeroes.map((hero, i) => {
       const classData = CLASSES[hero.classId];
       const stats = calculateHeroStats(hero, heroes, homesteadBonuses);
@@ -110,6 +115,14 @@ export const useDungeon = ({ addEffect }) => {
         stats.maxHp = Math.floor(stats.maxHp * (1 + elixirBuffs.defense));
       }
       if (elixirBuffs.speed > 0) stats.speed = Math.floor(stats.speed * (1 + elixirBuffs.speed));
+
+      // Apply raid-specific hero debuffs (e.g., Sunken Temple water curse: -20% speed)
+      if (isRaid && raidMechanic?.heroDebuff) {
+        const debuff = raidMechanic.heroDebuff;
+        if (debuff.stat === 'speed') {
+          stats.speed = Math.floor(stats.speed * debuff.multiplier);
+        }
+      }
 
       // Apply unique item maxHpMultiplier (Leviathan's Heart - 2x HP)
       const uniqueBonuses = getUniquePassiveBonuses({ ...hero, stats });
@@ -156,6 +169,9 @@ export const useDungeon = ({ addEffect }) => {
     if (isRaid && mazeDungeon.raidData) {
       addCombatLog({ type: 'system', message: `Raid: ${mazeDungeon.raidData.name}` });
       addCombatLog({ type: 'system', message: `${mazeDungeon.wingBossIds?.length || 0} wing bosses + final boss` });
+      if (raidMechanic) {
+        addCombatLog({ type: 'system', message: `${raidMechanic.name}: ${raidMechanic.description}` });
+      }
     } else {
       addCombatLog({ type: 'system', message: `Dungeon Level ${dungeon.level}` });
       addCombatLog({ type: 'system', message: `${mazeDungeon.rooms.length} rooms to explore` });
