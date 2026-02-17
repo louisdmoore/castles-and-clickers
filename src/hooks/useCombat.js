@@ -74,6 +74,7 @@ export const useCombat = ({ addEffect }) => {
   const hasResurrectionScroll = useCallback(() => useGameStore.getState().hasResurrectionScroll(), []);
   const consumeResurrectionScroll = useCallback(() => useGameStore.getState().useResurrectionScroll(), []);
   const addConsumable = useCallback((consumable) => useGameStore.getState().addConsumable(consumable), []);
+  const updateRunStats = useCallback((heroId, updates) => useGameStore.getState().updateRunStats(heroId, updates), []);
 
   const lastProcessedTurnRef = useRef(null);
 
@@ -485,21 +486,27 @@ export const useCombat = ({ addEffect }) => {
       }
     }
 
-    // Track combat stats
+    // Track combat stats (lifetime + per-run)
     if (actor.isHero) {
+      const statHeroId = actor.ownerId || actor.id;
+      const runUpdates = { turnsTaken: 1 };
       if (ctx.totalDamageDealtThisTurn > 0) {
-        const statHeroId = actor.ownerId || actor.id;
         incrementStat('totalDamageDealt', ctx.totalDamageDealtThisTurn, { heroId: statHeroId });
+        runUpdates.damageDealt = ctx.totalDamageDealtThisTurn;
+        runUpdates.biggestHit = ctx.totalDamageDealtThisTurn;
       }
+      updateRunStats(statHeroId, runUpdates);
     }
     for (const [heroId, damage] of Object.entries(ctx.damageTakenByHero)) {
       if (damage > 0) {
         incrementStat('totalDamageTaken', damage, { heroId });
+        updateRunStats(heroId, { damageTaken: damage });
       }
     }
     for (const [heroId, healing] of Object.entries(ctx.healingDoneByHero)) {
       if (healing > 0) {
         incrementStat('totalHealingDone', healing, { heroId });
+        updateRunStats(heroId, { healingDone: healing });
       }
     }
     for (const [heroId, healing] of Object.entries(ctx.healingReceivedByHero)) {
@@ -555,7 +562,7 @@ export const useCombat = ({ addEffect }) => {
     syncHeroHp(heroHpSync);
 
     return true;
-  }, [updateRoomCombat, addCombatLog, addGold, addXpToHero, processLootDrop, incrementStat, syncHeroHp, addEffect, addConsumable, handleUniqueDrop, hasResurrectionScroll, consumeResurrectionScroll]);
+  }, [updateRoomCombat, addCombatLog, addGold, addXpToHero, processLootDrop, incrementStat, updateRunStats, syncHeroHp, addEffect, addConsumable, handleUniqueDrop, hasResurrectionScroll, consumeResurrectionScroll]);
 
   return {
     getCurrentActor: useCallback((roomCombatOverride = null) => {

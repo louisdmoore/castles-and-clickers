@@ -39,7 +39,7 @@ export const createDungeonSlice = (set, get) => ({
 
   // Actions
   startDungeon: (level, options = {}) => {
-    const { heroes, dungeonUnlocked, maxDungeonLevel, initializeHeroHp, dungeonProgress, pendingDungeonBuffs } = get();
+    const { heroes, dungeonUnlocked, maxDungeonLevel, initializeHeroHp, initRunStats, dungeonProgress, pendingDungeonBuffs } = get();
     if (heroes.length === 0 || level > dungeonUnlocked) return false;
 
     // Cap at max dungeon level (30)
@@ -47,6 +47,9 @@ export const createDungeonSlice = (set, get) => ({
 
     // Initialize hero HP at full
     initializeHeroHp();
+
+    // Initialize per-run stats accumulator
+    initRunStats();
 
     // Set up dungeon type
     const dungeonType = options.type || 'normal';

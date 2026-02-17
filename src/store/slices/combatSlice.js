@@ -31,9 +31,47 @@ export const createCombatSlice = (set, get) => ({
   heroHp: {},
   roomCombat: null,
   combatPauseUntil: 0,
+  // Per-run stats accumulator — initialized on startDungeon, read by contribution meter / run summary / death recap
+  runStats: {},
 
   // Actions
   setCombat: (combat) => set({ combat }),
+
+  // Initialize per-run stats for all heroes at dungeon start
+  initRunStats: () => {
+    const { heroes } = get();
+    const stats = {};
+    heroes.filter(Boolean).forEach(hero => {
+      stats[hero.id] = {
+        damageDealt: 0,
+        healingDone: 0,
+        damageTaken: 0,
+        damagePrevented: 0,
+        controlTime: 0,
+        turnsTaken: 0,
+        kills: 0,
+        biggestHit: 0,
+      };
+    });
+    set({ runStats: stats });
+  },
+
+  // Accumulate run stats for a hero (called per-tick from useCombat)
+  updateRunStats: (heroId, updates) => {
+    set(state => {
+      const current = state.runStats[heroId];
+      if (!current) return state;
+      const updated = { ...current };
+      for (const [key, value] of Object.entries(updates)) {
+        if (key === 'biggestHit') {
+          updated.biggestHit = Math.max(updated.biggestHit, value);
+        } else {
+          updated[key] = (updated[key] || 0) + value;
+        }
+      }
+      return { runStats: { ...state.runStats, [heroId]: updated } };
+    });
+  },
 
   // OPTIMIZATION: Batched combat log to reduce state updates (44+ calls per tick -> 1)
   addCombatLog: (message) => {

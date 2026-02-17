@@ -159,6 +159,7 @@ export const useGameStore = create(
           toasts: undefined,
           // These are recomputed on dungeon start
           heroHp: state.dungeon ? state.heroHp : {},
+          runStats: {},
         }),
         // Ensure stats has all new fields even if old save doesn't
         merge: (persistedState, currentState) => {
