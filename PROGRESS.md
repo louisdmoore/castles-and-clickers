@@ -1,6 +1,6 @@
 # Implementation Progress — Design Rethink
 
-**Current Phase: Phase 3 — v0.2.2 — Make Real Choices**
+**Current Phase: Phase 4 — v0.3.0 — A New Chapter**
 
 ---
 
@@ -44,14 +44,14 @@
 
 ---
 
-## Phase 3: v0.2.2 — Make Real Choices
+## Phase 3: v0.2.2 — Make Real Choices ✅
 *Reference: DESIGN_RETHINK.md Sections 5, 7, 12*
 *Goal: Player makes real choices that change outcomes.*
 
-- [ ] Difficulty slider on prep screen (1.0x–3.0x) — multiplier on monster stats + loot quality (Section 7.1)
-- [ ] Hero traits on recruit — gameplay-affecting random traits from trait pool (Section 12.1)
-- [ ] Loot targeting — themed affix pools per dungeon, favored affixes at 2x rate (Section 5.4)
-- [ ] Infused/Ascended gear tiers at 2x/3x difficulty (Section 7.1)
+- [x] Difficulty slider on prep screen (1.0x–3.0x) — multiplier on monster stats + loot quality (Section 7.1)
+- [x] Hero traits on recruit — gameplay-affecting random traits from trait pool (Section 12.1)
+- [x] Loot targeting — themed affix pools per dungeon, favored affixes at 2x rate (Section 5.4)
+- [x] Infused/Ascended gear tiers at 2x/3x difficulty (Section 7.1)
 
 ---
 
@@ -116,6 +116,24 @@
 ## Handoff Notes
 
 *Space for sessions to leave notes for the next session. Most recent first.*
+
+### Session 4 (2026-02-17) — Phase 3 Complete (v0.2.2)
+
+**Completed:** All 4 Phase 3 tasks.
+
+**Design decisions:**
+- Difficulty slider: 5 stops (1.0/1.5/2.0/2.5/3.0x) stored in `dungeonSettings.difficultyMultiplier`, carried on `dungeon` object. Applied as `statMultiplier` to `placeMonsters` (multiplicative with raid multiplier), and as `lootMultiplier` to drop rate + `generateEquipment` rarity bonus. DifficultySlider component is a `memo`'d sub-component of PrepScreen.
+- Hero traits: Replaced old cosmetic trait system (inline array in heroGenerator) with `rollHeroTraits()` from heroTraits.js. Heroes store `traits: ['id1', 'id2']` (array of IDs). Stat multipliers (HP/ATK/DEF/SPD) applied in `calculateHeroStats` after base stats. Combat bonuses (crit, dodge, lifesteal, damage reduction) applied in `applyPassiveEffects` alongside skill passives. XP multiplier applied in `addXpToHero`. Traits displayed on HeroCard as amber-colored pills with tooltip.
+- Loot targeting: `rollAffix` in itemAffixes.js now accepts `favoredAffixes` parameter for weighted selection (2x). Favored affixes stored on `dungeon` object via `getDungeonTier(level).theme` → `DUNGEON_THEMES[theme].favoredAffixes`. Passed through `generateEquipment` → local `rollAffix` wrapper → `rollAffixFromPool`.
+- Infused/Ascended gear: `quality` field on items (`'infused'` or `'ascended'`). Infused = guaranteed bonus affix (20-40% chance at 2.0x+). Ascended = 1.3x stat boost + bonus affix (15% chance at 3.0x). Visual: emerald green (#34d399) for Infused, pink (#f472b6) for Ascended (overrides rarity color). Name prefixed with "Infused"/"Ascended".
+- Combat heroes now include `traits` array for access in combat resolution code.
+
+**Notes for next session:**
+- Phase 4 requires versioned save migration system as a prerequisite. The existing `merge` function in gameStore.js handles backwards compatibility, but a proper `v1_to_v2` migration pattern is needed for the ascension system's persistent state.
+- The `regenPercent` trait (Enduring: 1% HP/turn) and `controlResist` trait (Iron Will: +10% stun resist) are defined but not yet wired into combat processing. These need handlers in `combatStatusEffects.js` (for regen) and status effect application code (for resist). Can be deferred.
+- `healingMultiplier`/`healingReceivedMultiplier` traits (Devoted) are defined but not yet applied in healing code. Need handlers in skill execution healing path.
+
+**Next up:** Phase 4 — versioned save migration, ascension system, 7th party slot, offline progress.
 
 ### Session 3 (2026-02-17) — Phase 2 Complete (v0.2.1)
 
