@@ -11,7 +11,7 @@
  *   3. The migration receives the full persisted state and returns the updated state
  */
 
-export const SAVE_VERSION = 4;
+export const SAVE_VERSION = 5;
 
 // Sequential migration functions: fromVersion -> transform
 const MIGRATIONS = {
@@ -72,6 +72,22 @@ const MIGRATIONS = {
   3: (state) => {
     if (!state.challengeScores) {
       state.challengeScores = { tower: { best: 0, bestSeed: null } };
+    }
+    return state;
+  },
+
+  // v4 → v5: Phase 7 — Unique item leveling + duplicate fusion
+  4: (state) => {
+    // Initialize uniqueLevels from existing ownedUniques
+    if (!state.uniqueLevels) {
+      state.uniqueLevels = {};
+      if (state.ownedUniques && Array.isArray(state.ownedUniques)) {
+        for (const templateId of state.ownedUniques) {
+          if (typeof templateId === 'string') {
+            state.uniqueLevels[templateId] = { xp: 0, level: 1, awakened: false };
+          }
+        }
+      }
     }
     return state;
   },

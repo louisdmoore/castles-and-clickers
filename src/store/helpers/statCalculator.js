@@ -41,6 +41,18 @@ const updatePartySkillBonusCache = (allHeroes) => {
 // Module-level ascension count for stat multiplier (avoids passing through every call site)
 let currentAscensionCount = 0;
 
+// Module-level unique levels for stat scaling (avoids passing through every call site)
+let currentUniqueLevels = {};
+let uniqueLevelsVersion = 0;
+
+export const setUniqueLevels = (levels) => {
+  currentUniqueLevels = levels || {};
+  uniqueLevelsVersion++;
+  // Invalidate all caches when unique levels change
+  statCache.clear();
+  heroCacheKeys.clear();
+};
+
 export const setAscensionCount = (count) => {
   if (count !== currentAscensionCount) {
     currentAscensionCount = count;
@@ -76,7 +88,7 @@ const getStatCacheKey = (hero, allHeroes = [], homesteadBonuses = null) => {
   // but we include them so different heroes with same stats but different traits don't collide
   const traitsHash = (hero.traits || []).join(',');
 
-  return `${hero.id}:${hero.level}:${equipmentHash}:${skillsHash}:${partySkillBonusCacheVersion}:${homesteadHash}:${highestPartyLevel}:${traitsHash}:a${currentAscensionCount}`;
+  return `${hero.id}:${hero.level}:${equipmentHash}:${skillsHash}:${partySkillBonusCacheVersion}:${homesteadHash}:${highestPartyLevel}:${traitsHash}:a${currentAscensionCount}:u${uniqueLevelsVersion}`;
 };
 
 // Helper to calculate hero stats including equipment, passive skills, and homestead bonuses
@@ -126,9 +138,12 @@ export const calculateHeroStats = (hero, allHeroes = [], homesteadBonuses = null
   for (const slot of ['weapon', 'armor', 'accessory']) {
     const item = hero.equipment[slot];
     if (item) {
-      // For unique items with baseStats, rescale based on highest party level
+      // For unique items with baseStats, rescale based on highest party level and unique level
+      const uniqueLevel = (item.isUnique && item.templateId)
+        ? (currentUniqueLevels[item.templateId]?.level || 1)
+        : 1;
       const itemStats = (item.isUnique && item.baseStats)
-        ? scaleUniqueStats(item.baseStats, highestPartyLevel)
+        ? scaleUniqueStats(item.baseStats, highestPartyLevel, uniqueLevel)
         : item.stats;
       for (const [stat, value] of Object.entries(itemStats)) {
         if (stats[stat] !== undefined) {

@@ -9,6 +9,11 @@ export const CHANGELOG = [
     title: 'The Full Picture',
     date: '2026-02-17',
     changes: [
+      { type: 'feature', text: 'Unique item leveling — uniques now gain XP and level up (1-5), boosting their stats up to 2x at max level' },
+      { type: 'feature', text: 'Duplicate fusion — finding a duplicate unique now fuses into your existing copy, advancing its level instead of converting to gold' },
+      { type: 'feature', text: 'Each unique has a conditional XP bonus tied to its playstyle — lean into what makes your unique special' },
+      { type: 'feature', text: 'Capstone skill auras — Warlord (+10% party attack), Iron Fortress (+15% party defense), Divine Radiance (2% party regen)' },
+      { type: 'feature', text: 'Wide-screen layout — three-column grid with collapsible run stats panel (1440px+)' },
       { type: 'improvement', text: 'Restructured game interface for better performance and future layout improvements' },
     ],
   },

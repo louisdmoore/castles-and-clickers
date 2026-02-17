@@ -1,9 +1,10 @@
 import { canClassUseEquipment, EQUIPMENT_TEMPLATES, RARITY } from '../../data/equipment';
 import { calculateItemScore, calculateSellValue } from '../helpers/itemScoring';
-import { invalidateStatCache, calculateHeroStats } from '../helpers/statCalculator';
+import { invalidateStatCache, calculateHeroStats, setUniqueLevels } from '../helpers/statCalculator';
 import { getCollectionForUnique } from '../helpers/heroGenerator';
 import { SHOP_CONSUMABLES } from '../../data/consumables';
 import { ITEM_AFFIXES, AFFIX_TYPE, rollAffix as rollAffixFromPool, buildAffixedName } from '../../data/itemAffixes';
+import { UNIQUE_MAX_LEVEL, UNIQUE_XP_TABLE, calculateDuplicateValue } from '../../data/uniqueItems';
 import throttledStorage from '../helpers/throttledStorage';
 
 // Reforge cost curve: escalating per session, resets on dungeon completion
@@ -29,6 +30,7 @@ export const createInventorySlice = (set, get) => ({
     classPriority: {},  // Will be populated with DEFAULT_CLASS_PRIORITY from gameStore.js
   },
   ownedUniques: [],
+  uniqueLevels: {}, // templateId -> { xp, level, awakened }
   unreadUniques: [],
   pendingUniqueCelebration: null,
   pendingCollectionMilestone: null,
@@ -452,39 +454,73 @@ export const createInventorySlice = (set, get) => ({
     return { action: 'lost' };
   },
 
-  // Process a unique item drop - handles duplicates, tracking, etc.
+  // Process a unique item drop - handles duplicates (fusion), tracking, etc.
   processUniqueDrop: (uniqueItem) => {
-    const { ownedUniques, inventory, maxInventory } = get();
+    const { ownedUniques, uniqueLevels, inventory, maxInventory } = get();
 
     // Check if we already own this unique
     const templateId = uniqueItem.templateId || uniqueItem.id;
     if (ownedUniques.includes(templateId)) {
-      // Duplicate - convert to gold
-      const goldValue = 500 + Math.floor(
-        Object.values(uniqueItem.stats || {}).reduce((a, b) => a + Math.abs(b), 0) * 25
-      );
+      // Duplicate — fuse to advance level
+      const currentData = uniqueLevels[templateId] || { xp: 0, level: 1, awakened: false };
 
-      set(state => ({
-        gold: state.gold + goldValue,
-        stats: {
-          ...state.stats,
-          totalGoldEarned: state.stats.totalGoldEarned + goldValue,
-        },
-      }));
+      if (currentData.level < UNIQUE_MAX_LEVEL) {
+        // Fusion: advance one level
+        const newLevel = currentData.level + 1;
+        const newUniqueLevels = {
+          ...uniqueLevels,
+          [templateId]: { ...currentData, level: newLevel },
+        };
 
-      get().addLootNotification({
-        type: 'unique-duplicate',
-        item: uniqueItem,
-        gold: goldValue,
-      });
+        set({
+          uniqueLevels: newUniqueLevels,
+        });
 
-      return { action: 'duplicate', gold: goldValue };
+        // Update module-level cache for stat scaling
+        setUniqueLevels(newUniqueLevels);
+
+        // Immediate save on fusion
+        throttledStorage.flush();
+
+        get().addLootNotification({
+          type: 'unique-fused',
+          item: uniqueItem,
+          newLevel,
+        });
+
+        return { action: 'fused', newLevel };
+      } else {
+        // Already max level — convert to gold
+        const { gold: goldValue } = calculateDuplicateValue(templateId);
+
+        set(state => ({
+          gold: state.gold + goldValue,
+          stats: {
+            ...state.stats,
+            totalGoldEarned: state.stats.totalGoldEarned + goldValue,
+          },
+        }));
+
+        get().addLootNotification({
+          type: 'unique-duplicate',
+          item: uniqueItem,
+          gold: goldValue,
+        });
+
+        return { action: 'duplicate', gold: goldValue };
+      }
     }
 
-    // New unique - add to collection and inventory
+    // New unique - add to collection, initialize level, and add to inventory
+    const newUniqueLevels = {
+      ...uniqueLevels,
+      [templateId]: { xp: 0, level: 1, awakened: false },
+    };
+
     if (inventory.length < maxInventory) {
       set(state => ({
         ownedUniques: [...state.ownedUniques, templateId],
+        uniqueLevels: newUniqueLevels,
         unreadUniques: [...state.unreadUniques, uniqueItem.id],
         inventory: [...state.inventory, uniqueItem],
         stats: {
@@ -492,24 +528,11 @@ export const createInventorySlice = (set, get) => ({
           totalItemsLooted: (state.stats.totalItemsLooted || 0) + 1,
         },
       }));
-
-      // Immediate save on unique item drop
-      throttledStorage.flush();
-
-      get().addLootNotification({
-        type: 'unique-drop',
-        item: uniqueItem,
-      });
-
-      // Trigger celebration modal for new unique
-      get().triggerUniqueCelebration(uniqueItem);
-      get().checkCollectionMilestone(templateId);
-
-      return { action: 'unique-looted', item: uniqueItem };
     } else {
       // Inventory full but still track ownership
       set(state => ({
         ownedUniques: [...state.ownedUniques, templateId],
+        uniqueLevels: newUniqueLevels,
         unreadUniques: [...state.unreadUniques, uniqueItem.id],
         inventory: [...state.inventory.slice(1), uniqueItem], // Remove oldest item
         stats: {
@@ -517,21 +540,24 @@ export const createInventorySlice = (set, get) => ({
           totalItemsLooted: (state.stats.totalItemsLooted || 0) + 1,
         },
       }));
-
-      // Immediate save on unique item drop
-      throttledStorage.flush();
-
-      get().addLootNotification({
-        type: 'unique-drop',
-        item: uniqueItem,
-      });
-
-      // Trigger celebration modal for new unique
-      get().triggerUniqueCelebration(uniqueItem);
-      get().checkCollectionMilestone(templateId);
-
-      return { action: 'unique-looted', item: uniqueItem };
     }
+
+    // Update module-level cache
+    setUniqueLevels(newUniqueLevels);
+
+    // Immediate save on unique item drop
+    throttledStorage.flush();
+
+    get().addLootNotification({
+      type: 'unique-drop',
+      item: uniqueItem,
+    });
+
+    // Trigger celebration modal for new unique
+    get().triggerUniqueCelebration(uniqueItem);
+    get().checkCollectionMilestone(templateId);
+
+    return { action: 'unique-looted', item: uniqueItem };
   },
 
   markUniqueRead: (itemId) => {
@@ -589,6 +615,47 @@ export const createInventorySlice = (set, get) => ({
   ownsUnique: (templateId) => {
     const { ownedUniques } = get();
     return ownedUniques.includes(templateId);
+  },
+
+  // Get unique level data (returns { xp, level, awakened } or default)
+  getUniqueLevel: (templateId) => {
+    const { uniqueLevels } = get();
+    return uniqueLevels[templateId] || { xp: 0, level: 1, awakened: false };
+  },
+
+  // Grant XP to a unique item. Returns { leveled, newLevel } if the unique leveled up.
+  gainUniqueXp: (templateId, amount) => {
+    const { uniqueLevels, ownedUniques } = get();
+    if (!ownedUniques.includes(templateId)) return null;
+
+    const current = uniqueLevels[templateId] || { xp: 0, level: 1, awakened: false };
+    if (current.level >= UNIQUE_MAX_LEVEL) return null;
+
+    let newXp = current.xp + amount;
+    let newLevel = current.level;
+
+    // Check for level-ups (can gain multiple levels at once)
+    while (newLevel < UNIQUE_MAX_LEVEL && newXp >= UNIQUE_XP_TABLE[newLevel]) {
+      newXp -= UNIQUE_XP_TABLE[newLevel];
+      newLevel++;
+    }
+    // Cap XP at 0 if max level reached
+    if (newLevel >= UNIQUE_MAX_LEVEL) newXp = 0;
+
+    const leveled = newLevel > current.level;
+    const newUniqueLevels = {
+      ...uniqueLevels,
+      [templateId]: { ...current, xp: newXp, level: newLevel },
+    };
+
+    set({ uniqueLevels: newUniqueLevels });
+
+    // Update module-level cache for stat scaling
+    if (leveled) {
+      setUniqueLevels(newUniqueLevels);
+    }
+
+    return leveled ? { leveled: true, newLevel } : null;
   },
 
   getItemScoreForHero: (item, heroId) => {

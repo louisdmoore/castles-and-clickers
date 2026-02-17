@@ -5,7 +5,7 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { validationMiddleware } from './helpers/validation';
 import throttledStorage from './helpers/throttledStorage';
 import { DEFAULT_CLASS_PRIORITY } from './helpers/itemScoring';
-import { clearStatCache, setAscensionCount } from './helpers/statCalculator';
+import { clearStatCache, setAscensionCount, setUniqueLevels } from './helpers/statCalculator';
 import { getMaxPartySize } from '../data/milestones';
 import { getAscensionDungeonCap } from '../data/ascensionMilestones';
 import { resetCombatLogState } from './slices/combatSlice';
@@ -102,6 +102,7 @@ export const useGameStore = create(
               infirmary: 0,
             },
             ownedUniques: [],
+            uniqueLevels: {},
             unreadUniques: [],
             pendingUniqueCelebration: null,
             pendingCollectionMilestone: null,
@@ -179,6 +180,10 @@ export const useGameStore = create(
           const ascensionCount = persistedState?.ascension?.count || 0;
           setAscensionCount(ascensionCount);
 
+          // Initialize unique levels for stat calculator
+          const uniqueLevels = persistedState?.uniqueLevels || {};
+          setUniqueLevels(uniqueLevels);
+
           // Ensure maxDungeonLevel matches ascension cap
           const ascensionDungeonCap = getAscensionDungeonCap(ascensionCount);
 
@@ -215,6 +220,7 @@ export const useGameStore = create(
             maxPartySize, // Use derived value from dungeon progress
             maxDungeonLevel: ascensionDungeonCap, // Derive from ascension count
             ascension: persistedState?.ascension || { count: 0 },
+            uniqueLevels: persistedState?.uniqueLevels || {},
             shopConsumables: persistedState?.shopConsumables || [],
             pendingDungeonBuffs: persistedState?.pendingDungeonBuffs || [],
             challengeScores: persistedState?.challengeScores || { tower: { best: 0, bestSeed: null } },
@@ -253,5 +259,5 @@ throttledStorage.onSave((status) => {
 });
 
 // Re-export helpers (preserves identical import API for all consumers)
-export { calculateHeroStats, xpForLevel, calculateSkillPoints, calculateUsedSkillPoints, invalidateStatCache, clearStatCache, setAscensionCount } from './helpers/statCalculator';
+export { calculateHeroStats, xpForLevel, calculateSkillPoints, calculateUsedSkillPoints, invalidateStatCache, clearStatCache, setAscensionCount, setUniqueLevels } from './helpers/statCalculator';
 export { calculateItemScore, calculateSellValue, STAT_PRIORITIES, RARITY_ORDER } from './helpers/itemScoring';

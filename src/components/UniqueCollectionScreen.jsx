@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { UNIQUE_ITEMS, getUniqueItem, scaleUniqueStats } from '../data/uniqueItems';
+import { UNIQUE_ITEMS, getUniqueItem, scaleUniqueStats, UNIQUE_MAX_LEVEL, UNIQUE_XP_TABLE, getUniqueLevelScale } from '../data/uniqueItems';
 import { RAIDS, getRaidUniqueIds } from '../data/raids';
 import { WORLD_BOSSES } from '../data/worldBosses';
 import { CLASSES } from '../data/classes';
@@ -62,9 +62,11 @@ const COLLECTION_GROUPS = [
 ];
 
 // Single unique item card
-const UniqueItemCard = ({ itemId, isOwned, isSelected, onSelect }) => {
+const UniqueItemCard = ({ itemId, isOwned, isSelected, onSelect, uniqueLevel }) => {
   const item = getUniqueItem(itemId);
   if (!item) return null;
+
+  const level = uniqueLevel?.level || 1;
 
   return (
     <button
@@ -85,11 +87,15 @@ const UniqueItemCard = ({ itemId, isOwned, isSelected, onSelect }) => {
           item={{ templateId: itemId, slot: item.slot, rarity: 'unique' }}
           size={40}
         />
-        {isOwned && (
-          <div className="absolute -top-1 -right-1 bg-green-600 rounded-full p-0.5">
-            <CheckIcon size={10} className="text-white" />
+        {isOwned && level >= UNIQUE_MAX_LEVEL ? (
+          <div className="absolute -top-1 -right-1 bg-amber-500 rounded-full p-0.5">
+            <StarIcon size={10} className="text-white" />
           </div>
-        )}
+        ) : isOwned ? (
+          <div className="absolute -top-1 -right-1 bg-cyan-600 text-white text-[8px] font-bold rounded-full w-4 h-4 flex items-center justify-center">
+            {level}
+          </div>
+        ) : null}
       </div>
       {/* Item name */}
       <div className={`text-xs mt-1 truncate max-w-[64px] ${isOwned ? 'unique-text-shimmer' : 'text-gray-500'}`}>
@@ -102,6 +108,7 @@ const UniqueItemCard = ({ itemId, isOwned, isSelected, onSelect }) => {
 // Detail panel for selected item
 const UniqueDetailPanel = ({ itemId, isOwned, highestPartyLevel }) => {
   const item = getUniqueItem(itemId);
+  const uniqueLevels = useGameStore(state => state.uniqueLevels || {});
   if (!item) return null;
 
   const slotLabel = {
@@ -110,7 +117,11 @@ const UniqueDetailPanel = ({ itemId, isOwned, highestPartyLevel }) => {
     accessory: 'Accessory',
   }[item.slot] || 'Unknown';
 
-  const scaledStats = scaleUniqueStats(item.baseStats, highestPartyLevel);
+  const levelData = uniqueLevels[itemId] || { xp: 0, level: 1, awakened: false };
+  const scaledStats = scaleUniqueStats(item.baseStats, highestPartyLevel, levelData.level);
+  const isMaxLevel = levelData.level >= UNIQUE_MAX_LEVEL;
+  const xpForNext = isMaxLevel ? 0 : UNIQUE_XP_TABLE[levelData.level];
+  const xpPercent = isMaxLevel ? 100 : (xpForNext > 0 ? Math.min(100, Math.round((levelData.xp / xpForNext) * 100)) : 0);
 
   return (
     <div className={`pixel-panel p-4 ${isOwned ? 'unique-glow' : 'border-cyan-500/50'}`}>
@@ -141,11 +152,49 @@ const UniqueDetailPanel = ({ itemId, isOwned, highestPartyLevel }) => {
         )}
       </div>
 
+      {/* Level + XP progress */}
+      {isOwned && (
+        <div className="mb-3 pixel-panel-dark p-2">
+          <div className="flex items-center justify-between mb-1">
+            <span className="text-xs font-bold text-cyan-300">
+              Level {levelData.level}/{UNIQUE_MAX_LEVEL}
+            </span>
+            {isMaxLevel ? (
+              <span className="text-xs text-amber-400 font-bold">MAX</span>
+            ) : (
+              <span className="text-xs text-gray-400">{levelData.xp}/{xpForNext} XP</span>
+            )}
+          </div>
+          <div className="pixel-bar h-2">
+            <div
+              className="pixel-bar-fill h-full transition-all"
+              style={{
+                width: `${xpPercent}%`,
+                backgroundColor: isMaxLevel ? '#f59e0b' : '#06b6d4',
+              }}
+            />
+          </div>
+          {!isMaxLevel && (
+            <div className="text-[10px] text-gray-500 mt-1">
+              Stat bonus: {Math.round((getUniqueLevelScale(levelData.level) - 1) * 100)}%
+              {levelData.level < UNIQUE_MAX_LEVEL && (
+                <span className="text-cyan-500"> (next: {Math.round((getUniqueLevelScale(levelData.level + 1) - 1) * 100)}%)</span>
+              )}
+            </div>
+          )}
+          {item.conditionalXp && (
+            <div className="text-[10px] text-purple-400 mt-0.5">
+              {item.conditionalXp.description}
+            </div>
+          )}
+        </div>
+      )}
+
       {/* Stats */}
       {isOwned ? (
         <>
           <div className="mb-3">
-            <div className="text-xs text-gray-400 mb-1">Stats (Lv {highestPartyLevel})</div>
+            <div className="text-xs text-gray-400 mb-1">Stats (Lv {highestPartyLevel}, Unique Lv {levelData.level})</div>
             <div className="flex flex-wrap gap-2">
               {Object.entries(scaledStats).map(([stat, value]) => (
                 <span key={stat} className="text-sm px-2 py-0.5 bg-gray-800 rounded">
@@ -201,7 +250,7 @@ const UniqueDetailPanel = ({ itemId, isOwned, highestPartyLevel }) => {
 };
 
 // Collection group section
-const CollectionGroup = ({ group, ownedUniques, selectedItem, onSelectItem }) => {
+const CollectionGroup = ({ group, ownedUniques, uniqueLevels, selectedItem, onSelectItem }) => {
   const ownedCount = group.items.filter(id => ownedUniques.includes(id)).length;
   const totalCount = group.items.length;
   const isComplete = ownedCount === totalCount;
@@ -242,6 +291,7 @@ const CollectionGroup = ({ group, ownedUniques, selectedItem, onSelectItem }) =>
             isOwned={ownedUniques.includes(itemId)}
             isSelected={selectedItem === itemId}
             onSelect={onSelectItem}
+            uniqueLevel={uniqueLevels[itemId]}
           />
         ))}
       </div>
@@ -253,6 +303,7 @@ const CollectionGroup = ({ group, ownedUniques, selectedItem, onSelectItem }) =>
 const UniqueCollectionScreen = () => {
   const [selectedItem, setSelectedItem] = useState(null);
   const ownedUniques = useGameStore(state => state.ownedUniques || []);
+  const uniqueLevels = useGameStore(state => state.uniqueLevels || {});
   const heroes = useGameStore(state => state.heroes);
   const highestPartyLevel = heroes.length > 0 ? Math.max(...heroes.map(h => h.level)) : 1;
 
@@ -302,6 +353,7 @@ const UniqueCollectionScreen = () => {
               key={group.id}
               group={group}
               ownedUniques={ownedUniques}
+              uniqueLevels={uniqueLevels}
               selectedItem={selectedItem}
               onSelectItem={setSelectedItem}
             />

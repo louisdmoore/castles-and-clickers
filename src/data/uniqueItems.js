@@ -3,6 +3,35 @@
 // Uniques are one-of-a-kind - only one copy per player
 // Stats scale with highest party member level (+5% per level)
 
+// =====================================================
+// UNIQUE LEVELING SYSTEM
+// =====================================================
+// Each unique has a level (1–5) that boosts its stats.
+// XP is gained passively (fraction of wielder combat XP)
+// and via conditional bonuses tied to the unique's identity.
+// Duplicate drops fuse into the owned copy, advancing its level.
+
+export const UNIQUE_MAX_LEVEL = 5;
+
+// XP needed to reach each level (cumulative thresholds)
+// Level 1 starts at 0 XP, level 2 at 500, etc.
+export const UNIQUE_XP_TABLE = [0, 500, 2000, 5000, 12000];
+
+// Stat multiplier per unique level
+export const UNIQUE_LEVEL_SCALE = [1.0, 1.15, 1.35, 1.60, 2.0];
+
+// Get XP needed to reach the next level (returns Infinity at max)
+export const getUniqueXpForNextLevel = (currentLevel) => {
+  if (currentLevel >= UNIQUE_MAX_LEVEL) return Infinity;
+  return UNIQUE_XP_TABLE[currentLevel]; // index = currentLevel because table is 0-indexed for level 2+
+};
+
+// Get stat scale multiplier for a unique level
+export const getUniqueLevelScale = (level) => {
+  const idx = Math.max(0, Math.min(level - 1, UNIQUE_LEVEL_SCALE.length - 1));
+  return UNIQUE_LEVEL_SCALE[idx];
+};
+
 // Trigger types for unique powers
 export const UNIQUE_TRIGGER = {
   PASSIVE: 'passive',           // Always active
@@ -48,6 +77,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { worldBoss: 'forest_ancient' },
     tags: ['defense', 'offense'],
+    conditionalXp: { trigger: 'on_shield_absorb', description: 'Bonus XP when shield absorbs damage' },
   },
 
   // Level 20 World Boss - The Fallen King
@@ -75,6 +105,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { worldBoss: 'fallen_king' },
     tags: ['berserker', 'sustain'],
+    conditionalXp: { trigger: 'on_low_hp', description: 'Bonus XP when fighting below 30% HP' },
   },
 
   // Level 25 World Boss - Inferno Lord
@@ -100,6 +131,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { worldBoss: 'inferno_lord' },
     tags: ['fire', 'dot', 'aoe'],
+    conditionalXp: { trigger: 'on_burn_kill', description: 'Bonus XP when enemies die while burning' },
   },
 
   // Level 30 World Boss - Void Emperor
@@ -125,6 +157,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { worldBoss: 'void_emperor' },
     tags: ['sustain', 'cheat_death'],
+    conditionalXp: { trigger: 'on_damage_stored', description: 'Bonus XP when storing damage for Void Absorption' },
   },
 
   // =====================================================
@@ -153,6 +186,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'sunken_temple', wing: 'temple_entrance' },
     tags: ['offense', 'sustain'],
+    conditionalXp: { trigger: 'on_tidal_proc', description: 'Bonus XP when Tidal Rhythm procs' },
   },
 
   serpents_fang: {
@@ -177,6 +211,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'sunken_temple', wing: 'drowned_sanctum' },
     tags: ['critical', 'offense'],
+    conditionalXp: { trigger: 'on_crit', description: 'Bonus XP when the wielder crits' },
   },
 
   // =====================================================
@@ -204,6 +239,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'cursed_manor', wing: 'the_foyer' },
     tags: ['evasion', 'offense'],
+    conditionalXp: { trigger: 'on_dodge', description: 'Bonus XP when phasing through attacks' },
   },
 
   banshees_wail: {
@@ -231,6 +267,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'cursed_manor', wing: 'the_ballroom' },
     tags: ['offense', 'stacking'],
+    conditionalXp: { trigger: 'on_kill', description: 'Bonus XP when the wielder kills enemies' },
   },
 
   vampires_embrace: {
@@ -254,6 +291,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'cursed_manor', wing: 'the_tower' },
     tags: ['vampiric', 'sustain'],
+    conditionalXp: { trigger: 'on_lifesteal', description: 'Bonus XP when lifestealing damage' },
   },
 
   // =====================================================
@@ -282,6 +320,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'sky_fortress', wing: 'outer_ramparts' },
     tags: ['lightning', 'aoe', 'control'],
+    conditionalXp: { trigger: 'on_chain_hit', description: 'Bonus XP when chain lightning hits extra targets' },
   },
 
   thunder_guard: {
@@ -305,6 +344,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'sky_fortress', wing: 'thunder_halls' },
     tags: ['defense', 'thorns'],
+    conditionalXp: { trigger: 'on_retaliate', description: 'Bonus XP when retaliating with storm damage' },
   },
 
   eye_of_the_storm: {
@@ -328,6 +368,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'sky_fortress', wing: 'storm_throne' },
     tags: ['speed', 'evasion'],
+    conditionalXp: { trigger: 'on_dodge', description: 'Bonus XP when enemies miss the wielder' },
   },
 
   // =====================================================
@@ -358,6 +399,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'the_abyss', wing: 'the_depths' },
     tags: ['offense', 'stacking'],
+    conditionalXp: { trigger: 'on_kill', description: 'Bonus XP when the wielder kills enemies' },
   },
 
   krakens_grasp: {
@@ -382,6 +424,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'the_abyss', wing: 'the_trench' },
     tags: ['control', 'offense'],
+    conditionalXp: { trigger: 'on_combat_start', description: 'Bonus XP at the start of each combat' },
   },
 
   leviathans_heart: {
@@ -405,6 +448,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'the_abyss', wing: 'the_void_below' },
     tags: ['defense', 'fortify'],
+    conditionalXp: { trigger: 'on_damage_taken', description: 'Bonus XP when taking damage' },
   },
 
   // =====================================================
@@ -432,6 +476,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'void_throne', wing: 'realitys_edge' },
     tags: ['offense', 'evasion'],
+    conditionalXp: { trigger: 'on_double_hit', description: 'Bonus XP when attacks hit twice' },
   },
 
   nullblade: {
@@ -455,6 +500,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'void_throne', wing: 'the_shattered' },
     tags: ['offense', 'execution'],
+    conditionalXp: { trigger: 'on_kill', description: 'Bonus XP when killing enemies' },
   },
 
   cloak_of_nothing: {
@@ -478,6 +524,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'void_throne', wing: 'the_nothing' },
     tags: ['evasion', 'offense'],
+    conditionalXp: { trigger: 'on_stealth_attack', description: 'Bonus XP when attacking from stealth' },
   },
 
   void_gods_crown: {
@@ -503,6 +550,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'void_throne', wing: 'the_throne' },
     tags: ['defense', 'cheat_death'],
+    conditionalXp: { trigger: 'on_cheat_death', description: 'Bonus XP when cheating death' },
   },
 
   entropy_accessory: {
@@ -526,6 +574,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'void_throne', wing: 'the_throne' },
     tags: ['offense', 'execution'],
+    conditionalXp: { trigger: 'on_hit', description: 'Bonus XP when attacking enemies' },
   },
 
   // =====================================================
@@ -555,6 +604,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'dragon_sanctum', wing: 2 },
     tags: ['fire', 'dot'],
+    conditionalXp: { trigger: 'on_burn_apply', description: 'Bonus XP when applying burn' },
   },
 
   // Rogue Weapons
@@ -579,6 +629,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'shadow_realm', wing: 1 },
     tags: ['critical', 'evasion'],
+    conditionalXp: { trigger: 'on_crit', description: 'Bonus XP when landing critical hits' },
   },
 
   // Mage Weapons
@@ -603,6 +654,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'dragon_sanctum', wing: 1 },
     tags: ['frost', 'control', 'aoe'],
+    conditionalXp: { trigger: 'on_freeze', description: 'Bonus XP when freezing enemies' },
   },
 
   // Ranger Weapons
@@ -627,6 +679,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'dragon_sanctum', wing: 2 },
     tags: ['speed', 'execution'],
+    conditionalXp: { trigger: 'on_kill', description: 'Bonus XP when killing enemies' },
   },
 
   // Necromancer Weapons
@@ -654,6 +707,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'lich_throne', wing: 2 },
     tags: ['offense', 'stacking'],
+    conditionalXp: { trigger: 'on_kill', description: 'Bonus XP when harvesting souls' },
   },
 
   // Armor
@@ -679,6 +733,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'lich_throne', wing: 1 },
     tags: ['defense', 'cheat_death'],
+    conditionalXp: { trigger: 'on_cheat_death', description: 'Bonus XP when defying death' },
   },
 
   dragonscale_mantle: {
@@ -702,6 +757,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'dragon_sanctum', wing: 2 },
     tags: ['defense', 'fortify'],
+    conditionalXp: { trigger: 'on_resist_status', description: 'Bonus XP when resisting burn or freeze' },
   },
 
   shadow_cloak: {
@@ -724,6 +780,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'shadow_realm', wing: 2 },
     tags: ['evasion'],
+    conditionalXp: { trigger: 'on_dodge', description: 'Bonus XP when avoiding attacks' },
   },
 
   // Accessories
@@ -747,6 +804,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'arcane_tower', wing: 2 },
     tags: ['offense', 'execution'],
+    conditionalXp: { trigger: 'on_cooldown_reset', description: 'Bonus XP when resetting cooldowns' },
   },
 
   blood_pendant: {
@@ -769,6 +827,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'vampire_castle', wing: 2 },
     tags: ['sustain', 'support'],
+    conditionalXp: { trigger: 'on_party_heal', description: 'Bonus XP when healing from party damage' },
   },
 
   boots_of_blinding_speed: {
@@ -792,6 +851,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'wind_temple', wing: 2 },
     tags: ['speed'],
+    conditionalXp: { trigger: 'on_first_action', description: 'Bonus XP when acting first in combat' },
   },
 
   amulet_of_reflection: {
@@ -814,6 +874,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'crystal_caverns', wing: 2 },
     tags: ['defense', 'thorns'],
+    conditionalXp: { trigger: 'on_reflect', description: 'Bonus XP when reflecting damage' },
   },
 
   crown_of_command: {
@@ -836,6 +897,7 @@ export const UNIQUE_ITEMS = {
     },
     dropSource: { raid: 'fallen_kingdom', wing: 2 },
     tags: ['support'],
+    conditionalXp: { trigger: 'on_party_buff', description: 'Bonus XP while party benefits from Rally' },
   },
 };
 
@@ -866,12 +928,13 @@ export const getUniqueItemsForClass = (classId) =>
 // Check if item is unique
 export const isUniqueItem = (itemId) => !!UNIQUE_ITEMS[itemId];
 
-// Scale unique item stats based on highest party level (+5% per level)
-export const scaleUniqueStats = (baseStats, partyLevel) => {
+// Scale unique item stats based on highest party level (+5% per level) and unique level
+export const scaleUniqueStats = (baseStats, partyLevel, uniqueLevel = 1) => {
+  const levelScale = getUniqueLevelScale(uniqueLevel);
   const scaledStats = {};
   for (const [stat, value] of Object.entries(baseStats)) {
-    // +5% per party level
-    scaledStats[stat] = Math.floor(value * (1 + partyLevel * 0.05));
+    // +5% per party level, then multiply by unique level scale
+    scaledStats[stat] = Math.floor(value * (1 + partyLevel * 0.05) * levelScale);
   }
   return scaledStats;
 };
@@ -899,7 +962,7 @@ export const createUniqueItemInstance = (uniqueId, heroLevel = 1) => {
   };
 };
 
-// Calculate duplicate unique value (gold + materials)
+// Calculate duplicate unique value (gold fallback when unique is already max level)
 export const calculateDuplicateValue = (uniqueId) => {
   const unique = UNIQUE_ITEMS[uniqueId];
   if (!unique) return { gold: 500 };

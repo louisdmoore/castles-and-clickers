@@ -184,6 +184,21 @@ const Notification = ({ notification, onDismiss }) => {
           </>
         );
 
+      case 'unique-fused':
+        return (
+          <>
+            <div className="flex items-center gap-2">
+              <div className="unique-sparkle">
+                <ItemIcon item={item} size={20} />
+              </div>
+              <span className="font-medium unique-text-shimmer">{item.name}</span>
+            </div>
+            <div className="text-xs text-purple-300 mt-1">
+              Duplicate fused! Level {notification.newLevel}
+            </div>
+          </>
+        );
+
       case 'unique-duplicate':
         return (
           <>
@@ -194,7 +209,7 @@ const Notification = ({ notification, onDismiss }) => {
               <span className="font-medium unique-text-shimmer">{item.name}</span>
             </div>
             <div className="text-xs text-yellow-400 mt-1">
-              Duplicate unique - converted to {notification.gold}g
+              Max level - converted to {notification.gold}g
             </div>
           </>
         );
@@ -277,6 +292,7 @@ const Notification = ({ notification, onDismiss }) => {
       case 'suggest-equip': return item.rarityColor || '#3b82f6';
       case 'unique-drop': return '#06b6d4'; // unique cyan
       case 'unique-duplicate': return '#06b6d4'; // unique cyan
+      case 'unique-fused': return '#a855f7'; // purple for level-up
       case 'collection-milestone': return notification.isComplete ? '#eab308' : '#06b6d4';
       default: return '#6b7280';
     }

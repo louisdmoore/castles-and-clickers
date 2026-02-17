@@ -384,7 +384,7 @@ export const createDungeonSlice = (set, get) => ({
       pendingRecruits: [],
       pendingPartyChanges: [],
 
-      // Preserve: homestead, ownedUniques, stats, featureUnlocks, equipmentSettings, dungeonSettings
+      // Preserve: homestead, ownedUniques, uniqueLevels, stats, featureUnlocks, equipmentSettings, dungeonSettings
       // Preserve dungeonProgress raid completions
     }));
 
