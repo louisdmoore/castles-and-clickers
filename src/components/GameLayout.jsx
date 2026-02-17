@@ -24,6 +24,7 @@ import ShopScreen from './ShopScreen';
 import DungeonMap from './DungeonMap';
 import CurrentZoneIndicator from './CurrentZoneIndicator';
 import WelcomeBackModal from './WelcomeBackModal';
+import RunSummary from './RunSummary';
 import GameHUD from './GameHUD';
 import { DUNGEON_TIERS } from '../data/milestones';
 import { getWorldBossForLevel, getZoneWorldBoss } from '../data/worldBosses';
@@ -811,6 +812,7 @@ const GameLayout = () => {
 
       {/* Other modals */}
       <WelcomeBackModal progress={offlineProgress} onClose={() => setOfflineProgress(null)} />
+      <RunSummary />
       <LootNotifications />
       <ToastContainer />
       <UniqueDropCelebration />

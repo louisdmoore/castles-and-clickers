@@ -36,6 +36,7 @@ export const createDungeonSlice = (set, get) => ({
     heroHpSnapshot: {},
   },
   pendingRaidRecap: null,
+  lastRunSummary: null,
 
   // Actions
   startDungeon: (level, options = {}) => {
@@ -81,8 +82,47 @@ export const createDungeonSlice = (set, get) => ({
     return true;
   },
 
+  dismissRunSummary: () => set({ lastRunSummary: null }),
+
   endDungeon: (success) => {
-    const { maxDungeonLevel, processPendingRecruits } = get();
+    const { maxDungeonLevel, processPendingRecruits, runStats, heroes } = get();
+
+    // Snapshot run stats for the summary popup before clearing state
+    const dungeonLevel = get().dungeon?.level;
+    const runSummary = {
+      success,
+      dungeonLevel,
+      timestamp: Date.now(),
+      heroStats: {},
+    };
+    let totalDamage = 0;
+    let mvpId = null;
+    let mvpDamage = 0;
+    let biggestHit = 0;
+    let biggestHitHero = null;
+
+    for (const hero of heroes.filter(Boolean)) {
+      const stats = runStats[hero.id];
+      if (!stats) continue;
+      runSummary.heroStats[hero.id] = {
+        name: hero.name,
+        classId: hero.classId,
+        ...stats,
+      };
+      totalDamage += stats.damageDealt || 0;
+      if ((stats.damageDealt || 0) > mvpDamage) {
+        mvpDamage = stats.damageDealt || 0;
+        mvpId = hero.id;
+      }
+      if ((stats.biggestHit || 0) > biggestHit) {
+        biggestHit = stats.biggestHit || 0;
+        biggestHitHero = hero.name;
+      }
+    }
+    runSummary.totalDamage = totalDamage;
+    runSummary.mvpId = mvpId;
+    runSummary.biggestHit = biggestHit;
+    runSummary.biggestHitHero = biggestHitHero;
 
     set(state => {
       const updates = {
@@ -92,6 +132,7 @@ export const createDungeonSlice = (set, get) => ({
         isRunning: false,
         consumables: [], // Clear consumables on dungeon exit
         lastDungeonSuccess: success, // Track victory or defeat for transition screen
+        lastRunSummary: totalDamage > 0 ? runSummary : null,
         dungeonProgress: {
           ...state.dungeonProgress,
           currentType: 'normal',
