@@ -60,7 +60,7 @@
 *Goal: The game opens up with ascension.*
 *Prereq: Versioned save migration system (architectural prereq #3)*
 
-- [ ] **PREREQ:** Build versioned save migration system — replace ad-hoc `merge` with `v1_to_v2` pattern
+- [x] **PREREQ:** Build versioned save migration system — replace ad-hoc `merge` with `v1_to_v2` pattern
 - [ ] Ascension system (full Section 8) — partial reset, persistent state, stat bonuses, structural unlocks
 - [ ] 7th party slot (Ascension 1 reward) — modify `getMaxPartySize`, add flex slot
 - [ ] Offline progress enhancement — expand `calculateOfflineProgress`, add welcome-back screen
