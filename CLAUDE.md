@@ -227,6 +227,12 @@ When importing from game data files, verify actual export names — they don't a
 - `balanceConstants.js`: `DAMAGE_VARIANCE_MIN` + `DAMAGE_VARIANCE_RANGE` (no `DAMAGE_VARIANCE_MAX`)
 - `balanceConstants.js`: `BOSS_LOOT_DROP_CHANCE` / `NORMAL_LOOT_DROP_CHANCE` (not without `_CHANCE`)
 
+## Common Pitfalls
+
+- **Temporal Dead Zone (TDZ) in component files**: When adding helper functions used by components in the same file, always define the helper **above** the component that uses it. `const` declarations are not hoisted — if a component calls a `const` function defined below it, the component will crash with a `ReferenceError` at runtime. This won't be caught by ESLint or the build step. (Bug found in v0.3.2: `getReforgeCostForDisplay` was defined after `ReforgePanel` that used it.)
+- **EquipmentScreen left panel overflow**: The left column (`w-64 flex flex-col`) in EquipmentScreen.jsx is inside a `h-[60vh]` container. It contains hero tabs, stats, synergies, equipment slots, unequip button, reforge panel, and settings (`mt-auto`). Adding new elements here can cause content to overflow and become invisible. The column has `overflow-y-auto` to handle this, but be mindful of vertical space. Test with all slots populated.
+- **Combat resolution data flow**: `calculateBasicAttackDamage` returns `{ dmg, isCrit, passiveBonuses, uniqueBonuses, heroData, affixBonuses }`. This `attackResult` object is passed to `resolveMonsterTargetDamage` and `resolveHeroTargetDamage`. If you need new data in resolution functions, add it to this return value rather than recomputing it.
+
 ## Lint Pitfalls
 
 - **`react-hooks/set-state-in-effect`**: Calling `setState` synchronously inside `useEffect` triggers this. For CSS animations, use ref-based DOM class toggling instead of state (e.g., `el.classList.add('save-flash')` with `void el.offsetWidth` to force reflow).
@@ -234,7 +240,7 @@ When importing from game data files, verify actual export names — they don't a
 
 ## Lint Baseline
 
-`npm run lint` currently reports ~84 pre-existing errors (mostly unused vars in canvas files and React hooks warnings). Do not try to fix these unless specifically asked — just verify your changes don't add new ones.
+`npm run lint` currently reports ~83 pre-existing errors (mostly unused vars in canvas files and React hooks warnings). Do not try to fix these unless specifically asked — just verify your changes don't add new ones.
 
 ## Layout Positioning (learned v0.2.1)
 
@@ -276,7 +282,29 @@ The combat system already tracks per-hero stats that new features build on:
 - `compareToEquipped` in `inventorySlice.js` computes per-stat diffs between items — used by EquipmentTooltip and suggest-equip notifications
 - `processLootDrop` has two-tier auto-equip (v0.2.1): rare+ or close-call upgrades (within 10% score) → `suggest-equip` notification with buttons; common/uncommon clear upgrades → silent auto-equip. If inventory is full, always falls through to silent auto-equip
 - `generateEquipment` handles affix rolling during loot generation — reforging reuses this logic
-- Equipment affix arrays are currently immutable; reforging (Phase 6) requires making them mutable, which is a data model + save migration change
+- **Reforging** (v0.3.2): `reforgeItem(itemId, lockedAffixIndex)` and `getReforgeCost(locked)` in inventorySlice. Escalating cost curve resets via `reforgeCount: 0` in `endDungeon` (dungeonSlice) and `resetGame` (gameStore). No save migration needed — `reforgeCount` defaults to 0 via currentState spread.
+
+## Affix Synergy System (v0.3.2)
+
+- `getActiveSynergies(affixIds)` in `src/data/itemAffixes.js` — counts tags across affix IDs, returns active synergy bonuses
+- `getHeroSynergies(hero)` and `getHeroAffixIds(hero)` in `src/game/affixEngine.js` — convenience wrappers for a hero's equipped items
+- `getPassiveAffixBonuses(hero)` in affixEngine.js now returns **both** individual affix bonuses and synergy-derived bonuses (e.g., `synergyDodgeChance`, `synergyDamageReduction`, `synergyLifesteal`, etc.)
+- Synergy bonuses are wired into combat at these sites:
+  - Dodge calculation in `resolveHeroTargetDamage` (Quicksilver)
+  - Damage reduction in `resolveHeroTargetDamage` (Ironclad)
+  - Execute/berserker multipliers in `calculateBasicAttackDamage` (Headsman, Blood Rage)
+  - Lifesteal in `resolveMonsterTargetDamage` (Siphon)
+  - Healing received in `combatSkillExecution.js` (Lifebond)
+- **Performance note**: `getPassiveAffixBonuses` is called multiple times per combat tick (once for attacker, once or twice for defender). If this becomes a bottleneck, consider per-tick caching.
+
+## Status Effect Combo System (v0.3.2)
+
+- `STATUS_COMBOS` and `getActiveCombos(targetStatusIds, triggerType)` in `src/data/statusEffects.js`
+- Three trigger types wired into combat:
+  - `on_attack` → in `calculateBasicAttackDamage` (Shatter, Punish, Cripple) — checked before crit roll, applies guaranteed crit and damage multipliers
+  - `on_crit` → in `calculateBasicAttackDamage` after crit (Hemorrhage) — refreshes bleed duration
+  - `on_dot_tick` → in `processStatusEffectDamage` in combatStatusEffects.js (Toxic Fire, Exposed Wound) — multiplies DOT damage
+- Status effects in `newStatusEffects[targetId]` are arrays of `{ id, duration, stacks, ... }` objects. Extract IDs with `.map(s => s.id)` for combo checks.
 
 ## Save Migration System (v0.3.0+)
 
@@ -342,8 +370,8 @@ Phase 0 created data definition files that later phases consume. Check these bef
 - `src/data/ascensionMilestones.js` — Milestone table with helpers (`getAscensionStatMultiplier`, `getAscensionDungeonCap`, etc.)
 - `src/data/achievements.js` — 30 achievements across 5 categories
 - `src/data/heroTraits.js` — 14 traits with weighted rolling (`rollHeroTraits()`)
-- `src/data/statusEffects.js` — includes `STATUS_COMBOS` + `getActiveCombos()` for Phase 6
-- `src/data/itemAffixes.js` — includes `AFFIX_SYNERGY_BONUSES` + `getActiveSynergies()` for Phase 6
+- `src/data/statusEffects.js` — includes `STATUS_COMBOS` + `getActiveCombos()` (wired in Phase 6)
+- `src/data/itemAffixes.js` — includes `AFFIX_SYNERGY_BONUSES` + `getActiveSynergies()` (wired in Phase 6)
 
 ## Known Technical Debt
 
