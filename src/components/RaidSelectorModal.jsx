@@ -1,9 +1,9 @@
-import { useState, useMemo } from 'react';
+import { useState, useMemo, memo } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { RAIDS, getAllRaids, isRaidUnlocked, getRaidUniqueIds } from '../data/raids';
+import { RAIDS, getAllRaids, isRaidUnlocked, getRaidUniqueIds, RAID_DIFFICULTY_TIERS } from '../data/raids';
 import { getUniqueItem } from '../data/uniqueItems';
 import { CLASSES } from '../data/classes';
-import { CrownIcon, LockIcon, SkullIcon, CheckIcon, ChevronIcon } from './icons/ui';
+import { CrownIcon, LockIcon, SkullIcon, CheckIcon, ChevronIcon, GoldIcon } from './icons/ui';
 import { RaidBossIcon } from './icons/raidBosses';
 import ItemIcon from './icons/ItemIcon';
 
@@ -155,8 +155,59 @@ const RAID_COLORS = {
   void_throne: '#6d28d9',
 };
 
+// Difficulty tier order for rendering
+const DIFFICULTY_ORDER = ['normal', 'heroic', 'mythic'];
+
+// Difficulty tier selector component
+const DifficultySelector = memo(({ selected, onSelect, gold, ascensionCount }) => (
+  <div className="flex gap-1 mt-2">
+    {DIFFICULTY_ORDER.map(id => {
+      const tier = RAID_DIFFICULTY_TIERS[id];
+      const isSelected = selected === id;
+      const isLocked = tier.ascensionRequired > 0 && ascensionCount < tier.ascensionRequired;
+      const cantAfford = tier.goldCost > 0 && gold < tier.goldCost;
+
+      return (
+        <button
+          key={id}
+          onClick={() => !isLocked && onSelect(id)}
+          disabled={isLocked}
+          className={`flex-1 px-2 py-1.5 text-xs rounded border transition-all ${
+            isLocked
+              ? 'opacity-40 cursor-not-allowed border-gray-700 bg-gray-900 text-gray-600'
+              : isSelected
+                ? 'border-current font-bold'
+                : 'border-gray-700 bg-gray-900/50 hover:border-gray-500 text-gray-400'
+          }`}
+          style={!isLocked && isSelected ? { color: tier.color, borderColor: tier.color, backgroundColor: `${tier.color}15` } : {}}
+          title={isLocked ? `Requires Ascension ${tier.ascensionRequired}` : tier.description}
+          aria-label={`${tier.name} difficulty${isLocked ? ' (locked)' : ''}`}
+        >
+          <div className="flex items-center justify-center gap-1">
+            {isLocked && <LockIcon size={10} />}
+            <span>{tier.name}</span>
+          </div>
+          {tier.goldCost > 0 && !isLocked && (
+            <div className={`flex items-center justify-center gap-0.5 mt-0.5 ${cantAfford ? 'text-red-400' : 'text-yellow-500'}`}>
+              <GoldIcon size={10} />
+              <span>{(tier.goldCost / 1000).toFixed(0)}k</span>
+            </div>
+          )}
+          {tier.statMultiplier > 1 && !isLocked && !tier.goldCost && (
+            <div className="mt-0.5" style={{ color: tier.color, opacity: 0.7 }}>
+              {tier.statMultiplier}x
+            </div>
+          )}
+        </button>
+      );
+    })}
+  </div>
+));
+DifficultySelector.displayName = 'DifficultySelector';
+
 // Raid card component - Multi-boss dungeon system
-const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExpanded, onToggle }) => {
+const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExpanded, onToggle, gold, ascensionCount }) => {
+  const [difficulty, setDifficulty] = useState('normal');
   const raidUniqueIds = useMemo(() => getRaidUniqueIds(raid.id), [raid.id]);
   const ownedCount = raidUniqueIds.filter(id => ownedUniques.includes(id)).length;
 
@@ -165,6 +216,11 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
   const totalBosses = raid.wingBosses.length + 1; // +1 for final boss
   const RaidIcon = RAID_ICONS[raid.id] || CrownIcon;
   const raidColor = RAID_COLORS[raid.id] || '#3b82f6';
+
+  const selectedTier = RAID_DIFFICULTY_TIERS[difficulty];
+  const isLocked = selectedTier.ascensionRequired > 0 && ascensionCount < selectedTier.ascensionRequired;
+  const cantAfford = selectedTier.goldCost > 0 && gold < selectedTier.goldCost;
+  const canEnter = isUnlocked && !isLocked && !cantAfford;
 
   return (
     <div className="mb-4">
@@ -192,6 +248,9 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
               <p className="text-xs text-gray-400 mt-0.5">{raid.description}</p>
               <div className="text-xs text-gray-500 mt-1">
                 <span className="text-yellow-500">Lv {raid.recommendedLevel}</span> · {totalBosses} bosses
+                {difficulty !== 'normal' && (
+                  <span style={{ color: selectedTier.color }}> · {selectedTier.statMultiplier}x stats</span>
+                )}
               </div>
             </div>
           </div>
@@ -210,10 +269,14 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
             {/* Quick Enter Button */}
             {isUnlocked ? (
               <button
-                onClick={() => onEnterRaid(raid.id)}
-                className="pixel-btn pixel-btn-primary px-4 py-2 text-sm whitespace-nowrap"
+                onClick={() => onEnterRaid(raid.id, difficulty)}
+                disabled={!canEnter}
+                className={`pixel-btn px-4 py-2 text-sm whitespace-nowrap ${
+                  canEnter ? 'pixel-btn-primary' : 'opacity-50 cursor-not-allowed'
+                }`}
+                title={cantAfford ? 'Not enough gold' : isLocked ? `Requires Ascension ${selectedTier.ascensionRequired}` : `Enter on ${selectedTier.name}`}
               >
-                Enter
+                {difficulty === 'normal' ? 'Enter' : selectedTier.name}
               </button>
             ) : (
               <div className="px-4 py-2 text-sm text-gray-500 flex items-center gap-1">
@@ -222,6 +285,34 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
             )}
           </div>
         </div>
+
+        {/* Difficulty selector */}
+        {isUnlocked && (
+          <DifficultySelector
+            selected={difficulty}
+            onSelect={setDifficulty}
+            gold={gold}
+            ascensionCount={ascensionCount}
+          />
+        )}
+
+        {/* Difficulty info banner */}
+        {isUnlocked && difficulty !== 'normal' && (
+          <div
+            className="mt-2 p-2 rounded text-xs"
+            style={{ backgroundColor: `${selectedTier.color}10`, borderLeft: `3px solid ${selectedTier.color}` }}
+          >
+            <span style={{ color: selectedTier.color }} className="font-bold">{selectedTier.name}:</span>{' '}
+            <span className="text-gray-300">{selectedTier.description}</span>
+            {selectedTier.uniqueDropBonus > 0 && (
+              <span className="text-gray-400"> · +{Math.round(selectedTier.uniqueDropBonus * 100)}% unique drop rate</span>
+            )}
+            {selectedTier.affixCount > 0 && (
+              <span className="text-gray-400"> · {selectedTier.affixCount} random dungeon affixes</span>
+            )}
+          </div>
+        )}
+
         {/* Expand/collapse toggle */}
         <button
           onClick={onToggle}
@@ -273,15 +364,17 @@ const RaidSelectorModal = ({ onClose }) => {
   const dungeon = useGameStore(state => state.dungeon);
   const raidState = useGameStore(state => state.raidState);
   const raidRuns = useGameStore(state => state.stats?.raidRuns) || EMPTY_OBJECT;
+  const gold = useGameStore(state => state.gold);
+  const ascensionCount = useGameStore(state => state.ascension?.count) || 0;
   const enterRaid = useGameStore(state => state.enterRaid);
 
   const raids = useMemo(() => getAllRaids(), []);
 
   const canStart = heroes.filter(Boolean).length > 0;
 
-  const handleEnterRaid = (raidId) => {
+  const handleEnterRaid = (raidId, difficulty) => {
     if (!canStart) return;
-    const success = enterRaid(raidId);
+    const success = enterRaid(raidId, difficulty);
     if (success) {
       onClose();
     }
@@ -324,6 +417,11 @@ const RaidSelectorModal = ({ onClose }) => {
           <div className="flex-1">
             <div className="text-sm font-bold" style={{ color: RAID_COLORS[raidState.raidId] || '#3b82f6' }}>
               Currently in: {RAIDS[raidState.raidId]?.name || 'Unknown'}
+              {raidState.difficulty && raidState.difficulty !== 'normal' && (
+                <span style={{ color: RAID_DIFFICULTY_TIERS[raidState.difficulty]?.color }}>
+                  {' '}({RAID_DIFFICULTY_TIERS[raidState.difficulty]?.name})
+                </span>
+              )}
             </div>
             <div className="text-xs text-gray-400">
               {raidState.defeatedWingBosses?.length || 0}/{RAIDS[raidState.raidId]?.wingBosses?.length || 0} guardians defeated
@@ -353,7 +451,7 @@ const RaidSelectorModal = ({ onClose }) => {
 
       {/* Info hint */}
       <div className="text-xs text-gray-500 px-1">
-        Defeat the guardians to unlock the final boss. Each boss can drop unique legendary items!
+        Defeat the guardians to unlock the final boss. Select a difficulty tier for tougher fights and better rewards!
       </div>
 
       {/* Raid list */}
@@ -368,6 +466,8 @@ const RaidSelectorModal = ({ onClose }) => {
             onEnterRaid={handleEnterRaid}
             isExpanded={expandedRaid === raid.id}
             onToggle={() => toggleRaid(raid.id)}
+            gold={gold}
+            ascensionCount={ascensionCount}
           />
         ))}
       </div>

@@ -1253,7 +1253,7 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
       const targetBossId = target.wingBossId || target.finalBossId;
       const raidBoss = getWingBoss(dungeonProgress.currentRaidId, targetBossId);
       const ownedUniques = getOwnedUniques();
-      const raidDrop = rollRaidDrop(raidBoss?.dropTable, ownedUniques);
+      const raidDrop = rollRaidDrop(raidBoss?.dropTable, ownedUniques, dungeon.raidUniqueDropBonus || 0);
 
       if (raidDrop?.type === 'unique') {
         handleUniqueDrop(raidDrop.itemId, target.position);
@@ -1379,7 +1379,7 @@ export const processDoubleAttack = (ctx, actor, target, attackResult) => {
       const targetBossIdBonus = target.wingBossId || target.finalBossId;
       const raidBossBonus = getWingBoss(dungeonProgress.currentRaidId, targetBossIdBonus);
       const ownedUniquesBonus = getOwnedUniques();
-      const raidDropBonus = rollRaidDrop(raidBossBonus?.dropTable, ownedUniquesBonus);
+      const raidDropBonus = rollRaidDrop(raidBossBonus?.dropTable, ownedUniquesBonus, dungeon.raidUniqueDropBonus || 0);
 
       if (raidDropBonus?.type === 'unique') {
         handleUniqueDrop(raidDropBonus.itemId, target.position);
@@ -1469,7 +1469,7 @@ export const processAscendanceAOE = (ctx, actor, target, attackResult) => {
           const targetBossIdAoe = otherTarget.wingBossId || otherTarget.finalBossId;
           const raidBossAoe = getWingBoss(dungeonProgress.currentRaidId, targetBossIdAoe);
           const ownedUniquesAoe = getOwnedUniques();
-          const raidDropAoe = rollRaidDrop(raidBossAoe?.dropTable, ownedUniquesAoe);
+          const raidDropAoe = rollRaidDrop(raidBossAoe?.dropTable, ownedUniquesAoe, dungeon.raidUniqueDropBonus || 0);
 
           if (raidDropAoe?.type === 'unique') {
             handleUniqueDrop(raidDropAoe.itemId, otherTarget.position);

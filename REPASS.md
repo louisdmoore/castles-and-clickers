@@ -173,6 +173,18 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Prestige count has no cap — can prestige infinitely for +3% each time. Is there a practical limit (level 25 takes a while after reset to 10)?
 - [ ] Stars survive ascension — verified via spread operator. But test an actual ascension with prestiged heroes to confirm
 
+## Raid Difficulty Tiers (v0.5.0)
+
+- [ ] Heroic gold cost (50k) — is this the right price point? May be trivial for late-game, too expensive for mid-game
+- [ ] Heroic unique drop bonus (+50%) — is this noticeable? With base 20% unique drop rate going to 30%, verify the difference feels meaningful
+- [ ] Mythic unique drop bonus (+100%) — 2x unique drops. Verify it doesn't make uniques trivially farmable
+- [ ] Mythic dungeon affixes — only stat-based affixes (fortified/hasty/enraged/resilient) and passive affixes (vampiric/thorny) are applied at monster creation. Bolstering (per-room scaling) and bountiful (gold bonus) are not wired into combat yet — will be handled by the "Dungeon affixes" task
+- [ ] Difficulty selector UX — three buttons inline below raid header. Is this discoverable? Do players understand what each tier means?
+- [ ] Difficulty not persisted per-raid — resets to Normal each time the modal opens. Should it remember last selected?
+- [ ] Mythic affix preview — currently shows "2 random dungeon affixes" text but doesn't preview which affixes will roll. Should the preview show the rolled affixes before entering?
+- [ ] Raid difficulty in DungeonHeader — shows [Heroic]/[Mythic] tag next to raid name. Verify it's visible and not clipped
+- [ ] Raid recap difficulty display — shows difficulty tag on completion screen. Verify it renders correctly for all tiers
+
 ## General
 
 - [ ] Lint count crept from ~78 to ~84 — audit whether any are from Phase 1-2 changes

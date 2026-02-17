@@ -1,5 +1,5 @@
 import { DUNGEON_TIERS } from '../data/milestones';
-import { RAIDS } from '../data/raids';
+import { RAIDS, RAID_DIFFICULTY_TIERS } from '../data/raids';
 import { getWorldBossForLevel, getZoneWorldBoss } from '../data/worldBosses';
 import { PHASES } from '../game/constants';
 import {
@@ -83,19 +83,28 @@ const DungeonHeader = ({ dungeon, phase, enemyCount, displayRoomCombat, highestD
         )}
 
         {/* Raid name OR Zone icon and name */}
-        {isRaidDungeon && raidData ? (
-          <div className="flex items-center gap-2">
-            <CrownIcon size={24} className="text-amber-400" />
-            <div>
-              <div className="pixel-text font-bold text-amber-400">
-                {raidData.name}
-              </div>
-              <div className="pixel-label">
-                Raid
+        {isRaidDungeon && raidData ? (() => {
+          const raidDiff = dungeon.raidDifficulty || 'normal';
+          const diffTier = RAID_DIFFICULTY_TIERS[raidDiff];
+          return (
+            <div className="flex items-center gap-2">
+              <CrownIcon size={24} className="text-amber-400" />
+              <div>
+                <div className="pixel-text font-bold text-amber-400">
+                  {raidData.name}
+                  {raidDiff !== 'normal' && (
+                    <span className="text-xs ml-1.5 font-normal" style={{ color: diffTier?.color }}>
+                      [{diffTier?.name}]
+                    </span>
+                  )}
+                </div>
+                <div className="pixel-label">
+                  Raid{raidDiff !== 'normal' ? ` · ${diffTier?.statMultiplier}x` : ''}
+                </div>
               </div>
             </div>
-          </div>
-        ) : (
+          );
+        })() : (
           <div className="flex items-center gap-2">
             <div style={{ color: tierColor }}>
               <TierIcon size={24} />

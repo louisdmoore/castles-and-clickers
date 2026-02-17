@@ -1,7 +1,7 @@
 import { useCallback } from 'react';
 import { createPortal } from 'react-dom';
 import { useGameStore } from '../store/gameStore';
-import { RAIDS } from '../data/raids';
+import { RAIDS, RAID_DIFFICULTY_TIERS } from '../data/raids';
 import { RaidBossIcon } from './icons/raidBosses';
 import { StarIcon, CheckIcon, CrownIcon } from './icons/ui';
 import { getRaidBossSpriteId } from '../data/raidBossSpriteMap';
@@ -55,6 +55,11 @@ const RaidRecapScreen = () => {
           </div>
           <div className="text-xl text-purple-300 font-bold">
             {raid.name}
+            {pendingRaidRecap.difficulty && pendingRaidRecap.difficulty !== 'normal' && (
+              <span className="text-sm ml-2" style={{ color: RAID_DIFFICULTY_TIERS[pendingRaidRecap.difficulty]?.color }}>
+                [{RAID_DIFFICULTY_TIERS[pendingRaidRecap.difficulty]?.name}]
+              </span>
+            )}
           </div>
         </div>
 

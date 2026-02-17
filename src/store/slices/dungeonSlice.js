@@ -1,7 +1,8 @@
-import { RAIDS, isRaidUnlocked } from '../../data/raids';
+import { RAIDS, isRaidUnlocked, getRaidDifficultyTier } from '../../data/raids';
 import { getMaxPartySize, getDungeonTier } from '../../data/milestones';
 import { DUNGEON_THEMES } from '../../data/dungeonThemes';
 import { getAscensionDungeonCap, hasAscensionUnlock } from '../../data/ascensionMilestones';
+import { rollDungeonAffixes } from '../../data/dungeonAffixes';
 import { clearStatCache, setAscensionCount } from '../helpers/statCalculator';
 import throttledStorage from '../helpers/throttledStorage';
 
@@ -442,8 +443,8 @@ export const createDungeonSlice = (set, get) => ({
   // MULTI-BOSS RAID DUNGEON ACTIONS
   // ========================================
 
-  enterRaid: (raidId) => {
-    const { heroes, highestDungeonCleared, heroHp, initializeHeroHp, pendingDungeonBuffs } = get();
+  enterRaid: (raidId, difficulty = 'normal') => {
+    const { heroes, highestDungeonCleared, heroHp, initializeHeroHp, pendingDungeonBuffs, ascension } = get();
     if (heroes.filter(Boolean).length === 0) return false;
 
     const raid = RAIDS[raidId];
@@ -451,6 +452,25 @@ export const createDungeonSlice = (set, get) => ({
 
     // Check if raid is unlocked
     if (!isRaidUnlocked(raidId, highestDungeonCleared)) return false;
+
+    // Get difficulty tier config
+    const tier = getRaidDifficultyTier(difficulty);
+
+    // Check ascension requirement (Mythic requires Ascension 3)
+    if (tier.ascensionRequired > 0 && (ascension?.count || 0) < tier.ascensionRequired) return false;
+
+    // Check and deduct gold cost (Heroic costs 50,000 gold)
+    if (tier.goldCost > 0) {
+      const { gold } = get();
+      if (gold < tier.goldCost) {
+        get().addToast({ type: 'error', message: `Not enough gold! Need ${tier.goldCost.toLocaleString()} gold` });
+        return false;
+      }
+      set(state => ({ gold: state.gold - tier.goldCost }));
+    }
+
+    // Roll dungeon affixes for Mythic
+    const raidAffixes = tier.affixCount > 0 ? rollDungeonAffixes(tier.affixCount) : [];
 
     // Snapshot hero HP at raid start
     const hpSnapshot = {};
@@ -465,6 +485,7 @@ export const createDungeonSlice = (set, get) => ({
       raidState: {
         active: true,
         raidId,
+        difficulty,
         defeatedWingBosses: [],
         heroHpSnapshot: hpSnapshot,
       },
@@ -472,12 +493,16 @@ export const createDungeonSlice = (set, get) => ({
         ...state.dungeonProgress,
         currentType: 'raid',
         currentRaidId: raidId,
+        activeAffixes: raidAffixes,
       },
       dungeon: {
         level: raid.requiredLevel,
         type: 'raid',
         isRaid: true,
         raidId,
+        difficultyMultiplier: tier.statMultiplier,
+        raidDifficulty: difficulty,
+        raidUniqueDropBonus: tier.uniqueDropBonus,
         activeBuffs: pendingDungeonBuffs.length > 0 ? [...pendingDungeonBuffs] : [],
       },
       pendingDungeonBuffs: [],
@@ -537,6 +562,7 @@ export const createDungeonSlice = (set, get) => ({
       pendingRaidRecap: {
         raidId: raidState.raidId,
         raidName: raid.name,
+        difficulty: raidState.difficulty || 'normal',
         defeatedBosses: [...raidState.defeatedWingBosses],
         totalBosses: raid.wingBosses.length + 1,
         lootDrops,
@@ -545,6 +571,7 @@ export const createDungeonSlice = (set, get) => ({
       raidState: {
         active: false,
         raidId: null,
+        difficulty: undefined,
         defeatedWingBosses: [],
         heroHpSnapshot: {},
       },

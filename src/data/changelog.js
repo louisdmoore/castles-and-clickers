@@ -1,9 +1,17 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.4.0';
+export const CURRENT_VERSION = '0.5.0';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.5.0',
+    title: 'Depth',
+    date: '2026-02-17',
+    changes: [
+      { type: 'feature', text: 'Raid difficulty tiers — choose Normal, Heroic (1.5x stats, better unique drops, 50k gold), or Mythic (2x stats + 2 random dungeon affixes, requires Ascension 3)' },
+    ],
+  },
   {
     version: '0.4.0',
     title: 'The Full Picture',

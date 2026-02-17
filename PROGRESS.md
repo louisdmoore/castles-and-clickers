@@ -102,7 +102,7 @@
 ## Phase 8: v0.5.0+ — Depth
 *Reference: DESIGN_RETHINK.md Sections 6, 7, 9, 10, 13, 15*
 
-- [ ] Raid difficulty tiers (Normal/Heroic/Mythic) (Section 10.3)
+- [x] Raid difficulty tiers (Normal/Heroic/Mythic) (Section 10.3)
 - [ ] Raid-specific mechanics — Tier 1 data-only first (Section 10.1)
 - [ ] 8th party slot (Ascension 3) (Section 6.3)
 - [ ] Dungeon affixes (per-run modifiers) (Section 7.3)

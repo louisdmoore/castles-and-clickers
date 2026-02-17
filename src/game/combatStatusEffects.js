@@ -363,7 +363,7 @@ export const processStatusEffectDamage = (ctx, actor) => {
             const targetBossIdDot = actor.wingBossId || actor.finalBossId;
             const raidBossDot = getWingBoss(dungeonProgress.currentRaidId, targetBossIdDot);
             const ownedUniquesDot = getOwnedUniques();
-            const raidDropDot = rollRaidDrop(raidBossDot?.dropTable, ownedUniquesDot);
+            const raidDropDot = rollRaidDrop(raidBossDot?.dropTable, ownedUniquesDot, dungeon.raidUniqueDropBonus || 0);
 
             if (raidDropDot?.type === 'unique') {
               handleUniqueDrop(raidDropDot.itemId, actor.position);

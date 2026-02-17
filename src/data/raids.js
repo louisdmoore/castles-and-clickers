@@ -2,6 +2,46 @@
 // Raids are continuous dungeons where players fight through wing bosses
 // before facing the final boss at the end
 
+// Raid difficulty tiers (Section 10.3)
+export const RAID_DIFFICULTY_TIERS = {
+  normal: {
+    id: 'normal',
+    name: 'Normal',
+    statMultiplier: 1.0,
+    goldCost: 0,
+    ascensionRequired: 0,
+    uniqueDropBonus: 0,    // No bonus to unique drop rates
+    affixCount: 0,
+    color: '#9ca3af',
+    description: 'Standard difficulty',
+  },
+  heroic: {
+    id: 'heroic',
+    name: 'Heroic',
+    statMultiplier: 1.5,
+    goldCost: 50000,
+    ascensionRequired: 0,
+    uniqueDropBonus: 0.5,  // +50% unique drop rates
+    affixCount: 0,
+    color: '#f59e0b',
+    description: '1.5x monster stats, better unique drops',
+  },
+  mythic: {
+    id: 'mythic',
+    name: 'Mythic',
+    statMultiplier: 2.0,
+    goldCost: 0,
+    ascensionRequired: 3,
+    uniqueDropBonus: 1.0,  // +100% unique drop rates
+    affixCount: 2,         // 2 stacked dungeon affixes
+    color: '#ef4444',
+    description: '2.0x monster stats + 2 random affixes',
+  },
+};
+
+export const getRaidDifficultyTier = (difficulty) =>
+  RAID_DIFFICULTY_TIERS[difficulty] || RAID_DIFFICULTY_TIERS.normal;
+
 const AI = {
   BOSS: 'boss',
   AGGRESSIVE: 'aggressive',
@@ -686,7 +726,8 @@ export const getWingBoss = (raidId, bossId) => {
 
 // Roll for loot from boss drop table
 // ownedUniques: array of unique item IDs the player already owns (optional)
-export const rollRaidDrop = (dropTable, ownedUniques = []) => {
+// uniqueDropBonus: multiplier bonus for unique drop chances (0 = no bonus, 0.5 = +50%, 1.0 = +100%)
+export const rollRaidDrop = (dropTable, ownedUniques = [], uniqueDropBonus = 0) => {
   if (!dropTable) return null;
 
   // Filter out already-owned uniques and recalculate probabilities
@@ -702,12 +743,20 @@ export const rollRaidDrop = (dropTable, ownedUniques = []) => {
     return { type: 'random', rarity: 'rare' };
   }
 
+  // Apply unique drop bonus — boost unique chances by the bonus multiplier
+  const boostedDrops = uniqueDropBonus > 0
+    ? availableDrops.map(drop => drop.type === 'unique'
+      ? { ...drop, chance: drop.chance * (1 + uniqueDropBonus) }
+      : drop
+    )
+    : availableDrops;
+
   // Normalize probabilities for remaining drops
-  const totalChance = availableDrops.reduce((sum, drop) => sum + drop.chance, 0);
+  const totalChance = boostedDrops.reduce((sum, drop) => sum + drop.chance, 0);
   const roll = Math.random() * totalChance;
   let cumulative = 0;
 
-  for (const drop of availableDrops) {
+  for (const drop of boostedDrops) {
     cumulative += drop.chance;
     if (roll < cumulative) {
       if (drop.type === 'unique') {

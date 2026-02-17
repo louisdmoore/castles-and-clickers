@@ -171,7 +171,7 @@ export const executeHeroSkillAction = (ctx, actor) => {
             const targetBossId = m.wingBossId || m.finalBossId;
             const raidBoss = getWingBoss(dungeonProgress.currentRaidId, targetBossId);
             const ownedUniques = getOwnedUniques();
-            const raidDrop = rollRaidDrop(raidBoss?.dropTable, ownedUniques);
+            const raidDrop = rollRaidDrop(raidBoss?.dropTable, ownedUniques, dungeon.raidUniqueDropBonus || 0);
 
             if (raidDrop?.type === 'unique') {
               handleUniqueDrop(raidDrop.itemId, m.position);

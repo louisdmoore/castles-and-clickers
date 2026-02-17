@@ -922,6 +922,7 @@ export function placeMonsters(dungeon, level, options = {}) {
   const affixes = options.affixes || [];
 
   // Helper to apply affixes to a monster
+  // Supports both legacy affix format and DUNGEON_AFFIXES format (monsterStatMultiplier, etc.)
   const applyAffixes = (monster) => {
     if (affixes.length === 0) return monster;
 
@@ -929,6 +930,36 @@ export function placeMonsters(dungeon, level, options = {}) {
 
     for (const affix of affixes) {
       const effect = affix.effect;
+
+      // DUNGEON_AFFIXES format: monsterStatMultiplier: { maxHp: 1.3, attack: 1.2, ... }
+      if (effect.monsterStatMultiplier) {
+        const mult = effect.monsterStatMultiplier;
+        if (mult.maxHp) {
+          modified.stats.maxHp = Math.floor(modified.stats.maxHp * mult.maxHp);
+          modified.stats.hp = modified.stats.maxHp;
+        }
+        if (mult.attack) {
+          modified.stats.attack = Math.floor(modified.stats.attack * mult.attack);
+        }
+        if (mult.defense) {
+          modified.stats.defense = Math.floor(modified.stats.defense * mult.defense);
+        }
+        if (mult.speed) {
+          modified.stats.speed = Math.floor(modified.stats.speed * mult.speed);
+        }
+      }
+      if (effect.monsterLifesteal) {
+        const existing = modified.passive?.lifesteal || 0;
+        modified.passive = { ...(modified.passive || {}), lifesteal: existing + effect.monsterLifesteal };
+      }
+      if (effect.monsterReflectDamage) {
+        const existing = modified.passive?.reflectDamage || 0;
+        modified.passive = { ...(modified.passive || {}), reflectDamage: existing + effect.monsterReflectDamage };
+      }
+      // monsterScalingPerRoom is applied per-room during combat, not at creation time
+      // goldDropMultiplier is applied at gold drop time, not at creation time
+
+      // Legacy affix format (existing support)
       if (effect.hpMultiplier) {
         modified.stats.maxHp = Math.floor(modified.stats.maxHp * effect.hpMultiplier);
         modified.stats.hp = modified.stats.maxHp;
