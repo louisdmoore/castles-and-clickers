@@ -27,7 +27,7 @@
 *Prereq: Add `runStats` accumulator to `combatSlice` (architectural prereq #2)*
 
 - [x] **PREREQ:** Add `runStats` object to `combatSlice.js` state — `{ [heroId]: { damageDealt, healingDone, damageTaken, damagePrevented, controlTime, turnsTaken, kills, biggestHit } }`, initialized on `startDungeon`, updated per-tick in `useCombat`
-- [ ] Role-aware contribution meter component (`ContributionMeter`) — reads `runStats`, shows per-hero contribution with role-specific metrics (Section 3)
+- [x] Role-aware contribution meter component (`ContributionMeter`) — reads `runStats`, shows per-hero contribution with role-specific metrics (Section 3)
 - [ ] Run summary popup on dungeon completion — MVP, biggest hit, totals, positive message (Section 3)
 - [ ] Preparation phase screen — `POST_RUN` phase between dungeon end and next start, party overview, dungeon preview, auto-dismiss for idle players (Section 4)
 - [ ] Milestone widget — 2-3 nearest goals shown on prep screen / HUD (Section 4)

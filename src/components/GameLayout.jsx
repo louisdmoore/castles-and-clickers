@@ -13,6 +13,7 @@ import { useThrottledDisplay } from '../hooks/useThrottledDisplay';
 // Components
 import CanvasDungeonView from '../canvas/CanvasDungeonView';
 import CombatLog from './CombatLog';
+import ContributionMeter from './ContributionMeter';
 import Sidebar from './Sidebar';
 import ModalOverlay from './ModalOverlay';
 import HeroManagement from './HeroManagement';
@@ -561,6 +562,7 @@ const GameLayout = () => {
                   <div className="mt-4 max-h-32">
                     <CombatLog />
                   </div>
+                  <ContributionMeter />
                 </>
               );
             })()
