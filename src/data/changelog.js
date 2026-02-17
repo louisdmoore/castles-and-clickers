@@ -10,6 +10,7 @@ export const CHANGELOG = [
     date: '2026-02-17',
     changes: [
       { type: 'feature', text: 'Difficulty slider on prep screen — choose 1.0x to 3.0x challenge for better loot and harder monsters' },
+      { type: 'feature', text: 'Hero traits — each hero now rolls 1-2 random traits at recruitment that permanently affect their stats and combat abilities' },
     ],
   },
   {

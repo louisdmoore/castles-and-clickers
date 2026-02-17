@@ -1,5 +1,6 @@
 import { CLASSES, PARTY_SLOTS } from '../../data/classes';
 import { getSkillById, arePrerequisitesMet, calculateRespecCost } from '../../data/skillTrees';
+import { getHeroTrait } from '../../data/heroTraits';
 import { createHero, generateTavernHero } from '../helpers/heroGenerator';
 import { calculateHeroStats, invalidateStatCache, clearStatCache, calculateSkillPoints, calculateUsedSkillPoints } from '../helpers/statCalculator';
 import throttledStorage from '../helpers/throttledStorage';
@@ -359,7 +360,7 @@ export const createHeroSlice = (set, get) => ({
       xp: 0,
       equipment: tavernHero.equipment,
       skills: tavernHero.skills,
-      trait: tavernHero.trait,
+      traits: tavernHero.traits || [],
     };
 
     // If in dungeon, add to pending recruits
@@ -439,7 +440,13 @@ export const createHeroSlice = (set, get) => ({
       const heroes = state.heroes.map(hero => {
         if (hero.id !== heroId) return hero;
 
-        let newXp = hero.xp + xp;
+        // Apply XP multiplier from traits (e.g., Quick Learner +15%)
+        let xpMult = 1.0;
+        for (const traitId of (hero.traits || [])) {
+          const trait = getHeroTrait(traitId);
+          if (trait?.effect?.xpMultiplier) xpMult *= trait.effect.xpMultiplier;
+        }
+        let newXp = hero.xp + Math.floor(xp * xpMult);
         let newLevel = hero.level;
         const oldLvl = hero.level;
 

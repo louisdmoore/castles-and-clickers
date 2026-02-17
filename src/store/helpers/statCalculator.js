@@ -2,6 +2,7 @@ import { CLASSES } from '../../data/classes';
 import { getPassiveAffixBonuses } from '../../game/affixEngine';
 import { scaleUniqueStats } from '../../data/uniqueItems';
 import { getSkillById, SKILL_TYPE } from '../../data/skillTrees';
+import { getHeroTrait } from '../../data/heroTraits';
 
 // Helper to calculate XP needed for next level
 export const xpForLevel = (level) => Math.floor(100 * Math.pow(1.25, level - 1));
@@ -58,7 +59,11 @@ const getStatCacheKey = (hero, allHeroes = [], homesteadBonuses = null) => {
     ? Math.max(...allHeroes.map(h => h.level))
     : hero.level;
 
-  return `${hero.id}:${hero.level}:${equipmentHash}:${skillsHash}:${partySkillBonusCacheVersion}:${homesteadHash}:${highestPartyLevel}`;
+  // Traits are immutable per hero, so they won't independently invalidate the cache,
+  // but we include them so different heroes with same stats but different traits don't collide
+  const traitsHash = (hero.traits || []).join(',');
+
+  return `${hero.id}:${hero.level}:${equipmentHash}:${skillsHash}:${partySkillBonusCacheVersion}:${homesteadHash}:${highestPartyLevel}:${traitsHash}`;
 };
 
 // Helper to calculate hero stats including equipment, passive skills, and homestead bonuses
@@ -118,6 +123,18 @@ export const calculateHeroStats = (hero, allHeroes = [], homesteadBonuses = null
         }
       }
     }
+  }
+
+  // Apply hero trait bonuses (traits are permanent per hero)
+  for (const traitId of (hero.traits || [])) {
+    const trait = getHeroTrait(traitId);
+    if (!trait?.effect) continue;
+    const e = trait.effect;
+    if (e.maxHpMultiplier) stats.maxHp = Math.floor(stats.maxHp * e.maxHpMultiplier);
+    if (e.attackMultiplier) stats.attack = Math.floor(stats.attack * e.attackMultiplier);
+    if (e.defenseMultiplier) stats.defense = Math.floor(stats.defense * e.defenseMultiplier);
+    if (e.speedMultiplier) stats.speed = Math.floor(stats.speed * e.speedMultiplier);
+    if (e.damageMultiplier) stats.attack = Math.floor(stats.attack * e.damageMultiplier);
   }
 
   // Apply passive affix bonuses from equipment

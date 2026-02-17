@@ -128,6 +128,7 @@ export const useDungeon = ({ addEffect }) => {
         attackRange: classData.attackRange || 1,
         isHero: true,
         skills: hero.skills || [],
+        traits: hero.traits || [],
       };
     });
 

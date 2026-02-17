@@ -1,6 +1,7 @@
 import { CLASSES, getClassesByRole } from '../../data/classes';
 import { generateEquipment, getEquipmentForClass } from '../../data/equipment';
 import { getRaidUniqueIds } from '../../data/raids';
+import { rollHeroTraits } from '../../data/heroTraits';
 
 // Random name generators for tavern heroes
 const FIRST_NAMES = [
@@ -72,35 +73,20 @@ export const generateTavernHero = (role, dungeonLevel = 1) => {
     }
   });
 
-  // Add a trait (special bonus)
-  const traits = [
-    { id: 'veteran', name: 'Veteran', description: '+10% XP gain', xpBonus: 0.1 },
-    { id: 'lucky', name: 'Lucky', description: '+5% gold find', goldBonus: 0.05 },
-    { id: 'hardy', name: 'Hardy', description: '+10 max HP', hpBonus: 10 },
-    { id: 'quick', name: 'Quick Learner', description: 'Starts with +1 level', levelBonus: 1 },
-    { id: 'equipped', name: 'Well-Equipped', description: 'Comes with better gear', gearBonus: true },
-    { id: 'none', name: null, description: null },
-  ];
-  const trait = traits[Math.floor(Math.random() * traits.length)];
-
-  // Apply trait effects
-  let finalLevel = level;
-  if (trait.id === 'quick') {
-    finalLevel += 1;
-    baseCost += 40;
-  }
-  if (trait.id === 'hardy') baseCost += 20;
-  if (trait.id === 'veteran') baseCost += 30;
+  // Roll gameplay-affecting traits from the trait pool
+  const traits = rollHeroTraits();
+  // Extra cost per trait (more traits = more valuable hero)
+  baseCost += traits.length * 25;
 
   return {
     id: `tavern_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     name,
     classId: classData.id,
-    level: finalLevel,
+    level,
     xp: 0,
     equipment,
     skills: [],
-    trait: trait.id !== 'none' ? trait : null,
+    traits,
     recruitCost: Math.floor(baseCost),
     role,
   };
@@ -122,6 +108,7 @@ export const createHero = (classId, name, startingLevel = 1) => {
       accessory: null,
     },
     skills: [],
+    traits: rollHeroTraits(),
   };
 };
 
