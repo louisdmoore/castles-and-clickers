@@ -27,7 +27,7 @@ const updatePartySkillBonusCache = (allHeroes) => {
     const partySkills = [];
     for (const skillId of (hero.skills || [])) {
       const skill = getSkillById(skillId);
-      if (skill?.passive?.type === 'party_stat_bonus') {
+      if (skill?.passive?.type === 'party_stat_bonus' || skill?.partyBuff) {
         partySkills.push(skillId);
       }
     }
@@ -190,12 +190,15 @@ export const calculateHeroStats = (hero, allHeroes = [], homesteadBonuses = null
   // Apply party-wide passive bonuses from all party members (like Cleric's Holy Aura)
   // This includes the hero's own auras - "All allies" includes the caster
   // OPTIMIZATION: Use pre-computed party skill bonus cache
+  let partyAttackPercent = 0;
+  let partyDefensePercent = 0;
   for (const ally of allHeroes) {
     if (!ally) continue; // Skip undefined
     const partySkills = partySkillBonusCache.get(ally.id);
     if (partySkills) {
       for (const skillId of partySkills) {
         const skill = getSkillById(skillId);
+        // Flat stat bonuses (existing party_stat_bonus skills)
         if (skill?.passive?.stats) {
           for (const [stat, value] of Object.entries(skill.passive.stats)) {
             if (stats[stat] !== undefined) {
@@ -203,8 +206,20 @@ export const calculateHeroStats = (hero, allHeroes = [], homesteadBonuses = null
             }
           }
         }
+        // Percentage party aura buffs from capstone skills
+        if (skill?.partyBuff) {
+          if (skill.partyBuff.attackPercent) partyAttackPercent += skill.partyBuff.attackPercent;
+          if (skill.partyBuff.defensePercent) partyDefensePercent += skill.partyBuff.defensePercent;
+        }
       }
     }
+  }
+  // Apply percentage party buffs (after flat bonuses, before ascension)
+  if (partyAttackPercent > 0) {
+    stats.attack = Math.floor(stats.attack * (1 + partyAttackPercent));
+  }
+  if (partyDefensePercent > 0) {
+    stats.defense = Math.floor(stats.defense * (1 + partyDefensePercent));
   }
 
   // Apply ascension stat multiplier (after all other bonuses, multiplicative)

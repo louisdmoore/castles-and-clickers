@@ -718,6 +718,11 @@ export const getPerTurnEffects = (heroes) => {
       if (passive.type === 'damage_heals') {
         effects.damageToHealingPercent += passive.percent / 100;
       }
+
+      // Capstone partyBuff regen aura (e.g., Cleric Radiance)
+      if (skill.partyBuff?.regenPercent) {
+        effects.partyRegenPercent += skill.partyBuff.regenPercent;
+      }
     }
   }
 
