@@ -25,6 +25,7 @@ import DungeonMap from './DungeonMap';
 import CurrentZoneIndicator from './CurrentZoneIndicator';
 import WelcomeBackModal from './WelcomeBackModal';
 import RunSummary from './RunSummary';
+import PrepScreen from './PrepScreen';
 import GameHUD from './GameHUD';
 import { DUNGEON_TIERS } from '../data/milestones';
 import { getWorldBossForLevel, getZoneWorldBoss } from '../data/worldBosses';
@@ -114,6 +115,7 @@ const GameLayout = () => {
   const lastDungeonSuccess = useGameStore(state => state.lastDungeonSuccess);
   const unreadUniques = useGameStore(state => state.unreadUniques || []);
   const raidState = useGameStore(state => state.raidState);
+  const prepPhase = useGameStore(state => state.prepPhase);
   const setLastSeenVersion = useGameStore(state => state.setLastSeenVersion);
 
   // OPTIMIZATION: Throttled display state - renders at ~15 FPS instead of every tick
@@ -570,6 +572,9 @@ const GameLayout = () => {
           ) : dungeonTransition ? (
             // Show empty space during transition (transition overlay handles the display)
             <div className="flex-1" />
+          ) : prepPhase ? (
+            // Post-run preparation screen
+            <PrepScreen />
           ) : raidState?.active && !displayRoomCombat ? (
             // Raid dungeon is loading/setting up
             <div className="flex-1 flex items-center justify-center">

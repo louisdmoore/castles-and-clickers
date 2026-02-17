@@ -37,6 +37,7 @@ export const createDungeonSlice = (set, get) => ({
   },
   pendingRaidRecap: null,
   lastRunSummary: null,
+  prepPhase: null, // { nextLevel, success, dungeonType }
 
   // Actions
   startDungeon: (level, options = {}) => {
@@ -84,6 +85,16 @@ export const createDungeonSlice = (set, get) => ({
 
   dismissRunSummary: () => set({ lastRunSummary: null }),
 
+  dismissPrepPhase: () => set({ prepPhase: null }),
+
+  startFromPrepPhase: () => {
+    const { prepPhase } = get();
+    if (!prepPhase) return;
+    const { nextLevel, dungeonType } = prepPhase;
+    set({ prepPhase: null });
+    get().startDungeon(nextLevel, { type: dungeonType });
+  },
+
   endDungeon: (success) => {
     const { maxDungeonLevel, processPendingRecruits, runStats, heroes } = get();
 
@@ -125,6 +136,11 @@ export const createDungeonSlice = (set, get) => ({
     runSummary.biggestHitHero = biggestHitHero;
 
     set(state => {
+      // Determine next dungeon level for prep phase
+      const nextLevel = success
+        ? Math.min((state.dungeon?.level || 1) + 1, maxDungeonLevel)
+        : (state.dungeon?.level || 1);
+
       const updates = {
         dungeon: null,
         combat: null,
@@ -133,6 +149,11 @@ export const createDungeonSlice = (set, get) => ({
         consumables: [], // Clear consumables on dungeon exit
         lastDungeonSuccess: success, // Track victory or defeat for transition screen
         lastRunSummary: totalDamage > 0 ? runSummary : null,
+        prepPhase: {
+          nextLevel,
+          success,
+          dungeonType: state.dungeonSettings?.type || 'normal',
+        },
         dungeonProgress: {
           ...state.dungeonProgress,
           currentType: 'normal',
@@ -170,6 +191,8 @@ export const createDungeonSlice = (set, get) => ({
           totalDungeonsCleared: state.stats.totalDungeonsCleared + 1,
         };
 
+        // Update nextLevel with the new highest for the prep phase
+        updates.prepPhase.nextLevel = Math.min(clearedLevel + 1, maxDungeonLevel);
       }
 
       return updates;

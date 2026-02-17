@@ -62,6 +62,7 @@ export const useGameStore = create(
             highestDungeonCleared: 0,
             dungeonUnlocked: 1,
             lastDungeonSuccess: null,
+            prepPhase: null,
             lastSaveTime: Date.now(),
             stats: {
               totalGoldEarned: 0,
@@ -161,6 +162,7 @@ export const useGameStore = create(
           heroHp: state.dungeon ? state.heroHp : {},
           runStats: {},
           lastRunSummary: null,
+          prepPhase: null,
         }),
         // Ensure stats has all new fields even if old save doesn't
         merge: (persistedState, currentState) => {

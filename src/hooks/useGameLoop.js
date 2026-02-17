@@ -21,29 +21,22 @@ export const useGameLoop = ({
   const hasRoomCombat = useGameStore(state => !!state.roomCombat);
   // Pause game during unique drop celebration
   const hasPendingCelebration = useGameStore(state => !!state.pendingUniqueCelebration);
-  // Pause combat during dramatic moments (phase transitions)
-  const combatPauseUntil = useGameStore(state => state.combatPauseUntil);
-
   // OPTIMIZATION: Get actions imperatively to avoid re-renders
   const addGold = useCallback((amount) => useGameStore.getState().addGold(amount), []);
   const incrementStat = useCallback((stat) => useGameStore.getState().incrementStat(stat), []);
   const addCombatLog = useCallback((log) => useGameStore.getState().addCombatLog(log), []);
   const clearCombatLog = useCallback(() => useGameStore.getState().clearCombatLog(), []);
   const endDungeon = useCallback((success) => useGameStore.getState().endDungeon(success), []);
-  const startDungeon = useCallback((level, opts) => useGameStore.getState().startDungeon(level, opts), []);
   const setRoomCombat = useCallback((state) => useGameStore.getState().setRoomCombat(state), []);
   const updateRoomCombat = useCallback((updates) => useGameStore.getState().updateRoomCombat(updates), []);
   const clearRoomCombat = useCallback(() => useGameStore.getState().clearRoomCombat(), []);
   const updateLastSaveTime = useCallback(() => useGameStore.getState().updateLastSaveTime(), []);
 
-  // OPTIMIZATION: Track auto-start timeout to prevent pile-up
-  const autoStartTimeoutRef = useRef(null);
-
   // Main game tick
   const gameTick = useCallback(() => {
     // OPTIMIZATION: Get state imperatively at start of tick
     const state = useGameStore.getState();
-    const { roomCombat, dungeon, dungeonSettings, maxDungeonLevel } = state;
+    const { roomCombat, dungeon } = state;
     const homesteadBonuses = state.getHomesteadBonuses();
 
     if (!roomCombat || !dungeon) return;
@@ -142,24 +135,10 @@ export const useGameLoop = ({
           completeRaid();
           clearRoomCombat();
         } else {
-          // Normal dungeon completion
-          const nextLevel = Math.min(dungeon.level + 1, maxDungeonLevel);
-          const shouldAutoAdvance = dungeonSettings?.autoAdvance === true;
-          const atTargetLevel = dungeonSettings?.targetLevel && dungeon.level >= dungeonSettings.targetLevel;
-
+          // Normal dungeon completion — endDungeon sets prepPhase,
+          // which shows the prep screen. Auto-advance is handled there.
           endDungeon(true);
           clearRoomCombat();
-
-          // Auto-start next dungeon with player's settings
-          if (shouldAutoAdvance && !atTargetLevel && nextLevel <= maxDungeonLevel) {
-            const options = { type: dungeonSettings?.type || 'normal' };
-            // Cancel any pending auto-start to prevent pile-up
-            if (autoStartTimeoutRef.current) clearTimeout(autoStartTimeoutRef.current);
-            autoStartTimeoutRef.current = setTimeout(() => {
-              autoStartTimeoutRef.current = null;
-              startDungeon(nextLevel, options);
-            }, 500);
-          }
         }
       } else {
         updateRoomCombat({ tick: tick + 1 });
@@ -180,22 +159,10 @@ export const useGameLoop = ({
           abandonRaid();
           clearRoomCombat();
         } else {
-          // Normal dungeon defeat
-          const retryLevel = dungeon.level;
-
+          // Normal dungeon defeat — endDungeon sets prepPhase,
+          // which shows the prep screen. Auto-retry is handled there.
           endDungeon(false);
           clearRoomCombat();
-
-          // Auto-retry with player's settings
-          if (dungeonSettings?.autoAdvance === true) {
-            const options = { type: dungeonSettings?.type || 'normal' };
-            // Cancel any pending auto-start to prevent pile-up
-            if (autoStartTimeoutRef.current) clearTimeout(autoStartTimeoutRef.current);
-            autoStartTimeoutRef.current = setTimeout(() => {
-              autoStartTimeoutRef.current = null;
-              startDungeon(retryLevel, options);
-            }, 500);
-          }
         }
       } else {
         updateRoomCombat({ tick: tick + 1 });
@@ -206,7 +173,7 @@ export const useGameLoop = ({
     setupDungeon, handleExplorationTick, handleCombatTick,
     clearEffects, resetLastProcessedTurn,
     updateRoomCombat, addCombatLog, clearCombatLog, addGold,
-    incrementStat, endDungeon, clearRoomCombat, startDungeon,
+    incrementStat, endDungeon, clearRoomCombat,
   ]);
 
   // Start dungeon - trigger setup phase
@@ -268,8 +235,6 @@ export const useGameLoop = ({
 
     return () => {
       if (timeoutId) clearTimeout(timeoutId);
-      // Note: Don't cancel autoStartTimeoutRef here - it needs to survive
-      // the dungeon transition to start the next dungeon
     };
   }, [dungeon, isRunning, gameSpeed, hasRoomCombat, hasPendingCelebration]); // Only recreate on these specific changes
 
