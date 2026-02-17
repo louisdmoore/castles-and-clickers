@@ -76,7 +76,7 @@ const MIGRATIONS = {
     return state;
   },
 
-  // v4 → v5: Phase 7 — Unique item leveling + duplicate fusion
+  // v4 → v5: Phase 7 — Unique item leveling + duplicate fusion + hero prestige stars
   4: (state) => {
     // Initialize uniqueLevels from existing ownedUniques
     if (!state.uniqueLevels) {
@@ -89,6 +89,20 @@ const MIGRATIONS = {
         }
       }
     }
+
+    // Add prestige field to existing heroes (party and bench)
+    const addPrestige = (hero) => {
+      if (!hero) return hero;
+      if (!hero.prestige) hero.prestige = { count: 0 };
+      return hero;
+    };
+    if (state.heroes) {
+      state.heroes = state.heroes.map(addPrestige);
+    }
+    if (state.bench) {
+      state.bench = state.bench.map(addPrestige);
+    }
+
     return state;
   },
 };

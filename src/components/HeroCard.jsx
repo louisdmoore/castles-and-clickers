@@ -38,7 +38,14 @@ const HeroCard = ({ hero, onSelect, isSelected, showEquipment = true }) => {
       <div className="flex items-center gap-3 mb-3">
         <ClassIcon classId={hero.classId} size={40} />
         <div className="flex-1">
-          <h3 className="text-white font-bold">{hero.name}</h3>
+          <h3 className="text-white font-bold">
+            {hero.name}
+            {(hero.prestige?.count || 0) > 0 && (
+              <span className="text-amber-400 text-xs ml-1" title={`${hero.prestige.count} prestige star${hero.prestige.count > 1 ? 's' : ''} (+${hero.prestige.count * 3}% all stats)`}>
+                {'★'.repeat(Math.min(hero.prestige.count, 5))}
+              </span>
+            )}
+          </h3>
           <p className="text-gray-400 text-sm">{classData.name} Lv.{hero.level}</p>
         </div>
       </div>

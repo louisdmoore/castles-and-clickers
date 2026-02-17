@@ -2,6 +2,7 @@ import { useState, useMemo } from 'react';
 import { useGameStore, calculateHeroStats } from '../store/gameStore';
 import { CLASSES } from '../data/classes';
 import { SKILL_TREES, arePrerequisitesMet, calculateRespecCost, TIER_REQUIREMENTS, countSkillsByTier } from '../data/skillTrees';
+import { PRESTIGE_MIN_LEVEL } from '../store/slices/heroSlice';
 import SkillNode from './SkillNode';
 import HeroIcon from './icons/HeroIcon';
 import { TreeIcon } from './icons/ui';
@@ -15,10 +16,13 @@ const SkillTreeScreen = () => {
     getSkillPoints,
     unlockSkill,
     respecHero,
+    prestigeHero,
+    dungeon,
   } = useGameStore();
 
   const [selectedHeroId, setSelectedHeroId] = useState(heroes[0]?.id || null);
   const [showRespecConfirm, setShowRespecConfirm] = useState(false);
+  const [showPrestigeConfirm, setShowPrestigeConfirm] = useState(false);
 
   const selectedHero = heroes.find(h => h.id === selectedHeroId);
   const skillTree = selectedHero ? SKILL_TREES[selectedHero.classId] : null;
@@ -191,6 +195,24 @@ const SkillTreeScreen = () => {
                     Respec Skills ({respecCost} gold)
                   </button>
                 )}
+
+                {/* Prestige Button */}
+                {selectedHero.level >= PRESTIGE_MIN_LEVEL && !dungeon && (
+                  <button
+                    onClick={() => setShowPrestigeConfirm(true)}
+                    className="w-full pixel-btn text-sm pixel-btn-primary mt-2"
+                  >
+                    Prestige ({'★'.repeat(Math.min((selectedHero.prestige?.count || 0) + 1, 5))})
+                  </button>
+                )}
+                {selectedHero.level < PRESTIGE_MIN_LEVEL && (
+                  <div className="text-[10px] text-gray-500 text-center mt-1">
+                    Prestige at Lv{PRESTIGE_MIN_LEVEL}
+                    {(selectedHero.prestige?.count || 0) > 0 && (
+                      <span className="text-amber-400 ml-1">{'★'.repeat(selectedHero.prestige.count)}</span>
+                    )}
+                  </div>
+                )}
               </div>
             )}
 
@@ -303,6 +325,45 @@ const SkillTreeScreen = () => {
                 className="flex-1 pixel-btn pixel-btn-danger"
               >
                 Respec ({respecCost}g)
+              </button>
+            </div>
+          </div>
+        </div>
+      )}
+
+      {/* Prestige Confirmation Modal */}
+      {showPrestigeConfirm && selectedHero && (
+        <div className="fixed inset-0 bg-black/70 flex items-center justify-center z-50">
+          <div className="pixel-panel-gold p-6 max-w-sm mx-4">
+            <h3 className="text-xl font-bold text-amber-400 mb-2">
+              Prestige {selectedHero.name}?
+            </h3>
+            <p className="text-gray-300 mb-3">
+              {selectedHero.name} will be reset to <span className="text-yellow-400 font-bold">level 10</span> and all skills will be cleared.
+            </p>
+            <p className="text-gray-300 mb-3">
+              In return, they gain a permanent <span className="text-amber-400 font-bold">prestige star</span> granting <span className="text-green-400 font-bold">+3% all stats</span>.
+            </p>
+            <p className="text-gray-400 text-sm mb-4">
+              Stars persist across ascensions.
+              Current: <span className="text-amber-400">{'★'.repeat(selectedHero.prestige?.count || 0) || 'none'}</span>
+              {' '}After: <span className="text-amber-400">{'★'.repeat((selectedHero.prestige?.count || 0) + 1)}</span>
+            </p>
+            <div className="flex gap-3">
+              <button
+                onClick={() => setShowPrestigeConfirm(false)}
+                className="flex-1 pixel-btn"
+              >
+                Cancel
+              </button>
+              <button
+                onClick={() => {
+                  prestigeHero(selectedHeroId);
+                  setShowPrestigeConfirm(false);
+                }}
+                className="flex-1 pixel-btn pixel-btn-primary"
+              >
+                Prestige
               </button>
             </div>
           </div>

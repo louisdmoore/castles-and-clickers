@@ -151,7 +151,12 @@ const PrepScreen = ({ onOpenAscension }) => {
               return (
                 <div key={hero.id} className="flex items-center gap-2 mb-1.5 text-sm">
                   <ClassIcon classId={hero.classId} size={16} />
-                  <span className="pixel-label text-xs truncate flex-1">{hero.name}</span>
+                  <span className="pixel-label text-xs truncate flex-1">
+                    {hero.name}
+                    {(hero.prestige?.count || 0) > 0 && (
+                      <span className="text-amber-400 ml-0.5">{'★'.repeat(Math.min(hero.prestige.count, 5))}</span>
+                    )}
+                  </span>
                   <span className="text-xs text-[var(--color-text-dim)]">Lv{hero.level}</span>
                   <RoleIcon size={10} className={
                     role === 'tank' ? 'text-blue-400' : role === 'healer' ? 'text-green-400' : 'text-red-400'

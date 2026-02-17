@@ -88,7 +88,9 @@ const getStatCacheKey = (hero, allHeroes = [], homesteadBonuses = null) => {
   // but we include them so different heroes with same stats but different traits don't collide
   const traitsHash = (hero.traits || []).join(',');
 
-  return `${hero.id}:${hero.level}:${equipmentHash}:${skillsHash}:${partySkillBonusCacheVersion}:${homesteadHash}:${highestPartyLevel}:${traitsHash}:a${currentAscensionCount}:u${uniqueLevelsVersion}`;
+  const prestigeCount = hero.prestige?.count || 0;
+
+  return `${hero.id}:${hero.level}:${equipmentHash}:${skillsHash}:${partySkillBonusCacheVersion}:${homesteadHash}:${highestPartyLevel}:${traitsHash}:a${currentAscensionCount}:u${uniqueLevelsVersion}:p${prestigeCount}`;
 };
 
 // Helper to calculate hero stats including equipment, passive skills, and homestead bonuses
@@ -235,6 +237,16 @@ export const calculateHeroStats = (hero, allHeroes = [], homesteadBonuses = null
   }
   if (partyDefensePercent > 0) {
     stats.defense = Math.floor(stats.defense * (1 + partyDefensePercent));
+  }
+
+  // Apply prestige star bonus (+3% all stats per star, before ascension)
+  const prestigeCount = hero.prestige?.count || 0;
+  if (prestigeCount > 0) {
+    const prestigeMult = 1 + (prestigeCount * 0.03);
+    stats.maxHp = Math.floor(stats.maxHp * prestigeMult);
+    stats.attack = Math.floor(stats.attack * prestigeMult);
+    stats.defense = Math.floor(stats.defense * prestigeMult);
+    stats.speed = Math.floor(stats.speed * prestigeMult);
   }
 
   // Apply ascension stat multiplier (after all other bonuses, multiplicative)

@@ -13,6 +13,7 @@ export const CHANGELOG = [
       { type: 'feature', text: 'Duplicate fusion — finding a duplicate unique now fuses into your existing copy, advancing its level instead of converting to gold' },
       { type: 'feature', text: 'Each unique has a conditional XP bonus tied to its playstyle — lean into what makes your unique special' },
       { type: 'feature', text: 'Capstone skill auras — Warlord (+10% party attack), Iron Fortress (+15% party defense), Divine Radiance (2% party regen)' },
+      { type: 'feature', text: 'Prestige stars — heroes at level 25+ can prestige to reset to level 10 and gain a permanent +3% all stats star' },
       { type: 'feature', text: 'Wide-screen layout — three-column grid with collapsible run stats panel (1440px+)' },
       { type: 'improvement', text: 'Restructured game interface for better performance and future layout improvements' },
     ],

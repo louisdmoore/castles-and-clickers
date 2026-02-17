@@ -6,6 +6,11 @@ import { calculateHeroStats, invalidateStatCache, clearStatCache, calculateSkill
 import throttledStorage from '../helpers/throttledStorage';
 import { xpForLevel } from '../helpers/statCalculator';
 
+// Prestige constants
+export const PRESTIGE_MIN_LEVEL = 25;  // Must be level 25+ to prestige
+export const PRESTIGE_RESET_LEVEL = 10; // Reset to level 10 after prestige
+export const PRESTIGE_STAT_BONUS = 0.03; // +3% all stats per star
+
 export const createHeroSlice = (set, get) => ({
   // State
   heroes: [],
@@ -691,5 +696,54 @@ export const createHeroSlice = (set, get) => ({
     const hero = heroes.find(h => h.id === heroId);
     if (!hero) return null;
     return calculateHeroStats(hero, heroes);
+  },
+
+  // Prestige a hero: reset level/XP to 10, gain a permanent star (+3% all stats)
+  prestigeHero: (heroId) => {
+    const { heroes, bench, dungeon } = get();
+
+    // Can't prestige during dungeon
+    if (dungeon) {
+      get().addToast({ type: 'error', message: 'Cannot prestige during a dungeon' });
+      return false;
+    }
+
+    // Find hero in party or bench
+    const hero = heroes.filter(Boolean).find(h => h.id === heroId) || bench.find(h => h.id === heroId);
+    if (!hero) return false;
+
+    // Check level requirement
+    if (hero.level < PRESTIGE_MIN_LEVEL) {
+      get().addToast({ type: 'error', message: `Hero must be level ${PRESTIGE_MIN_LEVEL}+ to prestige` });
+      return false;
+    }
+
+    const newPrestige = { count: (hero.prestige?.count || 0) + 1 };
+
+    // Clear stat caches
+    clearStatCache();
+
+    // Update hero: reset level/XP, keep everything else, increment prestige
+    const updateHero = (h) => {
+      if (!h || h.id !== heroId) return h;
+      return {
+        ...h,
+        level: PRESTIGE_RESET_LEVEL,
+        xp: 0,
+        skills: [], // Free respec on prestige
+        prestige: newPrestige,
+      };
+    };
+
+    set(state => ({
+      heroes: state.heroes.map(h => h ? updateHero(h) : h),
+      bench: state.bench.map(updateHero),
+    }));
+
+    // Immediate save
+    throttledStorage.flush();
+
+    get().addToast({ type: 'success', message: `Prestige! ${hero.name} gained a star (${newPrestige.count} total)` });
+    return true;
   },
 });
