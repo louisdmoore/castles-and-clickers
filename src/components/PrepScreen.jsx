@@ -15,7 +15,7 @@ const DIFFICULTY_INFO = {
   1.0: { label: 'Normal', color: '#9ca3af', desc: 'Standard difficulty' },
   1.5: { label: 'Hard', color: '#fbbf24', desc: '+50% enemy stats, +50% drop rate' },
   2.0: { label: 'Brutal', color: '#f97316', desc: '+100% enemy stats, +100% drops, Infused gear' },
-  2.5: { label: 'Nightmare', color: '#ef4444', desc: '+150% enemy stats, +150% drops' },
+  2.5: { label: 'Nightmare', color: '#ef4444', desc: '+150% enemy stats, +150% drops, higher Infused rate' },
   3.0: { label: 'Mythic', color: '#a855f7', desc: '+200% enemy stats, +200% drops, Ascended gear' },
 };
 

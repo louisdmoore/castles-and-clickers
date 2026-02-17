@@ -1,5 +1,5 @@
 // Equipment definitions
-import { rollAffix as rollAffixFromPool, buildAffixedName as buildAffixName, AFFIX_TYPE } from './itemAffixes';
+import { rollAffix as rollAffixFromPool, buildAffixedName as buildAffixName, AFFIX_TYPE, ITEM_AFFIXES } from './itemAffixes';
 
 export const RARITY = {
   common: { name: 'Common', color: '#9ca3af', multiplier: 1.0 },
@@ -755,11 +755,56 @@ export const generateEquipment = (dungeonLevel, options = {}) => {
     }
   }
 
-  // Build name with affixes
-  let itemName = `${rarityData.name} ${template.name}`;
-  if (affixes.length > 0) {
-    itemName = buildAffixedName(template.name, affixes);
+  // Determine item quality tier based on difficulty multiplier
+  const diffMult = options.lootMultiplier || 1.0;
+  let itemQuality = null;
+
+  if (diffMult >= 3.0 && Math.random() < 0.15) {
+    itemQuality = 'ascended';
+  } else if (diffMult >= 2.0 && Math.random() < 0.20 + (diffMult - 2.0) * 0.20) {
+    itemQuality = 'infused';
   }
+
+  // Infused: guarantee a bonus affix (add one if none, or add extra)
+  if (itemQuality === 'infused' || itemQuality === 'ascended') {
+    // Ensure at least one affix, try to add a bonus one
+    if (affixes.length === 0) {
+      // Roll a prefix for the bonus affix
+      const bonusAffix = rollAffix(template.slot, tier, 'prefix', favoredAffixes)
+        || rollAffix(template.slot, tier, 'suffix', favoredAffixes);
+      if (bonusAffix) affixes.push(bonusAffix.id);
+    } else {
+      // Try to add a complementary affix (prefix if has suffix, suffix if has prefix)
+      const hasPrefix = affixes.some(a => ITEM_AFFIXES[a]?.type === AFFIX_TYPE.PREFIX);
+      const hasSuffix = affixes.some(a => ITEM_AFFIXES[a]?.type === AFFIX_TYPE.SUFFIX);
+      const bonusType = !hasPrefix ? 'prefix' : !hasSuffix ? 'suffix' : null;
+      if (bonusType) {
+        const bonusAffix = rollAffix(template.slot, tier, bonusType, favoredAffixes);
+        if (bonusAffix && !affixes.includes(bonusAffix.id)) affixes.push(bonusAffix.id);
+      }
+    }
+  }
+
+  // Ascended: bonus stat multiplier (1.3x stats)
+  if (itemQuality === 'ascended') {
+    for (const stat of Object.keys(stats)) {
+      stats[stat] = Math.round(stats[stat] * 1.3);
+    }
+  }
+
+  // Build name with affixes and quality prefix
+  const qualityPrefix = itemQuality === 'ascended' ? 'Ascended ' : itemQuality === 'infused' ? 'Infused ' : '';
+  let itemName;
+  if (affixes.length > 0) {
+    itemName = qualityPrefix + buildAffixedName(template.name, affixes);
+  } else {
+    itemName = qualityPrefix + `${rarityData.name} ${template.name}`;
+  }
+
+  // Quality color overrides rarity color for visual distinction
+  const qualityColor = itemQuality === 'ascended' ? '#f472b6' // Pink
+    : itemQuality === 'infused' ? '#34d399' // Emerald
+    : null;
 
   return {
     id: `${template.id}_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
@@ -768,10 +813,11 @@ export const generateEquipment = (dungeonLevel, options = {}) => {
     emoji: template.emoji,
     slot: template.slot,
     rarity,
-    rarityColor: rarityData.color,
+    rarityColor: qualityColor || rarityData.color,
     stats,
     classes: template.classes,
     affixes: affixes.length > 0 ? affixes : undefined,
+    ...(itemQuality ? { quality: itemQuality } : {}),
   };
 };
 
