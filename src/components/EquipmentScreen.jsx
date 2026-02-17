@@ -11,6 +11,13 @@ import HelpTooltip from './ui/HelpTooltip';
 import Tooltip from './ui/Tooltip';
 import EquipmentTooltip from './ui/EquipmentTooltip';
 
+// Cost helper for reforge display (mirrors store logic)
+const getReforgeCostForDisplay = (count, ascensionCount, locked) => {
+  const COSTS = [2000, 3000, 5000, 8000, 12000];
+  const baseCost = count < 5 ? COSTS[count] : 12000 + (count - 4) * 5000;
+  return Math.floor(baseCost * (1 + ascensionCount * 0.5) * (locked ? 2 : 1));
+};
+
 // Reforging panel for equipped items
 const ReforgePanel = ({ item }) => {
   const { gold, reforgeCount, reforgeItem, getReforgeCost, ascension } = useGameStore();
@@ -82,13 +89,6 @@ const ReforgePanel = ({ item }) => {
       )}
     </div>
   );
-};
-
-// Expose cost helper for display (mirrors store logic)
-const getReforgeCostForDisplay = (count, ascensionCount, locked) => {
-  const COSTS = [2000, 3000, 5000, 8000, 12000];
-  const baseCost = count < 5 ? COSTS[count] : 12000 + (count - 4) * 5000;
-  return Math.floor(baseCost * (1 + ascensionCount * 0.5) * (locked ? 2 : 1));
 };
 
 // Helper to get affix descriptions for an item
@@ -344,7 +344,7 @@ const EquipmentScreen = () => {
   return (
     <div className="flex gap-3 h-[60vh]">
       {/* Left: Hero & Equipment */}
-      <div className="w-64 flex-shrink-0 flex flex-col gap-2">
+      <div className="w-64 flex-shrink-0 flex flex-col gap-2 overflow-y-auto">
         {/* Hero Tabs */}
         <div className="flex gap-1">
           {heroes.filter(Boolean).map(hero => (
