@@ -29,7 +29,7 @@ import {
   getEnrageDamageBonus, getBossState, getWorldBossLoot,
 } from './bossEngine';
 import { applyStatusEffect } from './statusEngine';
-import { STATUS_EFFECTS } from '../data/statusEffects';
+import { STATUS_EFFECTS, getActiveCombos } from '../data/statusEffects';
 import {
   calculateDodgeChance, calculateDoubleAttackChance,
 } from './constants';
@@ -172,18 +172,43 @@ export const calculateBasicAttackDamage = (ctx, actor, target) => {
 
   // Apply unique damageReduction as self-nerf (Leviathan's Heart)
   const uniqueDamageReductionMultiplier = 1 - (uniqueBonuses.damageReduction || 0);
-  let dmg = Math.floor(baseDmg * passiveBonuses.damageMultiplier * uniqueBonuses.damageMultiplier * uniqueDamageReductionMultiplier * executeMultiplier * berserkerMultiplier * vengeanceMultiplier * tauntPartyMultiplier * buffDamageMultiplier * weaknessMultiplier * bossDamageMultiplier * stealthMultiplier * rootedMultiplier * shieldBonusMultiplier);
+  // Check status effect combos on target (on_attack trigger)
+  const targetStatusIds = (newStatusEffects[target.id] || []).map(s => s.id);
+  const attackCombos = targetStatusIds.length > 0 ? getActiveCombos(targetStatusIds, 'on_attack') : [];
+  let comboMultiplier = 1;
+  let comboGuaranteedCrit = false;
+  for (const combo of attackCombos) {
+    if (combo.effect.guaranteedCrit) comboGuaranteedCrit = true;
+    if (combo.effect.damageMultiplier) comboMultiplier *= combo.effect.damageMultiplier;
+    addCombatLog({ type: 'system', message: `${combo.comboMessage} ${actor.name} triggers ${combo.name} on ${target.name}!` });
+  }
+
+  let dmg = Math.floor(baseDmg * passiveBonuses.damageMultiplier * uniqueBonuses.damageMultiplier * uniqueDamageReductionMultiplier * executeMultiplier * berserkerMultiplier * vengeanceMultiplier * tauntPartyMultiplier * buffDamageMultiplier * weaknessMultiplier * bossDamageMultiplier * stealthMultiplier * rootedMultiplier * shieldBonusMultiplier * comboMultiplier);
   let isCrit = false;
 
   // Base crit chance
   const baseCritChance = actor.isHero && DPS_CLASSES.includes(actor.classId) ? BASE_CRIT_CHANCE_DPS : BASE_CRIT_CHANCE_OTHER;
 
   const totalCritChance = baseCritChance + (passiveBonuses.critChance || 0) + actorCritBonus + affixBonuses.critChanceBonus + (uniqueBonuses.critChance || 0);
-  if (Math.random() < totalCritChance) {
+  if (comboGuaranteedCrit || Math.random() < totalCritChance) {
     let critMultiplier = BASE_CRIT_MULTIPLIER + (passiveBonuses.critDamageBonus || 0);
     if (heroData) {
       const critAffixResult = processOnCritAffixes(heroData, dmg, target);
       critMultiplier *= critAffixResult.bonusDamageMultiplier;
+
+      // on_crit combo: hemorrhage (refresh bleed duration)
+      const critCombos = targetStatusIds.length > 0 ? getActiveCombos(targetStatusIds, 'on_crit') : [];
+      for (const combo of critCombos) {
+        if (combo.effect.refreshStatus) {
+          const targetEffects = newStatusEffects[target.id] || [];
+          const statusToRefresh = targetEffects.find(s => s.id === combo.effect.refreshStatus);
+          if (statusToRefresh) {
+            const template = STATUS_EFFECTS[combo.effect.refreshStatus];
+            statusToRefresh.duration = template?.duration || statusToRefresh.duration;
+            addCombatLog({ type: 'system', message: `${combo.comboMessage} ${target.name}'s ${combo.effect.refreshStatus} is refreshed!` });
+          }
+        }
+      }
     }
     dmg = Math.floor(dmg * critMultiplier);
     isCrit = true;
