@@ -10,7 +10,6 @@ import { RARITY } from '../data/equipment';
 import { ITEM_AFFIXES } from '../data/itemAffixes';
 import { CLASSES, PARTY_SLOTS } from '../data/classes';
 import { DUNGEON_TIERS } from '../data/milestones';
-import { BUILDINGS, getUpgradeCost } from '../data/homestead';
 import { STATUS_EFFECTS } from '../data/statusEffects';
 
 const TABS = [
@@ -18,7 +17,6 @@ const TABS = [
   { id: 'equipment', label: 'Equipment' },
   { id: 'classes', label: 'Classes' },
   { id: 'dungeons', label: 'Dungeons' },
-  { id: 'homestead', label: 'Homestead' },
   { id: 'status', label: 'Status FX' },
 ];
 
@@ -258,7 +256,6 @@ const DungeonsSection = () => (
     <DataTable
       headers={['Dungeon', 'Unlock']}
       rows={[
-        ['D3', 'Homestead buildings'],
         ['D5', 'Item Shop, Auto-Run'],
         ['D10', 'Shop rare items, Party size 5'],
         ['D12', 'Sunken Temple raid'],
@@ -281,47 +278,6 @@ const DungeonsSection = () => (
     </p>
   </div>
 );
-
-const HomesteadSection = () => {
-  const buildingEntries = Object.entries(BUILDINGS);
-
-  return (
-    <div>
-      <SectionTitle>Buildings</SectionTitle>
-      <DataTable
-        headers={['Building', 'Max Lv', 'Effect', 'Base Cost']}
-        rows={buildingEntries.map(([, b]) => [
-          b.name,
-          b.maxLevel,
-          b.description || b.effect || '—',
-          `${b.baseCost || getUpgradeCost(b, 0)}g`,
-        ])}
-      />
-
-      <SectionTitle>Cost Scaling</SectionTitle>
-      <p className="text-[var(--color-text-dim)] mb-2">
-        Each level costs approximately <span className="text-[var(--color-gold)]">2.5x</span> the previous level.
-        Plan your upgrades carefully!
-      </p>
-      {buildingEntries.length > 0 && (
-        <DataTable
-          headers={['Level', ...buildingEntries.slice(0, 4).map(([, b]) => b.name)]}
-          rows={[1, 2, 3, 4, 5].map(level => [
-            level,
-            ...buildingEntries.slice(0, 4).map(([, b]) =>
-              `${getUpgradeCost(b, level - 1).toLocaleString()}g`
-            ),
-          ])}
-        />
-      )}
-
-      <SectionTitle>Unlocks</SectionTitle>
-      <p className="text-[var(--color-text-dim)]">
-        The homestead unlocks after clearing Dungeon 3. Bonuses apply globally to all heroes.
-      </p>
-    </div>
-  );
-};
 
 const StatusSection = () => {
   const effects = STATUS_EFFECTS
@@ -376,7 +332,6 @@ const TAB_COMPONENTS = {
   equipment: EquipmentSection,
   classes: ClassesSection,
   dungeons: DungeonsSection,
-  homestead: HomesteadSection,
   status: StatusSection,
 };
 
@@ -386,7 +341,6 @@ const TAB_SEARCH_TEXT = {
   equipment: 'rarity common uncommon rare epic legendary unique affix prefix suffix weapon armor accessory shop pricing',
   classes: 'warrior paladin knight mage rogue ranger necromancer cleric druid shaman tank healer dps skill points tier',
   dungeons: 'dungeon tier crystal caves ancient crypt dark forest ruined castle volcanic depths void elite milestone raid party size',
-  homestead: 'barracks armory fortress training treasury academy infirmary building upgrade cost bonus',
   status: 'poison burn bleed stun slow freeze root weakness vulnerable blind cursed regeneration fortify haste might invisible',
 };
 
