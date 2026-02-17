@@ -17,10 +17,12 @@ A comprehensive reference for AI agents and developers working on this idle dung
 11. [Equipment & Affixes](#equipment--affixes)
 12. [Monster System](#monster-system)
 13. [Homestead System](#homestead-system)
-14. [Performance Patterns](#performance-patterns)
-15. [Data Flow Examples](#data-flow-examples)
-16. [File Reference](#file-reference)
-17. [Conventions](#conventions)
+14. [Run Stats & Post-Combat Feedback](#run-stats--post-combat-feedback)
+15. [Loot Notification System](#loot-notification-system)
+16. [Performance Patterns](#performance-patterns)
+17. [Data Flow Examples](#data-flow-examples)
+18. [File Reference](#file-reference)
+19. [Conventions](#conventions)
 
 ---
 
@@ -54,22 +56,34 @@ src/
 │   ├── EquipmentScreen.jsx  # Item management
 │   ├── SkillTreeScreen.jsx  # Skill unlocking
 │   ├── HomesteadScreen.jsx  # Building upgrades
-│   └── ShopScreen.jsx       # Item purchasing
+│   ├── ShopScreen.jsx       # Item purchasing
+│   ├── ContributionMeter.jsx # Per-hero combat stats (v0.2.0)
+│   ├── RunSummary.jsx       # Post-dungeon summary popup (v0.2.0)
+│   ├── PrepScreen.jsx       # Between-dungeon prep phase (v0.2.0)
+│   ├── MilestoneWidget.jsx  # Nearest goals tracker (v0.2.0)
+│   ├── DeathRecap.jsx       # Party wipe breakdown (v0.2.1)
+│   └── LootNotifications.jsx # Loot drop notifications (v0.2.1)
 │
 ├── data/                     # Game definitions (balance, content)
 │   ├── classes.js           # 15 hero classes with stats
 │   ├── skillTrees.js        # Skill trees per class
 │   ├── equipment.js         # Equipment templates
-│   ├── itemAffixes.js       # 40+ equipment affixes
+│   ├── itemAffixes.js       # 40+ equipment affixes + synergy tags (v0.1.29)
 │   ├── monsters.js          # 25+ monster types by tier
 │   ├── monsterAbilities.js  # Monster attack definitions
-│   ├── statusEffects.js     # Status effect mechanics
-│   ├── dungeonThemes.js     # 6 visual themes by level
+│   ├── statusEffects.js     # Status effects + combo table (v0.1.29)
+│   ├── dungeonThemes.js     # 6 themes + favored affixes (v0.1.29)
 │   ├── dungeonTypes.js      # Difficulty modifiers
 │   ├── homestead.js         # Building definitions
 │   ├── raids.js             # Special encounters
-│   ├── uniqueItems.js       # Legendary items
-│   └── milestones.js        # Dungeon tier definitions
+│   ├── uniqueItems.js       # Legendary items + synergy tags (v0.1.29)
+│   ├── milestones.js        # Dungeon tier definitions
+│   ├── heroTraits.js        # 14 traits with weighted rolling (v0.1.29)
+│   ├── roomEvents.js        # 10 room events (v0.1.29)
+│   ├── dungeonAffixes.js    # 8 dungeon modifiers (v0.1.29)
+│   ├── ascensionMilestones.js # Ascension rewards (v0.1.29)
+│   ├── achievements.js      # 30 achievements, 5 categories (v0.1.29)
+│   └── changelog.js         # Version + player-facing changelog
 │
 ├── game/                     # Core mechanics
 │   ├── combatEngine.js      # Combat initialization
@@ -143,6 +157,13 @@ Zustand store split into 5 focused slices in `src/store/slices/`, composed in `g
     bossUnlocked: boolean,
   },
 
+  // Per-Run Tracking (v0.2.0, excluded from persistence)
+  runStats: { heroId: { damageDealt, healingDone, damageTaken, ... } },
+  deathLog: [{ heroId, heroName, classId, killerName, deathOrder }],
+  lastRunSummary: { ... },       // Snapshot of runStats after dungeon end
+  lastDeathRecap: { ... },       // Built from deathLog on defeat
+  prepPhase: { nextLevel, success, dungeonType },
+
   // Persistent
   heroes: [heroDefinition],
   heroHp: { heroId: currentHp },  // Persists between rooms
@@ -194,9 +215,8 @@ const { isRunning, dungeon } = useGameStore();
 ### Phase Flow
 
 ```
-SETUP → EXPLORING → COMBAT → CLEARING → COMPLETE
-         ↑______________|                    ↓
-                                    (next dungeon)
+SETUP → EXPLORING → COMBAT → CLEARING → COMPLETE → PrepScreen → next dungeon
+         ↑______________|                DEFEAT  → PrepScreen → retry dungeon
 ```
 
 ### useGameLoop (250-500ms tick rate)
@@ -209,8 +229,9 @@ Located in `src/hooks/useGameLoop.js`.
 | EXPLORING | Variable | Move party, detect enemies in range |
 | COMBAT | Variable | Process turns until all enemies dead |
 | CLEARING | 2 ticks | Pause, check for remaining monsters |
-| COMPLETE | 3 ticks | Award gold/XP, auto-advance |
-| DEFEAT | 3 ticks | Increment deaths, auto-retry |
+| COMPLETE | 3 ticks | Award gold/XP, set `prepPhase`, show RunSummary |
+| DEFEAT | 3 ticks | Increment deaths, set `prepPhase`, show DeathRecap |
+| PrepScreen | 5s auto | Party overview, dungeon preview, milestones (v0.2.0) |
 
 ### Tick Rate Calculation
 
@@ -643,6 +664,25 @@ checkStatusBreaks(target)  // Damage breaks freeze, etc.
 - **Armor**: Plate, Leather, Robes, Shield
 - **Accessory**: Ring, Amulet, Cloak
 
+### Smart Auto-Equip (v0.2.1)
+
+`processLootDrop` in `inventorySlice.js` uses a two-tier system:
+
+- **Silent auto-equip**: Common/uncommon clear upgrades equip immediately with an "Auto-equipped" notification
+- **Suggest + confirm**: Rare+ upgrades or close-call upgrades (score within 10% of current) go to inventory with a `suggest-equip` notification showing stat diffs and [Equip]/[Keep Current] buttons
+
+Threshold check in `processLootDrop`:
+```javascript
+const isRarePlus = item.rarity === 'rare' || item.rarity === 'epic' || item.rarity === 'legendary';
+const isCloseCall = oldItem && currentScore > 0 && (newScore - currentScore) / currentScore < 0.10;
+```
+
+If inventory is full, falls through to silent auto-equip (don't lose the upgrade).
+
+### Equipment Comparison (v0.2.1)
+
+`compareToEquipped(item, heroId)` computes per-stat diffs and overall score diff. Used by `EquipmentTooltip` (hover comparison) and `suggest-equip` notifications. Returns `{ currentItem, scoreDiff, statDiff, isBetter }`.
+
 ### Affix Triggers (40+ affixes)
 
 **On-Hit**
@@ -735,6 +775,79 @@ Toast state lives in `economySlice.js`: `toasts: []`, `addToast({ type, message 
 
 ---
 
+## Run Stats & Post-Combat Feedback
+
+Added in v0.2.0–v0.2.1. These systems make combat outcomes visible to the player.
+
+### Run Stats (v0.2.0)
+
+Per-run stat accumulator in `combatSlice.js`. Initialized on `startDungeon`, updated per tick in `useCombat.js` alongside existing lifetime `stats.heroStats`.
+
+```javascript
+runStats: {
+  [heroId]: {
+    damageDealt, healingDone, damageTaken, damagePrevented,
+    healingReceived, controlTime, turnsTaken, kills, biggestHit
+  }
+}
+```
+
+Excluded from persistence (reset every run). `lastRunSummary` snapshots `runStats` before `endDungeon` clears it.
+
+### Components
+
+| Component | Trigger | Auto-dismiss | File |
+|-----------|---------|-------------|------|
+| `ContributionMeter` | During combat | N/A (live) | `ContributionMeter.jsx` |
+| `RunSummary` | Dungeon complete | 5s (auto-advance) | `RunSummary.jsx` |
+| `DeathRecap` | Party wipe | 8s (auto-advance) | `DeathRecap.jsx` |
+| `PrepScreen` | After dungeon end | 5s (auto-advance) | `PrepScreen.jsx` |
+| `MilestoneWidget` | On PrepScreen | N/A (embedded) | `MilestoneWidget.jsx` |
+
+### Preparation Phase Flow (v0.2.0)
+
+`endDungeon` sets `prepPhase: { nextLevel, success, dungeonType }` in `dungeonSlice.js`. The game loop no longer auto-starts the next dungeon — `PrepScreen` handles auto-advance via its own 5s timer. `startFromPrepPhase()` clears `prepPhase` and calls `startDungeon`.
+
+```
+dungeon COMPLETE/DEFEAT → endDungeon → set prepPhase + lastRunSummary/lastDeathRecap
+  → PrepScreen visible (RunSummary/DeathRecap modal on top)
+  → modal auto-dismisses → PrepScreen auto-dismisses (5s) → next dungeon starts
+```
+
+### Death Tracking (v0.2.1)
+
+Hero deaths are recorded at 3 code sites via `ctx.heroDeaths` array:
+- `combatDamageResolution.js` — attack damage kills
+- `combatSkillExecution.js` — skill damage kills
+- `combatStatusEffects.js` — DOT kills (killer name = DOT type: "Burn", "Poison", "Bleed")
+
+Deaths are processed at end of tick in `useCombat.js` → `recordHeroDeath()` action appends to `deathLog[]` in combatSlice. On defeat, `endDungeon` builds `lastDeathRecap` from `deathLog` + `runStats`.
+
+---
+
+## Loot Notification System (v0.2.1)
+
+Loot notifications are separate from toast notifications. State lives in `inventorySlice.js`: `lootNotifications[]`, `addLootNotification()`, `removeLootNotification()`, `clearOldNotifications()`.
+
+**Component:** `LootNotifications.jsx` renders a fixed-position container at `bottom-4 right-4` (z-40). Max 10 notifications, auto-cleanup every 1s.
+
+### Notification Types
+
+| Type | Trigger | Duration | Interactive |
+|------|---------|----------|-------------|
+| `auto-equipped` | Common/uncommon upgrade auto-equipped | 4.5s | Click to dismiss |
+| `suggest-equip` | Rare+ or close-call upgrade | 8s | [Equip] / [Keep Current] buttons |
+| `looted` | Item added to inventory | 4.5s | Click to equip (if upgrade) |
+| `auto-sold` | Junk auto-sold for gold | 4.5s | Click to dismiss |
+| `inventory-full` | Item lost, no space | 4.5s | Click to dismiss |
+| `unique-drop` | New unique collected | 4.5s | Click to dismiss |
+| `unique-duplicate` | Duplicate unique → gold | 4.5s | Click to dismiss |
+| `collection-milestone` | Unique collection progress | 4.5s | Click to dismiss |
+
+`suggest-equip` notifications use 9s server-side cleanup (vs 5s regular) to avoid premature removal before the 8s client-side timer.
+
+---
+
 ## Performance Patterns
 
 ### 1. Imperative State Access
@@ -803,6 +916,25 @@ handleExplorationTick():
   └─ setRoomCombat({ phase: COMBAT, turnOrder, combatMonsters })
 ```
 
+### Dungeon End (v0.2.0)
+
+```
+All rooms cleared / Party wipe
+  ↓
+endDungeon(success):
+  ├─ Snapshot runStats → lastRunSummary (success) or lastDeathRecap (defeat)
+  ├─ Award gold/XP, increment stats
+  ├─ Set prepPhase: { nextLevel, success, dungeonType }
+  └─ Clear dungeon/combat state
+  ↓
+GameLayout renders PrepScreen (prepPhase active)
+  ├─ RunSummary modal (success) or DeathRecap modal (defeat) on top
+  ├─ Modal auto-dismisses (5s/8s)
+  └─ PrepScreen auto-dismisses (5s when auto-advance on)
+  ↓
+startFromPrepPhase() → clears prepPhase → startDungeon(nextLevel)
+```
+
 ### Combat Turn
 
 ```
@@ -850,6 +982,9 @@ handleCombatTick():                          # useCombat.js (orchestrator)
 | `game/affixEngine.js` | 400+ lines | Affix triggers |
 | `game/monsterAI.js` | 300+ lines | AI behaviors |
 | `data/monsters.js` | 600+ lines | Monster definitions |
+| `components/PrepScreen.jsx` | ~180 lines | Between-dungeon preparation phase (v0.2.0) |
+| `components/DeathRecap.jsx` | ~165 lines | Party wipe breakdown modal (v0.2.1) |
+| `components/LootNotifications.jsx` | ~300 lines | Loot drop notifications with suggest-equip (v0.2.1) |
 | `data/itemAffixes.js` | 800+ lines | Affix definitions |
 
 ---
