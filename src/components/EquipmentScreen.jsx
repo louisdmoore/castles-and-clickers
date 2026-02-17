@@ -8,6 +8,8 @@ import HeroIcon from './icons/HeroIcon';
 import ItemIcon, { WeaponSlotIcon, ArmorSlotIcon, AccessorySlotIcon } from './icons/ItemIcon';
 import { GoldIcon, PartyIcon, StarIcon, ArrowUpIcon, SparkleIcon } from './icons/ui';
 import HelpTooltip from './ui/HelpTooltip';
+import Tooltip from './ui/Tooltip';
+import EquipmentTooltip from './ui/EquipmentTooltip';
 
 // Helper to get affix descriptions for an item
 const getAffixDescriptions = (item) => {
@@ -41,23 +43,6 @@ const getItemDisplayStats = (item, highestPartyLevel) => {
   return item?.stats || {};
 };
 
-// Build tooltip text for item
-const buildItemTooltip = (item, affixes) => {
-  const lines = [];
-  if (affixes.length > 0) {
-    lines.push(...affixes.map(a => `${a.name}: ${a.description}`));
-  }
-  if (item?.isUnique && item?.uniquePower) {
-    if (lines.length > 0) lines.push('');
-    lines.push(`★ ${item.uniquePower.name}`);
-    lines.push(item.uniquePower.description);
-    const classRestriction = formatClassRestrictions(item);
-    if (classRestriction) {
-      lines.push(`Classes: ${classRestriction}`);
-    }
-  }
-  return lines.length > 0 ? lines.join('\n') : undefined;
-};
 
 // Compact equipped item slot
 const EquippedSlot = ({ label, slot, item, onClick, isSelected, highestPartyLevel }) => {
@@ -66,12 +51,16 @@ const EquippedSlot = ({ label, slot, item, onClick, isSelected, highestPartyLeve
   const isUnique = item?.isUnique;
   const displayStats = getItemDisplayStats(item, highestPartyLevel);
 
+  const equippedTooltip = item ? (
+    <EquipmentTooltip item={item} />
+  ) : null;
+
   return (
+    <Tooltip content={equippedTooltip} position="bottom" delay={300} disabled={!item}>
     <button
       onClick={onClick}
       className={`p-2 rounded border flex items-center gap-2 transition-all text-left w-full
         ${isSelected ? 'border-yellow-400 bg-yellow-400/10' : isUnique ? 'border-cyan-500 bg-cyan-900/10 hover:border-cyan-400' : 'border-gray-700 bg-gray-900 hover:border-gray-500'}`}
-      title={buildItemTooltip(item, affixes)}
     >
       <div
         className={`w-8 h-8 rounded flex items-center justify-center flex-shrink-0 relative ${
@@ -111,6 +100,7 @@ const EquippedSlot = ({ label, slot, item, onClick, isSelected, highestPartyLeve
         )}
       </div>
     </button>
+    </Tooltip>
   );
 };
 
@@ -120,12 +110,20 @@ const InventoryRow = ({ item, canEquip, onEquip, onSell, comparison, highestPart
   const isUnique = item?.isUnique;
   const displayStats = getItemDisplayStats(item, highestPartyLevel);
 
+  const tooltipContent = (
+    <EquipmentTooltip
+      item={item}
+      comparedItem={comparison?.currentItem}
+      showComparison={!!comparison?.currentItem}
+    />
+  );
+
   return (
+    <Tooltip content={tooltipContent} position="left" delay={300}>
     <div
       className={`p-1.5 rounded border flex items-center gap-2
         ${comparison?.isBetter ? 'border-green-500/50 bg-green-500/5' : isUnique ? 'border-cyan-500/50 bg-cyan-900/10' : 'border-gray-700 bg-gray-900/50'}
         ${!canEquip ? 'opacity-50' : ''}`}
-      title={buildItemTooltip(item, affixes)}
     >
       <div
         className="w-7 h-7 rounded flex items-center justify-center flex-shrink-0 relative"
@@ -187,6 +185,7 @@ const InventoryRow = ({ item, canEquip, onEquip, onSell, comparison, highestPart
         </button>
       </div>
     </div>
+    </Tooltip>
   );
 };
 
