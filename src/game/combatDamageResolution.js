@@ -77,21 +77,35 @@ export const calculateBasicAttackDamage = (ctx, actor, target) => {
   const targetDefenseBonus = target.isHero ? defenseBonus : 1;
   const actorCritBonus = actor.isHero ? critBonus : 0;
 
-  // Check for execute bonus (Executioner's affix)
+  // Check for execute bonus (Executioner's affix + Headsman synergy)
   let executeMultiplier = 1;
   if (heroData) {
     const executeBonus = getExecuteBonus(heroData, target);
     if (executeBonus) {
       executeMultiplier = 1 + executeBonus.bonus;
     }
+    // Stack synergy execute bonus
+    if (affixBonuses.synergyExecuteBonus > 0 && affixBonuses.synergyExecuteThreshold > 0) {
+      const targetHpPercent = target.stats.hp / target.stats.maxHp;
+      if (targetHpPercent <= affixBonuses.synergyExecuteThreshold) {
+        executeMultiplier += affixBonuses.synergyExecuteBonus;
+      }
+    }
   }
 
-  // Check for berserker bonus (Berserker's affix)
+  // Check for berserker bonus (Berserker's affix + Blood Rage synergy)
   let berserkerMultiplier = 1;
   if (heroData) {
     const berserkerBonus = getBerserkerBonus({ ...heroData, stats: actor.stats });
     if (berserkerBonus) {
       berserkerMultiplier = 1 + (berserkerBonus.bonus / 100);
+    }
+    // Stack synergy low HP damage bonus
+    if (affixBonuses.synergyLowHpDamageBonus > 0 && affixBonuses.synergyLowHpThreshold > 0) {
+      const heroHpPercent = actor.stats.hp / actor.stats.maxHp;
+      if (heroHpPercent <= affixBonuses.synergyLowHpThreshold) {
+        berserkerMultiplier += affixBonuses.synergyLowHpDamageBonus;
+      }
     }
   }
 
@@ -267,6 +281,14 @@ export const resolveHeroTargetDamage = (ctx, actor, target, attackResult) => {
     baseDodgeChance += target.bonusDodge;
   }
   baseDodgeChance += targetUniqueAccuracyReduction + targetUniqueMissChance;
+  // Quicksilver synergy dodge bonus
+  if (target.isHero) {
+    const targetHeroForSynergy = heroes.find(h => h.id === target.id);
+    if (targetHeroForSynergy) {
+      const targetAffixBonuses = getPassiveAffixBonuses(targetHeroForSynergy);
+      baseDodgeChance += targetAffixBonuses.synergyDodgeChance || 0;
+    }
+  }
   const dodged = Math.random() < baseDodgeChance;
 
   if (dodged) {
@@ -296,6 +318,10 @@ export const resolveHeroTargetDamage = (ctx, actor, target, attackResult) => {
     );
     totalDamageReduction += onDamageTakenResult.damageReduction;
     reflectDamage = onDamageTakenResult.reflectDamage;
+
+    // Ironclad synergy damage reduction
+    const targetSynergyBonuses = getPassiveAffixBonuses(targetHeroData);
+    totalDamageReduction += targetSynergyBonuses.synergyDamageReduction || 0;
 
     const skillOnDamageTaken = getOnDamageTakenEffects(target, dmg, actor);
     totalDamageReduction += skillOnDamageTaken.damageReduction;
@@ -790,6 +816,11 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
   if (heroData) {
     const onHitResult = processOnHitAffixes(heroData, dmg, target, isCrit);
     let totalLifesteal = onHitResult.lifestealAmount || 0;
+
+    // Sustain synergy (Siphon) lifesteal
+    if (attackResult.affixBonuses?.synergyLifesteal > 0) {
+      totalLifesteal += Math.floor(dmg * attackResult.affixBonuses.synergyLifesteal);
+    }
 
     const skillOnHitEffects = getOnHitEffects(actor, dmg);
     totalLifesteal += skillOnHitEffects.healAmount;

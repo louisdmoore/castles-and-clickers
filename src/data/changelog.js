@@ -11,6 +11,7 @@ export const CHANGELOG = [
     changes: [
       { type: 'feature', text: 'Reforging — reroll affixes on rare+ gear from the Equipment screen. Lock one affix to keep it (costs 2x)' },
       { type: 'feature', text: 'Escalating reforge costs that reset after each dungeon clear — choose your moments wisely' },
+      { type: 'feature', text: 'Affix synergies — matching affix tags across gear activates set bonuses (Quicksilver, Ironclad, Lifebond, Headsman, Blood Rage, Siphon)' },
     ],
   },
   {

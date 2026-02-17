@@ -289,7 +289,11 @@ export const executeHeroSkillAction = (ctx, actor) => {
         const targetHealReduction = getHeroHealingReduction(heroes.find(hr => hr.id === result.targetId) || {});
         const buffHealReduction = (newBuffs[result.targetId] || {}).healingReduction || 0;
         const totalHealReduction = Math.min(1, targetHealReduction + buffHealReduction);
-        const reducedHealAmount = totalHealReduction > 0 ? Math.floor(result.amount * (1 - totalHealReduction)) : result.amount;
+        // Lifebond synergy: bonus healing received
+        const targetHeroForSynergy = heroes.find(hr => hr.id === result.targetId);
+        const synergyHealBonus = targetHeroForSynergy ? (getPassiveAffixBonuses(targetHeroForSynergy).synergyHealingReceived || 0) : 0;
+        const baseHealAmount = totalHealReduction > 0 ? Math.floor(result.amount * (1 - totalHealReduction)) : result.amount;
+        const reducedHealAmount = synergyHealBonus > 0 ? Math.floor(baseHealAmount * (1 + synergyHealBonus)) : baseHealAmount;
         const actualHealAmount = Math.min(reducedHealAmount, h.stats.maxHp - h.stats.hp);
         h.stats.hp = Math.min(h.stats.maxHp, h.stats.hp + reducedHealAmount);
         if (targetHealReduction > 0) {

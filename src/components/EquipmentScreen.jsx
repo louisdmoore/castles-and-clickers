@@ -2,7 +2,7 @@ import { useState, useMemo } from 'react';
 import { useGameStore, calculateHeroStats, calculateSellValue, STAT_PRIORITIES } from '../store/gameStore';
 import { CLASSES } from '../data/classes';
 import { canClassUseEquipment } from '../data/equipment';
-import { ITEM_AFFIXES } from '../data/itemAffixes';
+import { ITEM_AFFIXES, getActiveSynergies } from '../data/itemAffixes';
 import { scaleUniqueStats } from '../data/uniqueItems';
 import HeroIcon from './icons/HeroIcon';
 import ItemIcon, { WeaponSlotIcon, ArmorSlotIcon, AccessorySlotIcon } from './icons/ItemIcon';
@@ -291,6 +291,16 @@ const EquipmentScreen = () => {
   const stats = selectedHero ? calculateHeroStats(selectedHero, heroes) : null;
   const highestPartyLevel = heroes.length > 0 ? Math.max(...heroes.map(h => h.level)) : 1;
 
+  const heroSynergies = useMemo(() => {
+    if (!selectedHero) return [];
+    const affixIds = [];
+    for (const slot of ['weapon', 'armor', 'accessory']) {
+      const item = selectedHero.equipment[slot];
+      if (item?.affixes) affixIds.push(...item.affixes);
+    }
+    return getActiveSynergies(affixIds);
+  }, [selectedHero]);
+
   const processedInventory = useMemo(() => {
     let items = [...inventory];
     if (selectedSlot) items = items.filter(item => item.slot === selectedSlot);
@@ -358,6 +368,19 @@ const EquipmentScreen = () => {
             <div><span className="text-red-400 font-bold">{stats.attack}</span><div className="text-[9px] text-gray-500">ATK</div></div>
             <div><span className="text-blue-400 font-bold">{stats.defense}</span><div className="text-[9px] text-gray-500">DEF</div></div>
             <div><span className="text-yellow-400 font-bold">{stats.speed}</span><div className="text-[9px] text-gray-500">SPD</div></div>
+          </div>
+        )}
+
+        {/* Active Synergies */}
+        {heroSynergies.length > 0 && (
+          <div className="bg-gray-900 rounded px-2 py-1 space-y-0.5">
+            {heroSynergies.map(s => (
+              <div key={s.tag} className="flex items-center gap-1 text-[10px]">
+                <SparkleIcon size={10} />
+                <span className="text-purple-300 font-medium">{s.label}</span>
+                <span className="text-gray-500">{s.description}</span>
+              </div>
+            ))}
           </div>
         )}
 
