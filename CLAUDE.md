@@ -28,7 +28,7 @@ The project is undergoing a major feature expansion defined in `DESIGN_RETHINK.m
 - **No mid-combat player input.** The combat engine is non-interactive. Player expression belongs in pre-combat decisions (party, gear, skills, difficulty) and post-combat feedback (DPS meter, death recap).
 - **No multiplayer.** localStorage + Zustand architecture. Single-player only.
 - **New UI uses existing modal pattern.** New popups/screens should use `ModalOverlay.jsx`. The full layout overhaul is deferred to Phase 7 (v0.4.0).
-- **Save migration required for new persistent state.** Until the versioned migration system is built (Phase 4 prereq), use the existing `merge` function in `gameStore.js` persistence config for backwards compatibility.
+- **Save migration required for new persistent state.** Use the versioned migration system in `src/store/helpers/migrations.js`. See the "Save Migration System" section below for the pattern.
 - **Auto-dismiss for idle players.** Any new screen/popup that interrupts the game loop must auto-dismiss after ~5 seconds when auto-advance is on.
 
 ## Version Number
@@ -66,9 +66,9 @@ The game uses a hook-based loop architecture:
 - `useThrottledDisplay` - Render throttling (~15 FPS) to reduce component updates
 
 ### Combat Phases
-`SETUP → EXPLORING → COMBAT → CLEARING → COMPLETE`
+`SETUP → EXPLORING → COMBAT → CLEARING → COMPLETE/DEFEAT → PrepScreen → next dungeon`
 
-Combat uses initiative-based turn order with A* pathfinding for movement. Speed stat influences dodge chance and double attack probability.
+Combat uses initiative-based turn order with A* pathfinding for movement. Speed stat influences dodge chance and double attack probability. After dungeon ends, `prepPhase` state drives the PrepScreen (party overview, dungeon preview, milestones). The game loop no longer auto-starts the next dungeon — PrepScreen handles auto-advance via its own timer.
 
 ## Key Directories
 
@@ -100,8 +100,10 @@ Combat uses initiative-based turn order with A* pathfinding for movement. Speed 
 - `src/data/itemAffixes.js` - 18 affixes; add `tags` field for synergy system
 - `src/data/dungeonThemes.js` - Dungeon theme definitions; add `favoredAffixes` for loot targeting
 - `src/data/statusEffects.js` - Status effect definitions; add combo table
-- `src/game/statCalculator.js` - `calculateHeroStats`; trait bonuses, affix synergies, ascension multipliers apply here
-- `src/components/GameLayout.jsx` - Main layout (~857 lines, 12 modals); avoid refactoring until Phase 7
+- `src/store/helpers/statCalculator.js` - `calculateHeroStats`; trait bonuses, affix synergies, ascension multipliers apply here. Has module-level `currentAscensionCount` — call `clearStatCache()` when anything affecting stats changes.
+- `src/store/helpers/migrations.js` - Versioned save migrations. Increment `SAVE_VERSION` and add migration function when adding new persistent state.
+- `src/components/GameLayout.jsx` - Main layout (~857 lines, 12+ modals); avoid refactoring until Phase 7
+- `src/components/PrepScreen.jsx` - Between-dungeon screen; new pre-combat features (difficulty, ascension button) go here
 
 ## Performance Patterns
 
@@ -205,6 +207,7 @@ The UI targets WCAG AA compliance (v0.1.26). When adding new components:
 All 6 phases of `REMEDIATION_PLAN.md` are complete (v0.1.17–v0.1.28). When making significant changes, update:
 - `WEAK_POINTS.md` — Mark resolved items with strikethrough and version number
 - `DEVELOPER_GUIDE.md` — Add/update relevant architecture sections
+- `REPASS.md` — Add items that need review/polish after initial implementation. This is a living checklist of rough edges, tuning questions, and things to verify actually work well in practice.
 - `src/data/changelog.js` — Add player-facing changelog entry
 
 ## Toast Notifications
@@ -231,7 +234,35 @@ When importing from game data files, verify actual export names — they don't a
 
 ## Lint Baseline
 
-`npm run lint` currently reports ~78 pre-existing errors (mostly unused vars in canvas files and React hooks warnings). Do not try to fix these unless specifically asked — just verify your changes don't add new ones.
+`npm run lint` currently reports ~84 pre-existing errors (mostly unused vars in canvas files and React hooks warnings). Do not try to fix these unless specifically asked — just verify your changes don't add new ones.
+
+## Layout Positioning (learned v0.2.1)
+
+The gameplay screen has tight vertical space. Key constraints:
+- **Main area** is a flex column: Zone Header → Canvas (flex-1) → CombatLog (max-h-24) — don't add more stacked elements here without removing something
+- **ContributionMeter lives in the Sidebar** (below Party heroes), not the main area
+- **LootNotifications** are fixed at `bottom-28 right-4 z-40` — above the combat log area
+- **Toasts** are fixed at `top-20 right-4 z-50` — below the game HUD header
+- **Z-index stack**: transitions (60) > toasts/modals (50) > notifications/mobile drawer (40)
+- New fixed-position UI must avoid the bottom-right (notifications) and top-right (toasts) zones
+- Always test layout changes at multiple viewport sizes — the sidebar hides on mobile (<md breakpoint)
+
+## Death Tracking Pattern (learned v0.2.1)
+
+Hero deaths happen at 3 code sites — all use `ctx.heroDeaths` array:
+- `combatDamageResolution.js` — attack damage kills
+- `combatSkillExecution.js` — skill damage kills
+- `combatStatusEffects.js` — DOT kills (killer = DOT type name)
+
+If adding new damage sources that can kill heroes, you must also push to `ctx.heroDeaths` or deaths won't appear in the death recap.
+
+## Loot Notification Types (learned v0.2.1)
+
+`addLootNotification({ type, ... })` in inventorySlice. Types and their auto-cleanup durations:
+- Regular types (5s cleanup): `auto-equipped`, `looted`, `auto-sold`, `inventory-full`, `unique-drop`, `unique-duplicate`, `collection-milestone`
+- Extended type (9s cleanup): `suggest-equip` — has interactive buttons, needs longer lifetime
+
+When adding new notification types, update both `LootNotifications.jsx` (render case + border color) and `clearOldNotifications` in inventorySlice if the type needs non-standard cleanup timing.
 
 ## Existing Combat Stats Infrastructure
 
@@ -240,12 +271,79 @@ The combat system already tracks per-hero stats that new features build on:
 - `useCombat` computes `totalDamageDealtThisTurn`, `damageTakenByHero`, `healingDoneByHero` per tick
 - These are the foundation for the contribution meter, run summary, and death recap — you're adding per-run aggregation on top of existing per-tick data
 
-## Existing Equipment Infrastructure
+## Equipment Infrastructure
 
-- `compareToEquipped` in `inventorySlice.js` already computes per-stat diffs between items
-- `processLootDrop` in inventory handling already has branching logic for auto-equip — the smart auto-equip change is modifying this branch, not replacing it
+- `compareToEquipped` in `inventorySlice.js` computes per-stat diffs between items — used by EquipmentTooltip and suggest-equip notifications
+- `processLootDrop` has two-tier auto-equip (v0.2.1): rare+ or close-call upgrades (within 10% score) → `suggest-equip` notification with buttons; common/uncommon clear upgrades → silent auto-equip. If inventory is full, always falls through to silent auto-equip
 - `generateEquipment` handles affix rolling during loot generation — reforging reuses this logic
 - Equipment affix arrays are currently immutable; reforging (Phase 6) requires making them mutable, which is a data model + save migration change
+
+## Save Migration System (v0.3.0+)
+
+New persistent state fields require a save migration. The system lives in `src/store/helpers/migrations.js`:
+
+```js
+// 1. Increment SAVE_VERSION
+export const SAVE_VERSION = 4; // was 3
+
+// 2. Add a numbered migration function (key = previous version)
+const MIGRATIONS = {
+  1: (state) => { /* v1→v2 */ return state; },
+  2: (state) => { /* v2→v3 */ return state; },
+  3: (state) => { /* v3→v4: add your new state */
+    if (!state.myNewField) state.myNewField = defaultValue;
+    return state;
+  },
+};
+```
+
+The `merge` function in `gameStore.js` also needs a fallback for the new field (for saves that somehow skip migration):
+```js
+merge: (persistedState, currentState) => ({
+  ...currentState,
+  ...persistedState,
+  myNewField: persistedState?.myNewField || defaultValue,
+})
+```
+
+## Ascension System Architecture (v0.3.0)
+
+- State: `ascension: { count: 0 }` in dungeonSlice. `performAscension()` does selective reset.
+- Stat multiplier: Module-level `currentAscensionCount` in `src/store/helpers/statCalculator.js` — avoids threading through every call site. Call `setAscensionCount(n)` to update (auto-clears stat cache).
+- Initialized on load: `gameStore.js` merge calls `setAscensionCount(persistedState?.ascension?.count || 0)`.
+- Dungeon cap: `maxDungeonLevel` state derived from `getAscensionDungeonCap(count)` — increases +5 per ascension.
+- If you add new systems that read ascension count, import `setAscensionCount` from `gameStore.js` (re-exported) or read `get().ascension.count` in store actions.
+
+## Party Slot System (v0.3.0)
+
+`PARTY_SLOTS` in `src/data/classes.js` has 8 entries:
+- Slots 1-4: Role-restricted (tank, healer, DPS, DPS), unlocked by dungeon clears
+- Slots 5-6: Role-restricted (DPS at D10, healer at D20)
+- Slots 7-8: **Flex slots** (`role: null`, `flex: true`, `ascensionRequired: 1/3`) — any class allowed
+
+`getMaxPartySize(highestDungeonCleared, ascensionCount)` returns how many slots are available (4-8). **Both parameters are required** at all call sites. When iterating party slots, always use `maxPartySize` from state, never `PARTY_SLOTS.length`.
+
+`getClassesByRole(null)` returns all classes (for flex slots). Role checks must handle null: `if (slot.role && heroRole !== slot.role)`.
+
+## Unwired Combat Traits (deferred)
+
+These hero traits from `src/data/heroTraits.js` are defined and roll on heroes but have **no combat effect yet**:
+- `regenPercent` (Enduring: 1% HP/turn) — needs handler in `combatStatusEffects.js`
+- `controlResist` (Iron Will: +10% stun resist) — needs handler in status effect application
+- `healingMultiplier`/`healingReceivedMultiplier` (Devoted) — needs handler in skill execution healing path
+
+Wire these when touching the relevant combat files, or defer to a polish pass.
+
+## Phase 0 Data Files (pre-built)
+
+Phase 0 created data definition files that later phases consume. Check these before creating new data:
+- `src/data/roomEvents.js` — 10 room events with weighted rolling (`rollRoomEvent()`)
+- `src/data/dungeonAffixes.js` — 8 dungeon affix types with weighted rolling (`rollDungeonAffix()`)
+- `src/data/ascensionMilestones.js` — Milestone table with helpers (`getAscensionStatMultiplier`, `getAscensionDungeonCap`, etc.)
+- `src/data/achievements.js` — 30 achievements across 5 categories
+- `src/data/heroTraits.js` — 14 traits with weighted rolling (`rollHeroTraits()`)
+- `src/data/statusEffects.js` — includes `STATUS_COMBOS` + `getActiveCombos()` for Phase 6
+- `src/data/itemAffixes.js` — includes `AFFIX_SYNERGY_BONUSES` + `getActiveSynergies()` for Phase 6
 
 ## Known Technical Debt
 
