@@ -90,6 +90,7 @@ export const useGameStore = create(
               autoEquipUpgrades: true,
               classPriority: { ...DEFAULT_CLASS_PRIORITY },
             },
+            reforgeCount: 0,
             lootNotifications: [],
             homestead: {
               barracks: 0,

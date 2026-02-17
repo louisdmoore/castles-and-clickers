@@ -1,9 +1,18 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.3.1';
+export const CURRENT_VERSION = '0.3.2';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.3.2',
+    title: 'Craft My Build',
+    date: '2026-02-17',
+    changes: [
+      { type: 'feature', text: 'Reforging — reroll affixes on rare+ gear from the Equipment screen. Lock one affix to keep it (costs 2x)' },
+      { type: 'feature', text: 'Escalating reforge costs that reset after each dungeon clear — choose your moments wisely' },
+    ],
+  },
   {
     version: '0.3.1',
     title: 'Surprise Me',

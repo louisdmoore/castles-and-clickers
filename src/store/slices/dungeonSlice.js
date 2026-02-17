@@ -192,6 +192,7 @@ export const createDungeonSlice = (set, get) => ({
         roomCombat: null,
         isRunning: false,
         consumables: [], // Clear consumables on dungeon exit
+        reforgeCount: 0, // Reset reforge cost escalation
         lastDungeonSuccess: success, // Track victory or defeat for transition screen
         lastRunSummary: totalDamage > 0 ? runSummary : null,
         lastDeathRecap: deathRecap,
