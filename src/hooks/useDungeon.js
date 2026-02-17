@@ -25,6 +25,7 @@ import {
 import { resetUniqueStates, processOnCombatStartUniques, processOnRoomStartUniques, getUniquePassiveBonuses } from '../game/uniqueEngine';
 import { applyStatusEffect } from '../game/statusEngine';
 import { resetBossStates } from '../game/bossEngine';
+import { processRoomEvent } from '../game/roomEventHandlers';
 
 /**
  * Hook for dungeon setup and exploration phase logic
@@ -38,6 +39,7 @@ export const useDungeon = ({ addEffect }) => {
   const setRoomCombat = useCallback((state) => useGameStore.getState().setRoomCombat(state), []);
   const updateRoomCombat = useCallback((updates) => useGameStore.getState().updateRoomCombat(updates), []);
   const syncHeroHp = useCallback((hpMap) => useGameStore.getState().syncHeroHp(hpMap), []);
+  const processLootDrop = useCallback((item) => useGameStore.getState().processLootDrop(item), []);
 
   // Setup the maze dungeon
   const setupDungeon = useCallback(() => {
@@ -335,10 +337,18 @@ export const useDungeon = ({ addEffect }) => {
     const aliveHeroes = combatHeroes.filter(h => h.stats.hp > 0);
     const aliveMonsters = monsters.filter(m => m.stats.hp > 0);
 
-    // Detect room change for ON_ROOM_START unique effects (Ancient Bark shield)
+    // Detect room change for ON_ROOM_START unique effects and room events
     const currentRoomIndex = findRoomIndex(mazeDungeon.rooms, partyPosition);
     const lastRoomIndex = roomCombat.lastExploreRoomIndex ?? -1;
     if (currentRoomIndex !== -1 && currentRoomIndex !== lastRoomIndex) {
+      const roomChangeUpdates = { lastExploreRoomIndex: currentRoomIndex };
+
+      // Clear per-room event modifiers from previous room
+      roomChangeUpdates.roomEventXpMultiplier = null;
+      roomChangeUpdates.roomEventHeroXpBonus = null;
+      roomChangeUpdates.roomEventSkipCombat = null;
+
+      // Process unique item ON_ROOM_START effects (Ancient Bark shield)
       const newBuffs = { ...(roomCombat.buffs || {}) };
       for (const hero of aliveHeroes) {
         const roomStartResult = processOnRoomStartUniques(hero, {});
@@ -348,7 +358,29 @@ export const useDungeon = ({ addEffect }) => {
           addCombatLog({ type: 'system', message: `Ancient Bark! ${hero.name} gains a ${roomStartResult.shieldAmount} HP shield!` });
         }
       }
-      updateRoomCombat({ lastExploreRoomIndex: currentRoomIndex, buffs: newBuffs });
+      roomChangeUpdates.buffs = newBuffs;
+
+      // Process room event if this room has one
+      const currentRoom = mazeDungeon.rooms[currentRoomIndex];
+      if (currentRoom?.event) {
+        const eventResult = processRoomEvent(currentRoom.event.id, {
+          combatHeroes,
+          dungeon,
+          roomCombat,
+          addGold,
+          addCombatLog,
+          syncHeroHp,
+          processLootDrop,
+          addEffect,
+          partyPosition,
+          getState: () => useGameStore.getState(),
+        });
+        if (eventResult) {
+          Object.assign(roomChangeUpdates, eventResult);
+        }
+      }
+
+      updateRoomCombat(roomChangeUpdates);
     }
     const aliveBoss = aliveMonsters.find(m => m.isBoss);
     const aliveNonBoss = aliveMonsters.filter(m => !m.isBoss);
@@ -388,6 +420,31 @@ export const useDungeon = ({ addEffect }) => {
       if (anyHealed) {
         // Sync HP to persistent store
         syncHeroHp(hpUpdates);
+      }
+    }
+
+    // Crumbling Floor event: skip all non-boss monsters in this room
+    // Re-read roomCombat since room event processing may have updated it
+    const updatedRoomCombat = useGameStore.getState().roomCombat;
+    if (updatedRoomCombat?.roomEventSkipCombat) {
+      const roomToSkip = mazeDungeon.rooms[currentRoomIndex];
+      if (roomToSkip) {
+        // Kill all non-boss monsters positioned within this room
+        const monstersToSkip = monsters.filter(m => {
+          if (m.stats.hp <= 0 || m.isBoss) return false;
+          return m.position.x >= roomToSkip.x && m.position.x < roomToSkip.x + roomToSkip.width &&
+                 m.position.y >= roomToSkip.y && m.position.y < roomToSkip.y + roomToSkip.height;
+        });
+        if (monstersToSkip.length > 0) {
+          const updatedMonsters = monsters.map(m => {
+            if (monstersToSkip.some(ms => ms.id === m.id)) {
+              return { ...m, stats: { ...m.stats, hp: 0 } };
+            }
+            return m;
+          });
+          updateRoomCombat({ monsters: updatedMonsters, roomEventSkipCombat: null });
+          return true;
+        }
       }
     }
 
@@ -690,7 +747,7 @@ export const useDungeon = ({ addEffect }) => {
     }
 
     return true;
-  }, [addCombatLog, updateRoomCombat, addGold, incrementStat, syncHeroHp, startLocalCombat]);
+  }, [addCombatLog, updateRoomCombat, addGold, incrementStat, syncHeroHp, startLocalCombat, processLootDrop, addEffect]);
 
   return {
     setupDungeon,

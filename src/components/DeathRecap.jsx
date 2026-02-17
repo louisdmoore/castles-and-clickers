@@ -51,7 +51,7 @@ const DeathRecap = () => {
           <SkullIcon size={20} /> Dungeon Level {dungeonLevel}
         </div>
         <p className="pixel-label text-xs" style={{ color: 'var(--color-text-dim)' }}>
-          Data, not prescription. What happened?
+          Here's what went down.
         </p>
       </div>
 

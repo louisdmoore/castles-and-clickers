@@ -61,7 +61,7 @@ const ContributionMeter = () => {
   if (!dungeon || heroData.length === 0) return null;
 
   return (
-    <div className="pixel-panel-dark p-2 mt-2">
+    <div className="pixel-panel-dark p-2">
       <div className="flex items-center gap-1 mb-1.5">
         <SwordIcon size={14} />
         <span className="pixel-label text-xs">Contribution</span>

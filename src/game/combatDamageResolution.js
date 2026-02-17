@@ -1166,8 +1166,13 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
     const baseGold = target.goldReward.min + Math.floor(Math.random() * (target.goldReward.max - target.goldReward.min));
     const gold = Math.floor(baseGold * goldMultiplier);
     addGold(gold);
-    const xpPerHero = Math.floor((target.xpReward / heroes.length) * xpMultiplier);
-    heroes.forEach(h => addXpToHero(h.id, xpPerHero));
+    const baseXpPerHero = Math.floor((target.xpReward / heroes.length) * xpMultiplier);
+    const roomEventHeroXpBonus = ctx.roomEventHeroXpBonus;
+    heroes.forEach(h => {
+      // Ancient Library: specific hero gets bonus XP this room
+      const heroXpMult = roomEventHeroXpBonus?.[h.id] || 1;
+      addXpToHero(h.id, Math.floor(baseXpPerHero * heroXpMult));
+    });
     incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: target.templateId, isBoss: target.isBoss });
 
     if (target.wingBossId) {
@@ -1234,7 +1239,7 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
       } else {
         addCombatLog({ type: 'system', message: `${item.name} (inventory full!)` });
       }
-    } else if (Math.random() < (target.isBoss ? BOSS_LOOT_DROP_CHANCE : NORMAL_LOOT_DROP_CHANCE) * (dungeon.difficultyMultiplier || 1.0)) {
+    } else if (Math.random() < (target.isBoss ? BOSS_LOOT_DROP_CHANCE : NORMAL_LOOT_DROP_CHANCE) * (dungeon.difficultyMultiplier || 1.0) * (1 + (ctx.roomEventLootBonus || 0))) {
       const item = generateEquipment(dungeon.level, { lootMultiplier: dungeon.difficultyMultiplier || 1.0, favoredAffixes: dungeon.favoredAffixes });
       const result = processLootDrop(item);
       addEffect({ type: 'lootDrop', position: target.position, slot: item.slot, rarityColor: item.rarityColor || '#9ca3af' });

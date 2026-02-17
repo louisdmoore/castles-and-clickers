@@ -168,7 +168,11 @@ export const useCombat = ({ addEffect }) => {
     }
 
     const goldMultiplier = 1 + (homesteadBonuses.goldFind || 0);
-    const xpMultiplier = 1 + (homesteadBonuses.xpGain || 0) + xpBuffBonus;
+    // Room event XP multipliers (monster_ambush = all heroes, ancient_library = specific hero)
+    const roomEventXpMult = roomCombat.roomEventXpMultiplier || 1;
+    const roomEventHeroXpBonus = roomCombat.roomEventHeroXpBonus || null;
+    const roomEventLootBonus = roomCombat.roomEventLootBonus || 0;
+    const xpMultiplier = (1 + (homesteadBonuses.xpGain || 0) + xpBuffBonus) * roomEventXpMult;
     const damageBonus = 1;
     const defenseBonus = 1;
     const critBonus = 0;
@@ -218,6 +222,7 @@ export const useCombat = ({ addEffect }) => {
       heroes, dungeon, dungeonProgress, roomCombat, heroHp, homesteadBonuses, mazeDungeon,
       // Derived constants
       goldMultiplier, xpMultiplier, crownMultiplier, damageBonus, defenseBonus, critBonus,
+      roomEventHeroXpBonus, roomEventLootBonus,
       // Per-tick tracking (mutable)
       totalDamageDealtThisTurn: 0,
       damageTakenByHero: {},

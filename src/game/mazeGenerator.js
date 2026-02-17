@@ -6,6 +6,7 @@ import { getThemeForLevel, getThemeForRaid } from '../data/dungeonThemes';
 import { isWorldBossLevel, getWorldBossForLevel } from '../data/worldBosses';
 import { createWorldBossInstance, initBossState } from './bossEngine';
 import { RAIDS } from '../data/raids';
+import { rollRoomEvent } from '../data/roomEvents';
 
 // Tile types for the dungeon grid
 export const TILE = {
@@ -484,6 +485,19 @@ export function generateMazeDungeon(level) {
 
   // Find boss room
   const bossRoom = rooms.length > 1 ? rooms[rooms.length - 1] : rooms[0];
+
+  // Roll room events for eligible rooms (not entrance, boss, or treasure rooms)
+  const usedEvents = [];
+  for (const room of rooms) {
+    if (room.type === MAZE_ROOM_TYPES.ENTRANCE || room.type === MAZE_ROOM_TYPES.BOSS || room.type === MAZE_ROOM_TYPES.TREASURE) {
+      continue;
+    }
+    const event = rollRoomEvent(usedEvents);
+    if (event) {
+      room.event = { id: event.id, name: event.name, type: event.type };
+      if (event.effect?.oncePerRun) usedEvents.push(event.id);
+    }
+  }
 
   // Generate decorations based on theme
   const decorations = generateDecorations(grid, rooms, level);

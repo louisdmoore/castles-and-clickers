@@ -139,12 +139,14 @@ export const executeHeroSkillAction = (ctx, actor) => {
           const gold = Math.floor(baseGold * goldMultiplier);
           addGold(gold);
 
-          // Award XP with bonus for underleveled heroes
+          // Award XP with bonus for underleveled heroes + room event bonuses
           const baseXpPerHero = Math.floor((m.xpReward / heroes.length) * xpMultiplier);
+          const roomEventHeroXpBonus = ctx.roomEventHeroXpBonus;
           heroes.forEach(h => {
             const levelDiff = dungeon.level - h.level;
             const catchUpBonus = levelDiff > 0 ? 1 + (levelDiff * 0.10) : 1;
-            const xpForHero = Math.floor(baseXpPerHero * catchUpBonus);
+            const heroXpMult = roomEventHeroXpBonus?.[h.id] || 1;
+            const xpForHero = Math.floor(baseXpPerHero * catchUpBonus * heroXpMult);
             addXpToHero(h.id, xpForHero);
           });
           incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: m.templateId, isBoss: m.isBoss });

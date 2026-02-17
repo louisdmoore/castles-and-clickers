@@ -29,7 +29,7 @@ const LootNotifications = () => {
   if (lootNotifications.length === 0) return null;
 
   return (
-    <div className="fixed bottom-4 right-4 z-40 flex flex-col gap-2 pointer-events-none" role="status" aria-live="polite">
+    <div className="fixed bottom-28 right-4 z-40 flex flex-col gap-2 pointer-events-none" role="status" aria-live="polite">
       {lootNotifications.map((notif) => (
         <Notification
           key={notif.id}

@@ -1,9 +1,20 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.3.0';
+export const CURRENT_VERSION = '0.3.1';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.3.1',
+    title: 'Surprise Me',
+    date: '2026-02-17',
+    changes: [
+      { type: 'feature', text: 'Room events — explore dungeons to find Healing Springs, Trapped Chests, Ancient Libraries, Wandering Merchants, and more (15% chance per room)' },
+      { type: 'feature', text: '10 event types: heal your party, gain bonus loot, trade HP for gold, get XP boosts, or skip rooms entirely' },
+      { type: 'feature', text: 'Shrine of Fortune — sacrifice gold for increased drop rates the rest of the run' },
+      { type: 'feature', text: 'Monster Ambush and Ancient Library give bonus XP in their rooms' },
+    ],
+  },
   {
     version: '0.3.0',
     title: 'A New Chapter',
