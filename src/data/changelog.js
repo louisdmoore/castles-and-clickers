@@ -13,6 +13,8 @@ export const CHANGELOG = [
       { type: 'feature', text: '10 event types: heal your party, gain bonus loot, trade HP for gold, get XP boosts, or skip rooms entirely' },
       { type: 'feature', text: 'Shrine of Fortune — sacrifice gold for increased drop rates the rest of the run' },
       { type: 'feature', text: 'Monster Ambush and Ancient Library give bonus XP in their rooms' },
+      { type: 'feature', text: 'Tower of Trials — endless challenge mode unlocked at Ascension 2. No healing between floors, scaling difficulty. How far can you go?' },
+      { type: 'feature', text: 'Tower high score tracking with seed display — compete against your personal best' },
     ],
   },
   {

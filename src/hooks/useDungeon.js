@@ -393,8 +393,10 @@ export const useDungeon = ({ addEffect }) => {
     }
 
     // Passive healing during exploration (base 0.5% + infirmary bonus)
-    const baseHealPercent = 0.005;
-    const infirmaryBonus = homesteadBonuses.healBetweenDungeons || 0;
+    // Disabled in Tower of Trials — no healing between floors
+    const isTower = dungeon?.isTower;
+    const baseHealPercent = isTower ? 0 : 0.005;
+    const infirmaryBonus = isTower ? 0 : (homesteadBonuses.healBetweenDungeons || 0);
     const totalHealPercent = baseHealPercent + infirmaryBonus;
 
     // Apply passive healing and track which heroes were healed

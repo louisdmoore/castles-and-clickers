@@ -127,11 +127,15 @@ export const useGameLoop = ({
         clearEffects();
         resetLastProcessedTurn();
 
-        // Check if this is a raid dungeon completion
-        if (dungeon.isRaid) {
+        // Check dungeon type for completion handling
+        if (dungeon.isTower) {
+          // Tower of Trials: advance to next floor (no healing)
+          const { advanceTowerFloor } = useGameStore.getState();
+          clearRoomCombat();
+          addCombatLog({ type: 'system', message: `Floor ${dungeon.towerFloor} cleared!` });
+          advanceTowerFloor();
+        } else if (dungeon.isRaid) {
           const { completeRaid } = useGameStore.getState();
-          // Raid dungeon is complete when final boss is killed
-          // The dungeon only reaches COMPLETE phase when all bosses (including final) are dead
           completeRaid();
           clearRoomCombat();
         } else {
@@ -153,8 +157,12 @@ export const useGameLoop = ({
         resetLastProcessedTurn();
         incrementStat('totalDeaths');
 
-        // Check if this is a raid - abandon on defeat
-        if (dungeon.isRaid) {
+        if (dungeon.isTower) {
+          // Tower of Trials: end the run, record score
+          const { endTowerRun } = useGameStore.getState();
+          clearRoomCombat();
+          endTowerRun();
+        } else if (dungeon.isRaid) {
           const { abandonRaid } = useGameStore.getState();
           abandonRaid();
           clearRoomCombat();

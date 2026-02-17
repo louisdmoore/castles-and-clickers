@@ -5,6 +5,7 @@ import { getDungeonTier } from '../data/milestones';
 import { DUNGEON_THEMES } from '../data/dungeonThemes';
 import { getAffix } from '../data/itemAffixes';
 import { getWorldBossForLevel } from '../data/worldBosses';
+import { hasAscensionUnlock } from '../data/ascensionMilestones';
 import ClassIcon from './icons/ClassIcon';
 import { SwordIcon, ShieldIcon, HeartIcon, CrownIcon, ChestIcon, StarIcon } from './icons/ui';
 import MilestoneWidget from './MilestoneWidget';
@@ -70,6 +71,9 @@ const PrepScreen = ({ onOpenAscension }) => {
   const highestDungeonCleared = useGameStore(state => state.highestDungeonCleared);
   const canAscend = useGameStore(state => state.canAscend);
   const ascension = useGameStore(state => state.ascension);
+  const challengeScores = useGameStore(state => state.challengeScores);
+  const startTowerOfTrials = useGameStore(state => state.startTowerOfTrials);
+  const canAccessTower = hasAscensionUnlock(ascension?.count || 0, 'challenge_access');
 
   // Auto-dismiss after 5s when auto-advance is on and run summary is gone
   useEffect(() => {
@@ -254,6 +258,38 @@ const PrepScreen = ({ onOpenAscension }) => {
         <div className="mb-4">
           <MilestoneWidget />
         </div>
+
+        {/* Tower of Trials */}
+        {canAccessTower && (
+          <div className="pixel-panel-dark p-3 mb-4">
+            <div className="flex items-center justify-between">
+              <div>
+                <div className="flex items-center gap-1">
+                  <SwordIcon size={12} />
+                  <span className="pixel-label text-xs" style={{ color: '#a855f7' }}>Tower of Trials</span>
+                </div>
+                <div className="text-[10px] text-[var(--color-text-dim)] mt-0.5">
+                  Endless floors. No healing. How far can you go?
+                </div>
+                {(challengeScores?.tower?.best || 0) > 0 && (
+                  <div className="text-[10px] mt-0.5" style={{ color: '#fbbf24' }}>
+                    Best: Floor {challengeScores.tower.best}
+                    {challengeScores.tower.bestSeed && (
+                      <span className="text-[var(--color-text-dim)] ml-1">#{challengeScores.tower.bestSeed}</span>
+                    )}
+                  </div>
+                )}
+              </div>
+              <button
+                onClick={startTowerOfTrials}
+                className="pixel-btn text-xs"
+                style={{ borderColor: '#a855f7', color: '#a855f7' }}
+              >
+                Enter Tower
+              </button>
+            </div>
+          </div>
+        )}
 
         {/* Auto-advance indicator */}
         {autoAdvance && canEnter && (

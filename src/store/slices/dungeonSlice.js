@@ -1,9 +1,13 @@
 import { RAIDS, isRaidUnlocked } from '../../data/raids';
 import { getMaxPartySize, getDungeonTier } from '../../data/milestones';
 import { DUNGEON_THEMES } from '../../data/dungeonThemes';
-import { getAscensionDungeonCap } from '../../data/ascensionMilestones';
+import { getAscensionDungeonCap, hasAscensionUnlock } from '../../data/ascensionMilestones';
 import { clearStatCache, setAscensionCount } from '../helpers/statCalculator';
 import throttledStorage from '../helpers/throttledStorage';
+
+// Tower of Trials: map floor number to effective dungeon level
+// Floors 1-5 map to D10-D14, then +1 per floor, scaling beyond max dungeon level
+const getTowerEffectiveLevel = (floor) => Math.min(9 + floor, 50);
 
 export const createDungeonSlice = (set, get) => ({
   // State
@@ -44,6 +48,8 @@ export const createDungeonSlice = (set, get) => ({
   lastRunSummary: null,
   lastDeathRecap: null,
   prepPhase: null, // { nextLevel, success, dungeonType }
+  challengeScores: { tower: { best: 0, bestSeed: null } },
+  towerState: null, // { floor, seed, active } — transient, not persisted
 
   // Actions
   startDungeon: (level, options = {}) => {
@@ -602,4 +608,201 @@ export const createDungeonSlice = (set, get) => ({
       };
     });
   },
+
+  // ========================================
+  // TOWER OF TRIALS (CHALLENGE MODE)
+  // ========================================
+
+  canAccessTower: () => {
+    const { ascension, dungeon } = get();
+    return hasAscensionUnlock(ascension?.count || 0, 'challenge_access') && !dungeon;
+  },
+
+  startTowerOfTrials: () => {
+    const { heroes, initializeHeroHp, initRunStats } = get();
+    if (heroes.filter(Boolean).length === 0) return false;
+
+    // Generate a seed for this run
+    const seed = Math.floor(Math.random() * 0xFFFFFF).toString(16).toUpperCase().padStart(6, '0');
+
+    initializeHeroHp();
+    initRunStats();
+
+    const startFloor = 1;
+    // Tower uses dungeon level scaling: floor N maps to effective dungeon level
+    const effectiveLevel = getTowerEffectiveLevel(startFloor);
+
+    // Look up theme for flavor
+    const tier = getDungeonTier(Math.min(effectiveLevel, 30));
+    const theme = DUNGEON_THEMES[tier.theme];
+
+    set({
+      towerState: { floor: startFloor, seed, active: true },
+      dungeon: {
+        level: effectiveLevel,
+        currentRoom: 0,
+        totalRooms: 5 + Math.floor(effectiveLevel / 2),
+        completed: false,
+        type: 'tower',
+        isTower: true,
+        towerFloor: startFloor,
+        towerSeed: seed,
+        activeBuffs: [],
+        difficultyMultiplier: 1.0,
+        favoredAffixes: theme?.favoredAffixes || [],
+      },
+      dungeonProgress: {
+        ...get().dungeonProgress,
+        currentType: 'tower',
+        activeAffixes: [],
+      },
+      combat: null,
+      roomCombat: { phase: 'setup', tick: 0 },
+      combatLog: [],
+      isRunning: true,
+      prepPhase: null,
+      lastRunSummary: null,
+      lastDeathRecap: null,
+    });
+    return true;
+  },
+
+  // Called when a tower floor is completed — advance to next floor without healing
+  advanceTowerFloor: () => {
+    const { towerState, initRunStats } = get();
+    if (!towerState?.active) return;
+
+    const nextFloor = towerState.floor + 1;
+    const effectiveLevel = getTowerEffectiveLevel(nextFloor);
+
+    const tier = getDungeonTier(Math.min(effectiveLevel, 30));
+    const theme = DUNGEON_THEMES[tier.theme];
+
+    // Reset per-run stats for the new floor
+    initRunStats();
+
+    set(state => ({
+      towerState: { ...state.towerState, floor: nextFloor },
+      dungeon: {
+        level: effectiveLevel,
+        currentRoom: 0,
+        totalRooms: 5 + Math.floor(Math.min(effectiveLevel, 30) / 2),
+        completed: false,
+        type: 'tower',
+        isTower: true,
+        towerFloor: nextFloor,
+        towerSeed: state.towerState.seed,
+        activeBuffs: [],
+        difficultyMultiplier: 1.0,
+        favoredAffixes: theme?.favoredAffixes || [],
+      },
+      combat: null,
+      roomCombat: { phase: 'setup', tick: 0 },
+      combatLog: [],
+      isRunning: true,
+    }));
+  },
+
+  // Called when the party wipes in the tower — record score and end
+  endTowerRun: () => {
+    const { towerState, runStats, heroes, deathLog } = get();
+    if (!towerState?.active) return;
+
+    const floor = towerState.floor;
+    const seed = towerState.seed;
+
+    // Build run summary
+    const runSummary = {
+      success: false,
+      dungeonLevel: getTowerEffectiveLevel(floor),
+      timestamp: Date.now(),
+      heroStats: {},
+      isTower: true,
+      towerFloor: floor,
+    };
+    let totalDamage = 0;
+    let mvpId = null;
+    let mvpDamage = 0;
+    let biggestHit = 0;
+    let biggestHitHero = null;
+
+    for (const hero of heroes.filter(Boolean)) {
+      const stats = runStats[hero.id];
+      if (!stats) continue;
+      runSummary.heroStats[hero.id] = { name: hero.name, classId: hero.classId, ...stats };
+      totalDamage += stats.damageDealt || 0;
+      if ((stats.damageDealt || 0) > mvpDamage) {
+        mvpDamage = stats.damageDealt;
+        mvpId = hero.id;
+      }
+      if ((stats.biggestHit || 0) > biggestHit) {
+        biggestHit = stats.biggestHit;
+        biggestHitHero = hero.name;
+      }
+    }
+    runSummary.totalDamage = totalDamage;
+    runSummary.mvpId = mvpId;
+    runSummary.biggestHit = biggestHit;
+    runSummary.biggestHitHero = biggestHitHero;
+
+    // Build death recap
+    let deathRecap = null;
+    if (deathLog.length > 0) {
+      deathRecap = {
+        dungeonLevel: getTowerEffectiveLevel(floor),
+        timestamp: Date.now(),
+        deaths: deathLog,
+        heroStats: {},
+        isTower: true,
+        towerFloor: floor,
+      };
+      for (const hero of heroes.filter(Boolean)) {
+        const stats = runStats[hero.id];
+        if (!stats) continue;
+        deathRecap.heroStats[hero.id] = {
+          name: hero.name,
+          classId: hero.classId,
+          damageTaken: stats.damageTaken || 0,
+          healingReceived: stats.healingReceived || 0,
+          damageDealt: stats.damageDealt || 0,
+        };
+      }
+    }
+
+    // Update high score
+    set(state => {
+      const currentBest = state.challengeScores?.tower?.best || 0;
+      const isNewBest = floor > currentBest;
+
+      return {
+        towerState: null,
+        dungeon: null,
+        combat: null,
+        roomCombat: null,
+        isRunning: false,
+        lastRunSummary: totalDamage > 0 ? runSummary : null,
+        lastDeathRecap: deathRecap,
+        lastTowerResult: { floor, seed, isNewBest },
+        prepPhase: null, // No prep phase after tower — go back to menu
+        challengeScores: {
+          ...state.challengeScores,
+          tower: {
+            best: isNewBest ? floor : currentBest,
+            bestSeed: isNewBest ? seed : state.challengeScores?.tower?.bestSeed,
+          },
+        },
+        dungeonProgress: {
+          ...state.dungeonProgress,
+          currentType: 'normal',
+          activeAffixes: [],
+        },
+      };
+    });
+
+    // Reset HP and process pending changes
+    get().resetHeroHp();
+    throttledStorage.flush();
+  },
+
+  dismissTowerResult: () => set({ lastTowerResult: null }),
 });

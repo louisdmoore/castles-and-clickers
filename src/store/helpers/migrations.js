@@ -11,7 +11,7 @@
  *   3. The migration receives the full persisted state and returns the updated state
  */
 
-export const SAVE_VERSION = 3;
+export const SAVE_VERSION = 4;
 
 // Sequential migration functions: fromVersion -> transform
 const MIGRATIONS = {
@@ -65,6 +65,14 @@ const MIGRATIONS = {
       state.maxDungeonLevel = 30;
     }
 
+    return state;
+  },
+
+  // v3 → v4: Phase 5 — Challenge modes (Tower of Trials)
+  3: (state) => {
+    if (!state.challengeScores) {
+      state.challengeScores = { tower: { best: 0, bestSeed: null } };
+    }
     return state;
   },
 };

@@ -27,6 +27,7 @@ import RunSummary from './RunSummary';
 import DeathRecap from './DeathRecap';
 import PrepScreen from './PrepScreen';
 import AscensionModal from './AscensionModal';
+import TowerResult from './TowerResult';
 import GameHUD from './GameHUD';
 import { DUNGEON_TIERS } from '../data/milestones';
 import { getWorldBossForLevel, getZoneWorldBoss } from '../data/worldBosses';
@@ -199,6 +200,7 @@ const GameLayout = () => {
       setDungeonTransition({
         level: dungeon.level,
         type: dungeon.type || 'normal',
+        towerFloor: dungeon.towerFloor,
         isRetry,
       });
       // Clear transition after brief display
@@ -213,6 +215,7 @@ const GameLayout = () => {
       setDungeonTransition({
         level: dungeon.level,
         type: dungeon.type || 'normal',
+        towerFloor: dungeon.towerFloor,
         isRetry: false,
       });
       const timer = setTimeout(() => setDungeonTransition(null), 1200);
@@ -461,7 +464,7 @@ const GameLayout = () => {
                               {currentTier.name}
                             </div>
                             <div className="pixel-label">
-                              Level {dungeon.level}
+                              {dungeon.isTower ? `Tower Floor ${dungeon.towerFloor}` : `Level ${dungeon.level}`}
                             </div>
                           </div>
                         </div>
@@ -809,6 +812,8 @@ const GameLayout = () => {
                 ? (lastDungeonSuccess ? 'Preparing next adventure...' : 'The party has fallen...')
                 : raidState?.active && RAIDS[raidState.raidId]
                 ? RAIDS[raidState.raidId].name
+                : dungeonTransition.type === 'tower'
+                ? `Tower Floor ${dungeonTransition.towerFloor || dungeonTransition.level}`
                 : `Dungeon Level ${dungeonTransition.level}`}
             </p>
             <div className="flex justify-center gap-1">
@@ -828,6 +833,7 @@ const GameLayout = () => {
       <WelcomeBackModal progress={offlineProgress} onClose={() => setOfflineProgress(null)} />
       <RunSummary />
       <DeathRecap />
+      <TowerResult />
       <LootNotifications />
       <ToastContainer />
       <UniqueDropCelebration />

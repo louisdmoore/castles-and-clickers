@@ -116,6 +116,7 @@ export const useGameStore = create(
             saveStatus: { success: true, timestamp: Date.now() },
             toasts: [],
             ascension: { count: 0 },
+            challengeScores: { tower: { best: 0, bestSeed: null } },
             dungeonSettings: {
               type: 'normal',
               autoAdvance: false,
@@ -215,6 +216,7 @@ export const useGameStore = create(
             ascension: persistedState?.ascension || { count: 0 },
             shopConsumables: persistedState?.shopConsumables || [],
             pendingDungeonBuffs: persistedState?.pendingDungeonBuffs || [],
+            challengeScores: persistedState?.challengeScores || { tower: { best: 0, bestSeed: null } },
             stats: {
               totalGoldEarned: 0,
               totalGoldSpent: 0,
