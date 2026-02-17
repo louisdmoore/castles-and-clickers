@@ -1,9 +1,19 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.2.0';
+export const CURRENT_VERSION = '0.2.1';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.2.1',
+    title: 'Know What To Do',
+    date: '2026-02-17',
+    changes: [
+      { type: 'feature', text: 'Death recap popup on party wipe — see kill order, damage vs healing, and what went wrong' },
+      { type: 'feature', text: 'Equipment comparison tooltips — hover over items to see stat differences' },
+      { type: 'feature', text: 'Smart auto-equip — rare+ upgrades now show a suggestion with stat comparison instead of silently swapping' },
+    ],
+  },
   {
     version: '0.2.0',
     title: 'See What\'s Happening',

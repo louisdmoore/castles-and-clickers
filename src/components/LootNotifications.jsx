@@ -3,6 +3,15 @@ import { useGameStore } from '../store/gameStore';
 import ItemIcon from './icons/ItemIcon';
 import { CheckIcon, WarningIcon, StarIcon, TrophyIcon } from './icons/ui';
 
+const STAT_NAMES = {
+  attack: 'ATK', defense: 'DEF', speed: 'SPD', maxHp: 'HP',
+  critChance: 'CRIT%', critDamage: 'CRIT DMG', healingPower: 'HEAL',
+  blockChance: 'BLOCK%', dodgeChance: 'DODGE%', magicDamage: 'MAGIC',
+};
+function formatStatName(stat) {
+  return STAT_NAMES[stat] || stat.toUpperCase();
+}
+
 const LootNotifications = () => {
   // OPTIMIZATION: Use individual selectors to avoid re-renders on unrelated state changes
   const lootNotifications = useGameStore(state => state.lootNotifications);
@@ -38,16 +47,16 @@ const Notification = ({ notification, onDismiss }) => {
   const equipItem = useCallback((heroId, item) => useGameStore.getState().equipItem(heroId, item), []);
   const [equipped, setEquipped] = useState(false);
 
-  // Auto-dismiss after animation
+  // Auto-dismiss after animation (suggest-equip gets longer to allow reading)
   useEffect(() => {
-    const timer = setTimeout(onDismiss, equipped ? 2000 : 4500);
+    const duration = equipped ? 2000 : (type === 'suggest-equip' ? 8000 : 4500);
+    const timer = setTimeout(onDismiss, duration);
     return () => clearTimeout(timer);
-  }, [onDismiss, equipped]);
+  }, [onDismiss, equipped, type]);
 
   const handleClick = () => {
     // If it's an upgrade notification and item is still in inventory, equip it
     if (type === 'looted' && notification.upgradeFor && !equipped) {
-      // OPTIMIZATION: Access inventory imperatively to avoid subscription
       const inventory = useGameStore.getState().inventory;
       const itemInInventory = inventory.find(i => i.id === item.id);
       if (itemInInventory) {
@@ -56,13 +65,31 @@ const Notification = ({ notification, onDismiss }) => {
         return;
       }
     }
-    // Otherwise just dismiss
+    // Suggest-equip uses explicit buttons, don't dismiss on card click
+    if (type === 'suggest-equip' && !equipped) return;
+    onDismiss();
+  };
+
+  const handleEquipSuggestion = (e) => {
+    e.stopPropagation();
+    if (equipped) return;
+    const inventory = useGameStore.getState().inventory;
+    const itemInInventory = inventory.find(i => i.id === item.id);
+    if (itemInInventory) {
+      equipItem(notification.hero.id, item);
+      setEquipped(true);
+    }
+  };
+
+  const handleKeepCurrent = (e) => {
+    e.stopPropagation();
     onDismiss();
   };
 
   const getContent = () => {
     // Show equipped confirmation
     if (equipped) {
+      const heroName = notification.upgradeFor?.name || notification.hero?.name;
       return (
         <>
           <div className="flex items-center gap-2">
@@ -70,7 +97,7 @@ const Notification = ({ notification, onDismiss }) => {
             <span className="font-medium text-green-400">Equipped!</span>
           </div>
           <div className="text-xs text-gray-400 mt-1">
-            {item.name} on {notification.upgradeFor.name}
+            {item.name} on {heroName}
           </div>
         </>
       );
@@ -190,6 +217,51 @@ const Notification = ({ notification, onDismiss }) => {
         );
       }
 
+      case 'suggest-equip': {
+        const { hero, oldItem, comparison } = notification;
+        const statDiffs = comparison?.statDiff || {};
+        return (
+          <>
+            <div className="text-[10px] text-blue-300 mb-1 uppercase tracking-wide">Upgrade Found</div>
+            <div className="flex items-center gap-2">
+              <ItemIcon item={item} size={20} />
+              <span className="font-medium" style={{ color: item.rarityColor }}>
+                {item.name}
+              </span>
+            </div>
+            <div className="text-xs text-gray-400 mt-1">
+              For {hero.name}
+              {oldItem && <span className="text-gray-500"> (replacing {oldItem.name})</span>}
+            </div>
+            {Object.keys(statDiffs).length > 0 && (
+              <div className="flex flex-wrap gap-x-3 gap-y-0.5 mt-1.5 text-[11px]">
+                {Object.entries(statDiffs).map(([stat, diff]) => (
+                  <span key={stat} className={diff > 0 ? 'text-green-400' : 'text-red-400'}>
+                    {diff > 0 ? '+' : ''}{diff} {formatStatName(stat)}
+                  </span>
+                ))}
+              </div>
+            )}
+            <div className="flex gap-2 mt-2">
+              <button
+                className="pixel-btn pixel-btn-primary text-xs px-3 py-1"
+                onClick={handleEquipSuggestion}
+                aria-label={`Equip ${item.name} on ${hero.name}`}
+              >
+                Equip
+              </button>
+              <button
+                className="pixel-btn text-xs px-3 py-1"
+                onClick={handleKeepCurrent}
+                aria-label="Keep current equipment"
+              >
+                Keep Current
+              </button>
+            </div>
+          </>
+        );
+      }
+
       default:
         return null;
     }
@@ -202,6 +274,7 @@ const Notification = ({ notification, onDismiss }) => {
       case 'looted': return notification.upgradeFor ? '#22c55e' : item.rarityColor;
       case 'inventory-full': return '#ef4444';
       case 'auto-equipped': return '#22c55e';
+      case 'suggest-equip': return item.rarityColor || '#3b82f6';
       case 'unique-drop': return '#06b6d4'; // unique cyan
       case 'unique-duplicate': return '#06b6d4'; // unique cyan
       case 'collection-milestone': return notification.isComplete ? '#eab308' : '#06b6d4';

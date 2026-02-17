@@ -318,11 +318,42 @@ export const createInventorySlice = (set, get) => ({
     // Check if this item is an upgrade for anyone
     const upgradeCheck = get().isUpgradeForAnyHero(item);
 
-    // If auto-equip is on and item is an upgrade, equip it immediately
+    // If auto-equip is on and item is an upgrade, equip or suggest
     // Never auto-replace unique items - they're too valuable
     if (equipmentSettings.autoEquipUpgrades && upgradeCheck.isUpgrade && upgradeCheck.hero && !upgradeCheck.hero.equipment[item.slot]?.isUnique) {
       const hero = upgradeCheck.hero;
       const oldItem = hero.equipment[item.slot];
+
+      // Smart auto-equip: suggest + confirm for meaningful items, silent for trivial upgrades
+      const isRarePlus = item.rarity === 'rare' || item.rarity === 'epic' || item.rarity === 'legendary';
+      const isCloseCall = oldItem && (() => {
+        const priority = equipmentSettings.classPriority[hero.classId] || 'balanced';
+        const currentScore = calculateItemScore(oldItem, priority);
+        const newScore = calculateItemScore(item, priority);
+        return currentScore > 0 && (newScore - currentScore) / currentScore < 0.10;
+      })();
+
+      if ((isRarePlus || isCloseCall) && get().inventory.length < maxInventory) {
+        // Add to inventory and suggest instead of auto-equipping
+        const comparison = get().compareToEquipped(item, hero.id);
+        set(state => ({
+          inventory: [...state.inventory, item],
+          stats: {
+            ...state.stats,
+            totalItemsLooted: (state.stats.totalItemsLooted || 0) + 1,
+          },
+        }));
+        get().addLootNotification({
+          type: 'suggest-equip',
+          item,
+          hero,
+          oldItem,
+          comparison,
+        });
+        return { action: 'suggested', hero };
+      }
+
+      // Below threshold or inventory full — auto-equip silently
       let goldGain = 0;
 
       // Handle old item - never sell uniques, sell if autoSellJunk, otherwise add to inventory
@@ -611,7 +642,7 @@ export const createInventorySlice = (set, get) => ({
     const now = Date.now();
     set(state => ({
       lootNotifications: state.lootNotifications.filter(
-        n => now - n.timestamp < 5000
+        n => now - n.timestamp < (n.type === 'suggest-equip' ? 9000 : 5000)
       ),
     }));
   },

@@ -1,6 +1,6 @@
 # Implementation Progress — Design Rethink
 
-**Current Phase: Phase 2 — v0.2.1 — Know What To Do**
+**Current Phase: Phase 3 — v0.2.2 — Make Real Choices**
 
 ---
 
@@ -34,13 +34,13 @@
 
 ---
 
-## Phase 2: v0.2.1 — Know What To Do
+## Phase 2: v0.2.1 — Know What To Do ✅
 *Reference: DESIGN_RETHINK.md Sections 3, 5*
 *Goal: Player knows what went wrong and what to change.*
 
 - [x] Death recap popup on party wipe — data-focused, shows kill order, damage taken vs healing, dominant damage type (Section 3)
 - [x] Equipment comparison tooltips — use existing `compareToEquipped`, show stat diffs on hover/drop (Section 5.1)
-- [ ] Smart auto-equip — suggest + confirm for rare+ items, silent equip below threshold (Section 5.1)
+- [x] Smart auto-equip — suggest + confirm for rare+ items, silent equip below threshold (Section 5.1)
 
 ---
 
@@ -116,6 +116,18 @@
 ## Handoff Notes
 
 *Space for sessions to leave notes for the next session. Most recent first.*
+
+### Session 3 (2026-02-17) — Phase 2 Complete (v0.2.1)
+
+**Completed:** All 3 Phase 2 tasks.
+
+**Design decisions:**
+- Death recap uses `deathLog` array in combatSlice, populated by `recordHeroDeath` called from 3 death sites (combatDamageResolution, combatSkillExecution, combatStatusEffects). DOT deaths use the DOT type name (Burn/Poison/Bleed) as killer. `lastDeathRecap` built by endDungeon on defeat, auto-dismisses after 8s.
+- Equipment comparison tooltips wrap EquippedSlot and InventoryRow in existing `Tooltip` + `EquipmentTooltip` components. Uses existing `compareToEquipped` for stat diffs.
+- Smart auto-equip: `processLootDrop` now checks two thresholds before auto-equipping: (1) rare+ rarity, (2) score improvement within 10% of current (close call). Items meeting either threshold go to inventory with a `suggest-equip` notification showing stat diffs and [Equip]/[Keep Current] buttons. Common/uncommon clear upgrades still auto-equip silently. Suggest-equip notifications get 8s auto-dismiss (vs 4.5s for regular).
+- `clearOldNotifications` uses 9s cutoff for suggest-equip (vs 5s regular) to avoid premature server-side cleanup before the 8s client-side timer fires.
+
+**Next up:** Phase 3 — difficulty slider, hero traits, loot targeting, infused/ascended gear tiers.
 
 ### Session 2 (2026-02-17) — Phase 1 Complete (v0.2.0)
 
