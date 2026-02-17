@@ -385,10 +385,28 @@ export const getAvailableAffixes = (slot, tier, type = null) => {
 };
 
 // Roll a random affix for a slot/tier
-export const rollAffix = (slot, tier, type = null) => {
+// favoredAffixes: array of affix IDs that get 2x weight (from dungeon theme)
+export const rollAffix = (slot, tier, type = null, favoredAffixes = null) => {
   const available = getAvailableAffixes(slot, tier, type);
   if (available.length === 0) return null;
-  return available[Math.floor(Math.random() * available.length)];
+
+  // If no favored affixes, simple uniform random
+  if (!favoredAffixes || favoredAffixes.length === 0) {
+    return available[Math.floor(Math.random() * available.length)];
+  }
+
+  // Weighted selection: favored affixes get 2x weight
+  const favoredSet = new Set(favoredAffixes);
+  let totalWeight = 0;
+  for (const a of available) {
+    totalWeight += favoredSet.has(a.id) ? 2 : 1;
+  }
+  let roll = Math.random() * totalWeight;
+  for (const a of available) {
+    roll -= favoredSet.has(a.id) ? 2 : 1;
+    if (roll <= 0) return a;
+  }
+  return available[available.length - 1];
 };
 
 // Build item name with affixes

@@ -1,5 +1,6 @@
 import { RAIDS, isRaidUnlocked } from '../../data/raids';
-import { getMaxPartySize } from '../../data/milestones';
+import { getMaxPartySize, getDungeonTier } from '../../data/milestones';
+import { DUNGEON_THEMES } from '../../data/dungeonThemes';
 import throttledStorage from '../helpers/throttledStorage';
 
 export const createDungeonSlice = (set, get) => ({
@@ -65,6 +66,11 @@ export const createDungeonSlice = (set, get) => ({
     // Get difficulty multiplier from settings
     const difficultyMultiplier = get().dungeonSettings?.difficultyMultiplier || 1.0;
 
+    // Look up favored affixes from dungeon theme for loot targeting
+    const tier = getDungeonTier(cappedLevel);
+    const theme = DUNGEON_THEMES[tier.theme];
+    const favoredAffixes = theme?.favoredAffixes || [];
+
     set({
       dungeon: {
         level: cappedLevel,
@@ -74,6 +80,7 @@ export const createDungeonSlice = (set, get) => ({
         type: dungeonType,
         activeBuffs,
         difficultyMultiplier,
+        favoredAffixes,
       },
       pendingDungeonBuffs: [],
       dungeonProgress: {

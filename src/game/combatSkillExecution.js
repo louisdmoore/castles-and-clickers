@@ -201,7 +201,7 @@ export const executeHeroSkillAction = (ctx, actor) => {
           }
 
           if (Math.random() < dropChance) {
-            const item = generateEquipment(dungeon.level, { guaranteedRarity: minRarity, lootMultiplier: diffMult });
+            const item = generateEquipment(dungeon.level, { guaranteedRarity: minRarity, lootMultiplier: diffMult, favoredAffixes: dungeon.favoredAffixes });
             const lootResult = processLootDrop(item);
             addEffect({ type: 'lootDrop', position: m.position, slot: item.slot, rarityColor: item.rarityColor || '#9ca3af' });
             if (lootResult.action === 'sold') {

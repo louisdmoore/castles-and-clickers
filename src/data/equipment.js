@@ -739,17 +739,18 @@ export const generateEquipment = (dungeonLevel, options = {}) => {
 
   // Roll for affixes based on rarity (rare and above)
   const affixes = [];
+  const favoredAffixes = options.favoredAffixes || null;
   if (rarity === 'rare' || rarity === 'epic' || rarity === 'legendary') {
     // Rare: 1 affix, Epic: 2 affixes, Legendary: 2 affixes
     const affixCount = rarity === 'rare' ? 1 : 2;
 
     // Try to roll prefix first
-    const prefix = rollAffix(template.slot, tier, 'prefix');
+    const prefix = rollAffix(template.slot, tier, 'prefix', favoredAffixes);
     if (prefix) affixes.push(prefix.id);
 
     // Try to roll suffix (always for epic/legendary, or if no prefix was available for rare)
     if (affixCount >= 2 || (affixCount === 1 && affixes.length === 0)) {
-      const suffix = rollAffix(template.slot, tier, 'suffix');
+      const suffix = rollAffix(template.slot, tier, 'suffix', favoredAffixes);
       if (suffix) affixes.push(suffix.id);
     }
   }
@@ -775,8 +776,8 @@ export const generateEquipment = (dungeonLevel, options = {}) => {
 };
 
 // Helper to roll an affix - uses centralized affix definitions
-const rollAffix = (slot, tier, type) => {
-  const affix = rollAffixFromPool(slot, tier, type === 'prefix' ? AFFIX_TYPE.PREFIX : AFFIX_TYPE.SUFFIX);
+const rollAffix = (slot, tier, type, favoredAffixes = null) => {
+  const affix = rollAffixFromPool(slot, tier, type === 'prefix' ? AFFIX_TYPE.PREFIX : AFFIX_TYPE.SUFFIX, favoredAffixes);
   if (!affix) return null;
   return { id: affix.id, name: affix.name };
 };
