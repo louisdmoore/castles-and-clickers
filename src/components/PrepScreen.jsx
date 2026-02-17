@@ -7,6 +7,7 @@ import { getAffix } from '../data/itemAffixes';
 import { getWorldBossForLevel } from '../data/worldBosses';
 import ClassIcon from './icons/ClassIcon';
 import { SwordIcon, ShieldIcon, HeartIcon, CrownIcon, ChestIcon } from './icons/ui';
+import MilestoneWidget from './MilestoneWidget';
 
 const PrepScreen = () => {
   const prepPhase = useGameStore(state => state.prepPhase);
@@ -164,6 +165,11 @@ const PrepScreen = () => {
               </div>
             </div>
           )}
+        </div>
+
+        {/* Milestone widget */}
+        <div className="mb-4">
+          <MilestoneWidget />
         </div>
 
         {/* Auto-advance indicator */}
