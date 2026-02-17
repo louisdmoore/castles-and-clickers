@@ -1,6 +1,6 @@
 # Implementation Progress — Design Rethink
 
-**Current Phase: Phase 7 — v0.4.0 — The Full Picture**
+**Current Phase: Phase 8 — v0.5.0+ — Depth**
 
 ---
 
@@ -103,7 +103,7 @@
 *Reference: DESIGN_RETHINK.md Sections 6, 7, 9, 10, 13, 15*
 
 - [x] Raid difficulty tiers (Normal/Heroic/Mythic) (Section 10.3)
-- [ ] Raid-specific mechanics — Tier 1 data-only first (Section 10.1)
+- [x] Raid-specific mechanics — Tier 1 data-only first (Section 10.1)
 - [ ] 8th party slot (Ascension 3) (Section 6.3)
 - [ ] Dungeon affixes (per-run modifiers) (Section 7.3)
 - [ ] Achievement system with constraint challenges
@@ -116,6 +116,36 @@
 ## Handoff Notes
 
 *Space for sessions to leave notes for the next session. Most recent first.*
+
+### Session 9 (2026-02-17) — Phase 8 Started (v0.5.0)
+
+**Completed:** First 2 Phase 8 tasks (raid difficulty tiers + raid-specific mechanics).
+
+**Design decisions:**
+- Raid difficulty tiers: `RAID_DIFFICULTY_TIERS` in raids.js with Normal (1.0x, free), Heroic (1.5x, 50k gold), Mythic (2.0x, Ascension 3, 2 dungeon affixes). Difficulty stored on `raidState` and `dungeon` objects. `rollRaidDrop` accepts `uniqueDropBonus` parameter threaded through 5 combat call sites. DifficultySelector UI component in RaidSelectorModal with gold cost and ascension lock indicators. DungeonHeader and RaidRecapScreen show difficulty tags.
+- Raid-specific mechanics: `RAID_MECHANICS` in raids.js — Sunken Temple has Water Curse (-20% speed on all heroes, applied in useDungeon.js setupDungeon), Cursed Manor has Ghost Ward (75% DR on all non-boss enemies, applied via `monster.passive.damageReduction` in mazeGenerator.js placeMonsters, processed in combatDamageResolution.js resolveMonsterTargetDamage). Mechanic info shown in RaidSelectorModal per-raid. Combat log messages added for raid mechanic activation.
+- `applyAffixes` helper in mazeGenerator.js updated to handle DUNGEON_AFFIXES format (monsterStatMultiplier, monsterLifesteal, monsterReflectDamage) alongside legacy format.
+
+**Key files modified:**
+- `src/data/raids.js` — RAID_DIFFICULTY_TIERS, RAID_MECHANICS, getRaidDifficultyTier, getRaidMechanic, rollRaidDrop updated
+- `src/store/slices/dungeonSlice.js` — enterRaid accepts difficulty, stores on raidState/dungeon, completeRaid tracks difficulty
+- `src/game/mazeGenerator.js` — applyAffixes handles DUNGEON_AFFIXES, placeMonsters applies raid mechanic monster passives
+- `src/hooks/useDungeon.js` — setupDungeon applies hero speed debuff, passes raidId to placeMonsters
+- `src/game/combatDamageResolution.js` — passive.damageReduction for non-boss monsters, uniqueDropBonus threading
+- `src/game/combatSkillExecution.js` — uniqueDropBonus threading
+- `src/game/combatStatusEffects.js` — uniqueDropBonus threading
+- `src/components/RaidSelectorModal.jsx` — DifficultySelector, raid mechanic display, difficulty-aware enter flow
+- `src/components/DungeonHeader.jsx` — raid difficulty tag display
+- `src/components/RaidRecapScreen.jsx` — raid difficulty tag on completion
+
+**Notes for next session:**
+- Unwired combat traits (regenPercent, controlResist, healingMultiplier) carried forward.
+- MilestoneWidget duplicate `style` attribute bug carried forward.
+- Conditional XP triggers not wired into combat carried forward.
+- Pre-existing lint errors at ~82. No new errors introduced.
+- Only 2 raids have mechanics so far (sunken_temple, cursed_manor). sky_fortress, the_abyss, void_throne need mechanics added as Tier 2 later.
+
+**Next up:** 8th party slot (Ascension 3), dungeon affixes, achievements, essence/awakening, raid mastery, progressive disclosure.
 
 ### Session 8 (2026-02-17) — Phase 7 Complete (v0.4.0)
 

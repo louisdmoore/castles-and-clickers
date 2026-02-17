@@ -185,6 +185,17 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Raid difficulty in DungeonHeader — shows [Heroic]/[Mythic] tag next to raid name. Verify it's visible and not clipped
 - [ ] Raid recap difficulty display — shows difficulty tag on completion screen. Verify it renders correctly for all tiers
 
+## Raid-Specific Mechanics (v0.5.0)
+
+- [ ] Water Curse -20% speed — is this impactful enough to feel like a raid mechanic? May need tuning (e.g., -30%)
+- [ ] Ghost Ward 75% DR on all non-boss enemies — is this too punishing? Makes trash mobs near-unkillable without high damage builds
+- [ ] Ghost Ward DR stacks with boss phase DR — verify bosses don't have both passive DR and phase DR simultaneously
+- [ ] Raid mechanic display in RaidSelectorModal — shows name and description. Is SkullIcon the right indicator? Should it be more prominent?
+- [ ] Combat log message for raid mechanics — logged once at dungeon setup. Should it persist or remind the player mid-combat?
+- [ ] Only 2 of 5 raids have mechanics — sky_fortress, the_abyss, void_throne need mechanics designed and added (Tier 2)
+- [ ] Hero speed debuff is applied once at setup — if heroes are resurrected or rejoin, do they keep the debuff? Currently yes (baked into stats)
+- [ ] Monster passive DR not visible to the player — no UI indicator shows enemies have damage reduction. Should show as a buff icon or stat overlay
+
 ## General
 
 - [ ] Lint count crept from ~78 to ~84 — audit whether any are from Phase 1-2 changes

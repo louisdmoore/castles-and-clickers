@@ -10,6 +10,7 @@ export const CHANGELOG = [
     date: '2026-02-17',
     changes: [
       { type: 'feature', text: 'Raid difficulty tiers — choose Normal, Heroic (1.5x stats, better unique drops, 50k gold), or Mythic (2x stats + 2 random dungeon affixes, requires Ascension 3)' },
+      { type: 'feature', text: 'Raid-specific mechanics — Sunken Temple applies Water Curse (-20% hero speed), Cursed Manor activates Ghost Ward (enemies take 75% less damage)' },
     ],
   },
   {
