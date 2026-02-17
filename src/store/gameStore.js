@@ -8,6 +8,7 @@ import { DEFAULT_CLASS_PRIORITY } from './helpers/itemScoring';
 import { clearStatCache } from './helpers/statCalculator';
 import { getMaxPartySize } from '../data/milestones';
 import { resetCombatLogState } from './slices/combatSlice';
+import { SAVE_VERSION, migrate } from './helpers/migrations';
 
 // Slices
 import { createHeroSlice } from './slices/heroSlice';
@@ -144,7 +145,8 @@ export const useGameStore = create(
       }),
       {
         name: 'castles-and-clickers-save',
-        version: 1,
+        version: SAVE_VERSION,
+        migrate,
         // OPTIMIZATION: Throttle writes to every 2 seconds instead of every state change
         storage: createJSONStorage(() => throttledStorage),
         // OPTIMIZATION: Exclude transient combat state from persistence
