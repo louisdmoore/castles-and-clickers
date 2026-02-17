@@ -1,9 +1,17 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.2.1';
+export const CURRENT_VERSION = '0.2.2';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.2.2',
+    title: 'Make Real Choices',
+    date: '2026-02-17',
+    changes: [
+      { type: 'feature', text: 'Difficulty slider on prep screen — choose 1.0x to 3.0x challenge for better loot and harder monsters' },
+    ],
+  },
   {
     version: '0.2.1',
     title: 'Know What To Do',

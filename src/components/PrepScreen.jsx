@@ -9,6 +9,54 @@ import ClassIcon from './icons/ClassIcon';
 import { SwordIcon, ShieldIcon, HeartIcon, CrownIcon, ChestIcon } from './icons/ui';
 import MilestoneWidget from './MilestoneWidget';
 
+const DIFFICULTY_STOPS = [1.0, 1.5, 2.0, 2.5, 3.0];
+
+const DIFFICULTY_INFO = {
+  1.0: { label: 'Normal', color: '#9ca3af', desc: 'Standard difficulty' },
+  1.5: { label: 'Hard', color: '#fbbf24', desc: '+50% enemy stats, +50% drop rate' },
+  2.0: { label: 'Brutal', color: '#f97316', desc: '+100% enemy stats, +100% drops, Infused gear' },
+  2.5: { label: 'Nightmare', color: '#ef4444', desc: '+150% enemy stats, +150% drops' },
+  3.0: { label: 'Mythic', color: '#a855f7', desc: '+200% enemy stats, +200% drops, Ascended gear' },
+};
+
+const DifficultySlider = memo(({ value, onChange }) => {
+  const stopIndex = DIFFICULTY_STOPS.indexOf(value);
+  const info = DIFFICULTY_INFO[value] || DIFFICULTY_INFO[1.0];
+
+  const handleChange = useCallback((e) => {
+    const idx = parseInt(e.target.value, 10);
+    onChange(DIFFICULTY_STOPS[idx]);
+  }, [onChange]);
+
+  return (
+    <div className="pixel-panel-dark p-3 mb-4">
+      <div className="flex items-center justify-between mb-2">
+        <span className="pixel-label text-xs">Difficulty</span>
+        <span className="pixel-label text-xs font-bold" style={{ color: info.color }}>
+          {info.label} ({value}x)
+        </span>
+      </div>
+      <input
+        type="range"
+        min={0}
+        max={DIFFICULTY_STOPS.length - 1}
+        step={1}
+        value={stopIndex >= 0 ? stopIndex : 0}
+        onChange={handleChange}
+        className="w-full accent-current"
+        style={{ accentColor: info.color }}
+        aria-label={`Difficulty: ${info.label}`}
+      />
+      <div className="flex justify-between text-[10px] text-[var(--color-text-dim)] mt-1">
+        {DIFFICULTY_STOPS.map(s => (
+          <span key={s} style={s === value ? { color: info.color, fontWeight: 'bold' } : undefined}>{s}x</span>
+        ))}
+      </div>
+      <div className="text-[10px] text-[var(--color-text-dim)] mt-1 text-center">{info.desc}</div>
+    </div>
+  );
+});
+
 const PrepScreen = () => {
   const prepPhase = useGameStore(state => state.prepPhase);
   const heroes = useGameStore(state => state.heroes);
@@ -18,6 +66,7 @@ const PrepScreen = () => {
   const dismissPrepPhase = useGameStore(state => state.dismissPrepPhase);
   const maxDungeonLevel = useGameStore(state => state.maxDungeonLevel);
   const dungeonSettings = useGameStore(state => state.dungeonSettings);
+  const setDungeonSettings = useGameStore(state => state.setDungeonSettings);
   const highestDungeonCleared = useGameStore(state => state.highestDungeonCleared);
 
   // Auto-dismiss after 5s when auto-advance is on and run summary is gone
@@ -166,6 +215,14 @@ const PrepScreen = () => {
             </div>
           )}
         </div>
+
+        {/* Difficulty slider */}
+        {!atMaxLevel && (
+          <DifficultySlider
+            value={dungeonSettings?.difficultyMultiplier || 1.0}
+            onChange={(val) => setDungeonSettings({ difficultyMultiplier: val })}
+          />
+        )}
 
         {/* Milestone widget */}
         <div className="mb-4">

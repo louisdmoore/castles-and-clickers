@@ -1234,8 +1234,8 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
       } else {
         addCombatLog({ type: 'system', message: `${item.name} (inventory full!)` });
       }
-    } else if (Math.random() < (target.isBoss ? BOSS_LOOT_DROP_CHANCE : NORMAL_LOOT_DROP_CHANCE)) {
-      const item = generateEquipment(dungeon.level);
+    } else if (Math.random() < (target.isBoss ? BOSS_LOOT_DROP_CHANCE : NORMAL_LOOT_DROP_CHANCE) * (dungeon.difficultyMultiplier || 1.0)) {
+      const item = generateEquipment(dungeon.level, { lootMultiplier: dungeon.difficultyMultiplier || 1.0 });
       const result = processLootDrop(item);
       addEffect({ type: 'lootDrop', position: target.position, slot: item.slot, rarityColor: item.rarityColor || '#9ca3af' });
       if (result.action === 'sold') {

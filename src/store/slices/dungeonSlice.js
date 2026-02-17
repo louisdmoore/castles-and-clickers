@@ -21,6 +21,7 @@ export const createDungeonSlice = (set, get) => ({
     type: 'normal',
     autoAdvance: false,
     targetLevel: null,
+    difficultyMultiplier: 1.0,
   },
   featureUnlocks: {
     autoAdvance: false,
@@ -61,6 +62,9 @@ export const createDungeonSlice = (set, get) => ({
     // Consume pending dungeon buffs into active buffs
     const activeBuffs = pendingDungeonBuffs.length > 0 ? [...pendingDungeonBuffs] : [];
 
+    // Get difficulty multiplier from settings
+    const difficultyMultiplier = get().dungeonSettings?.difficultyMultiplier || 1.0;
+
     set({
       dungeon: {
         level: cappedLevel,
@@ -69,6 +73,7 @@ export const createDungeonSlice = (set, get) => ({
         completed: false,
         type: dungeonType,
         activeBuffs,
+        difficultyMultiplier,
       },
       pendingDungeonBuffs: [],
       dungeonProgress: {

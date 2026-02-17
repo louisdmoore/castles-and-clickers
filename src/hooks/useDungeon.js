@@ -69,11 +69,13 @@ export const useDungeon = ({ addEffect }) => {
     // Raid multiplier for raid dungeons (15% bonus over normal scaling)
     const dungeonType = dungeonProgress?.currentType || 'normal';
     const raidMultiplier = dungeonType === 'raid' ? 1.15 : 1.0;
+    // Difficulty slider multiplier (1.0x–3.0x, stored on dungeon object)
+    const difficultyMultiplier = dungeon.difficultyMultiplier || 1.0;
 
     // Place monsters (base scaling is 1.12^(level-1) in placeMonsters)
     const allMonsters = placeMonsters(mazeDungeon, dungeon.level, {
       dungeonType,
-      statMultiplier: raidMultiplier,
+      statMultiplier: raidMultiplier * difficultyMultiplier,
       affixes: dungeonProgress?.activeAffixes || [],
     });
 

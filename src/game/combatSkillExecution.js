@@ -187,7 +187,8 @@ export const executeHeroSkillAction = (ctx, actor) => {
 
           // Calculate drop chance and minimum rarity
           const skipNormalDrop = isRaidDungeon && m.isBoss;
-          let dropChance = skipNormalDrop ? 0 : (m.isBoss ? 0.95 : 0.25);
+          const diffMult = dungeon.difficultyMultiplier || 1.0;
+          let dropChance = skipNormalDrop ? 0 : (m.isBoss ? 0.95 : 0.25) * diffMult;
           let minRarity = null;
 
           if (m.isElite) {
@@ -200,7 +201,7 @@ export const executeHeroSkillAction = (ctx, actor) => {
           }
 
           if (Math.random() < dropChance) {
-            const item = generateEquipment(dungeon.level, { guaranteedRarity: minRarity });
+            const item = generateEquipment(dungeon.level, { guaranteedRarity: minRarity, lootMultiplier: diffMult });
             const lootResult = processLootDrop(item);
             addEffect({ type: 'lootDrop', position: m.position, slot: item.slot, rarityColor: item.rarityColor || '#9ca3af' });
             if (lootResult.action === 'sold') {
