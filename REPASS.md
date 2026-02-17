@@ -78,6 +78,30 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Ascended 1.3x stat boost stacks with rarity multiplier — verify the resulting stat values aren't too high for game balance
 - [ ] Equipment comparison tooltips don't account for quality tier — should "Infused" be treated as an upgrade signal?
 
+## Room Events
+
+- [ ] Event balance — Healing Spring full heal may be too strong in early dungeons; Cursed Altar 20% HP cost may be too harsh
+- [ ] Shrine of Fortune gold cost scaling — cost is `50 * dungeonLevel`, may need tuning for late-game gold levels
+- [ ] Trapped Chest loot — generates a single item via `generateEquipment`, no difficulty/rarity boost. Should trapped chests guarantee better rarity?
+- [ ] Wandering Merchant — always gives rare+ item for free. May need a gold cost or trade mechanic to feel more like a "merchant"
+- [ ] Imprisoned NPC +10% attack buff — permanent for the run, no visual indicator on hero stats. Should show as a buff icon
+- [ ] Monster Ambush 2x XP — only applies to that room's combat. Is 2x enough to feel rewarding?
+- [ ] Crumbling Floor skip combat — kills all non-boss monsters. If the room has a boss, the skip doesn't apply. Is this clear to the player?
+- [ ] Ancient Library — gives 2x XP to one random hero. No feedback about which hero got the bonus
+- [ ] Room event combat log messages — events log to combat log, but combat log resets on new combat. Events may not be visible long enough
+- [ ] Once-per-run events (healing_spring, wandering_merchant, abandoned_campfire) — `usedEvents` tracking is per-generation, not per-run. If dungeon is re-entered, these could appear again
+
+## Tower of Trials
+
+- [ ] Tower effective level caps at 50 — `getTowerEffectiveLevel(floor) = min(9 + floor, 50)`. Floors above 41 all have the same difficulty. Should scale further?
+- [ ] Tower has no loot drops — heroes don't get gear from tower runs. Intentional (challenge mode) but may feel unrewarding
+- [ ] No healing at all in tower — passive exploration healing disabled, no healing springs. Healer classes become essential. Is this too restrictive?
+- [ ] Tower seed display — shown on TowerResult modal and PrepScreen best score. Seed is cosmetic only (no seed-based replay). Should explain what seed means
+- [ ] TowerResult auto-dismiss 8s — same as DeathRecap. If player is away, they won't see their score. Score is persisted though
+- [ ] Tower entry from PrepScreen only — no way to enter tower from main menu or when not in prep phase. UX may be confusing
+- [ ] Tower floor display in zone header — shows "Tower Floor X" but no indication of effective dungeon level
+- [ ] Tower with auto-advance on — tower doesn't auto-advance (it's a separate flow), but auto-advance timer on PrepScreen still counts down. Verify no conflict
+
 ## General
 
 - [ ] Lint count crept from ~78 to ~84 — audit whether any are from Phase 1-2 changes

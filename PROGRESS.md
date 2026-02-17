@@ -1,6 +1,6 @@
 # Implementation Progress — Design Rethink
 
-**Current Phase: Phase 5 — v0.3.1 — Surprise Me**
+**Current Phase: Phase 6 — v0.3.2 — Craft My Build**
 
 ---
 
@@ -67,12 +67,12 @@
 
 ---
 
-## Phase 5: v0.3.1 — Surprise Me
+## Phase 5: v0.3.1 — Surprise Me ✅
 *Reference: DESIGN_RETHINK.md Sections 7, 9*
 *Goal: Every run feels different.*
 
-- [ ] Room random events (8-10 types, 15% per room) — event handlers using existing systems (Section 7.2)
-- [ ] Tower of Trials (endless challenge mode) — no healing between floors, high score tracking (Section 9)
+- [x] Room random events (8-10 types, 15% per room) — event handlers using existing systems (Section 7.2)
+- [x] Tower of Trials (endless challenge mode) — no healing between floors, high score tracking (Section 9)
 
 ---
 
@@ -116,6 +116,27 @@
 ## Handoff Notes
 
 *Space for sessions to leave notes for the next session. Most recent first.*
+
+### Session 6 (2026-02-17) — Phase 5 Complete (v0.3.1)
+
+**Completed:** Both Phase 5 tasks (room events + Tower of Trials).
+
+**Design decisions:**
+- Room events: 10 event types rolled during maze generation via `rollRoomEvent()`. Events stored on room objects as `{ id, name, type }`. Processed in `useDungeon.js` on room change (via `findRoomIndex` comparison). Event handlers in `src/game/roomEventHandlers.js` return roomCombat update objects for modifier events. Combat modifiers (`roomEventXpMultiplier`, `roomEventHeroXpBonus`, `roomEventLootBonus`) stored on `roomCombat` and consumed in `combatDamageResolution.js` and `combatSkillExecution.js` via the `ctx` object.
+- Crumbling floor event skips combat by setting `roomEventSkipCombat: true` on roomCombat, then zeroing HP on all non-boss monsters in the room before the combat check.
+- Tower of Trials: Endless floors with `getTowerEffectiveLevel(floor) = min(9 + floor, 50)` scaling. Uses a seed for leaderboard-friendliness. No HP reset between floors — `advanceTowerFloor` creates a new dungeon without calling `initializeHeroHp`, and passive exploration healing is disabled when `dungeon.isTower`. High scores stored in `challengeScores.tower` (persisted, save migration v3→v4).
+- Tower access gated by `hasAscensionUnlock(count, 'challenge_access')` which requires Ascension 2. Entry button on PrepScreen.
+- Tower completion flow: COMPLETE phase → `advanceTowerFloor()` (next floor), DEFEAT phase → `endTowerRun()` (records score, shows TowerResult modal). TowerResult modal auto-dismisses after 8s, shows floor reached, seed, and "New Personal Best!" indicator.
+- `lastTowerResult` is excluded from persistence via partialize (transient UI state).
+
+**Notes for next session:**
+- The `regenPercent`, `controlResist`, and `healingMultiplier`/`healingReceivedMultiplier` traits are still not wired into combat processing. Carried forward from Session 5.
+- MilestoneWidget duplicate `style` attribute bug still exists (line ~146). Carried forward.
+- Pre-existing lint errors at ~82 (down from ~84). No new errors introduced.
+- Tower effective level caps at 50 (`getTowerEffectiveLevel`). If max dungeon level increases beyond 50 via further ascensions, the tower cap should scale too.
+- Room event `processLootDrop` callback uses `inventorySlice.processLootDrop` — ensure it handles the "no dungeon" edge case if events are ever used outside dungeons.
+
+**Next up:** Phase 6 — Reforging/enchantment, affix synergy bonuses, status effect combos.
 
 ### Session 5 (2026-02-17) — Phase 4 Complete (v0.3.0)
 
