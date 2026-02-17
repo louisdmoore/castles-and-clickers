@@ -406,64 +406,49 @@ Architecture is clean — dependencies flow one-way: `components/ → hooks/ →
 
 ## 7. Accessibility
 
-**Severity: Critical (compliance), Medium (player impact for this genre)**
+**Severity: Critical (compliance), Medium (player impact for this genre)** → **Largely resolved in v0.1.26**
 
-### 7.1 Zero ARIA Support
+### 7.1 ~~Zero ARIA Support~~ — **FIXED (v0.1.26)**
 
-No `aria-*` attributes found across any component file. Screen reader users cannot access semantic information about interactive elements, modals, or dynamic content.
+~~No `aria-*` attributes found across any component file.~~ ARIA attributes added to: GameHUD (hamburger button, version), NavBar (`aria-label`, `aria-disabled`, `aria-current`), CombatLog (`role="log"`, `aria-live`), LootNotifications (`role="status"`, `aria-live`), RaidSelectorModal (`aria-expanded`, `aria-controls`), ModalOverlay (`role="dialog"`, `aria-modal`, `aria-labelledby`), SkillNode (`aria-label` with skill name/tier/status).
 
-### 7.2 Keyboard Navigation Gaps
+### 7.2 ~~Keyboard Navigation Gaps~~ — **MOSTLY FIXED (v0.1.26)**
 
-**Working:**
-- Escape key closes modals (`ModalOverlay.jsx` lines 6–13)
-- Native button focus works
+~~**Missing:**~~
+- ~~No visible `:focus-visible` styling in CSS~~ **FIXED** — gold outline on buttons, blue outline on inputs
+- ~~Skill tree nodes not keyboard navigable~~ **FIXED** — `onFocus`/`onBlur` shows tooltip, `aria-label` describes skill
+- Canvas dungeon view has no keyboard alternative (acceptable — canvas is a visual display, not interactive)
+- ~~No roving tabindex pattern anywhere~~ Not needed — all interactive elements use native `<button>` which is tabbable
 
-**Missing:**
-- No tabIndex management for complex components
-- No visible `:focus-visible` styling in CSS
-- Skill tree nodes not keyboard navigable
-- Canvas dungeon view has no keyboard alternative
-- No keyboard shortcuts for game speed, dungeon selection, or navigation
-- No roving tabindex pattern anywhere
+### 7.3 ~~Focus Management in Modals~~ — **FIXED (v0.1.26)**
 
-### 7.3 Focus Management in Modals
+~~- No focus trap — focus can escape to background content~~
+~~- No focus restoration — closing a modal returns focus to body, not the trigger~~
+~~- No auto-focus on modal open~~
 
-- No focus trap — focus can escape to background content
-- No focus restoration — closing a modal returns focus to body, not the trigger
-- No `inert` attribute on background while modals are open
-- No auto-focus on modal open
+All fixed in `ModalOverlay.jsx`: focus trap (Tab/Shift+Tab wrap), auto-focus close button on open, focus restore to previous element on close. `aria-modal="true"` + focus trap replaces the `inert` attribute approach.
 
-### 7.4 Color Contrast Failures
+### 7.4 ~~Color Contrast Failures~~ — **FIXED (v0.1.26)**
 
-| Element | Location | Ratio | WCAG AA (4.5:1) |
-|---------|----------|-------|------------------|
-| `.pixel-label` | index.css:224 | ~3.9:1 | Fail |
-| `.pixel-speed-btn` | index.css:305 | ~3.2:1 | Fail |
-| Level text (gray-400 on gray-900) | PartyStatus.jsx | ~3.5:1 | Fail |
-| Dimmed stats | EquipmentScreen.jsx | <4.5:1 | Fail |
-| Secondary stats | StatsScreen.jsx | <4.5:1 | Fail |
+~~The global `--color-text-dim: #a0a0b0` value is used throughout and likely fails contrast on dark backgrounds.~~
 
-The global `--color-text-dim: #a0a0b0` value is used throughout and likely fails contrast on dark backgrounds.
+- `--color-text-dim` updated from `#a0a0b0` to `#b8b8c8` (~5.5:1 contrast on `#1a1a2e`)
+- `--color-text-dark` updated from `#606070` to `#8a8a9a`
+- `.pixel-label` and `.pixel-speed-btn` inherit the fix via CSS variables
 
-### 7.5 No Motion Safety
+### 7.5 ~~No Motion Safety~~ — **FIXED (v0.1.26)**
 
-Zero instances of `@media (prefers-reduced-motion)` in the codebase. Problematic animations include:
+~~Zero instances of `@media (prefers-reduced-motion)` in the codebase.~~
 
-| Animation | Duration | Risk |
-|-----------|----------|------|
-| `animate-screen-shake` | 0.4s | Vestibular disorder trigger |
-| `animate-pixel-blink` | 1s infinite | Flashing content |
-| `unique-glow-pulse` | 2.5s infinite | Repetitive motion |
-| `skill-glow-pulse` | 2.5s infinite | Repetitive motion |
-| `animate-damage-flash` | 0.3s | Flashing content |
+Added `@media (prefers-reduced-motion: reduce)` block that sets `animation-duration: 0.01ms !important`, `animation-iteration-count: 1 !important`, and `transition-duration: 0.01ms !important` on all elements. Kills all 24+ keyframe animations and transitions for users who prefer reduced motion.
 
-### 7.6 Screen Reader Blind Spots
+### 7.6 ~~Screen Reader Blind Spots~~ — **MOSTLY FIXED (v0.1.26)**
 
-- Icon-only buttons lack `aria-label`
-- Combat log updates have no `aria-live` region
-- Loot notifications have no `role="status"`
-- Hero recruitment input has no associated `<label>`
-- Buff/debuff icons rely solely on `title` tooltips
+- ~~Icon-only buttons lack `aria-label`~~ **FIXED** — hamburger menu button has `aria-label`
+- ~~Combat log updates have no `aria-live` region~~ **FIXED** — `role="log"` + `aria-live="off"` (too rapid for live announcements)
+- ~~Loot notifications have no `role="status"`~~ **FIXED** — `role="status"` + `aria-live="polite"`
+- Hero recruitment input has no associated `<label>` (still open)
+- Buff/debuff icons rely solely on `title` tooltips (still open)
 
 ---
 
@@ -481,22 +466,13 @@ No first-time player guidance exists:
 
 Players must discover mechanics entirely through trial and error.
 
-### 8.2 No Save Feedback
+### ~~8.2 No Save Feedback~~ (RESOLVED v0.1.27)
 
-- Auto-save runs on a 2-second throttle, completely invisible to the player
-- No "Game saved" indicator, timestamp, or confirmation
-- `lastSaveTime` exists in state but is not displayed anywhere in the UI
-- No warning when the game is in an unsaved state
-- No manual save/export option
+~~Auto-save runs on a 2-second throttle, completely invisible to the player.~~ Save indicator in GameHUD shows "Saved Xs ago" with green flash, warning on failure.
 
-### 8.3 Silent Error States
+### ~~8.3 Silent Error States~~ (RESOLVED v0.1.27)
 
-Most failure conditions produce no user-facing feedback:
-- Insufficient gold for purchases — silently rejected
-- Full inventory — only shows red stat text
-- Skill prerequisites not met — button disabled with no explanation
-- Failed equipment generation — silently skipped
-- localStorage write failure — completely invisible
+~~Most failure conditions produce no user-facing feedback.~~ Toast notification system shows errors for: insufficient gold, inventory full, skill prerequisites, max stack, unique sell attempt, save failure, and more.
 
 ### 8.4 No Loading States
 
@@ -578,10 +554,10 @@ For context, these systems are solid and should be preserved:
 | 6 | Slow early skill unlocks | Major | New player retention | Low |
 | 7 | Speed stat dominance | Major | Class balance | Medium |
 | 8 | No onboarding | Medium | New player confusion | High |
-| 9 | Accessibility (ARIA, keyboard) | Medium–Critical | Excludes disabled players | High |
+| 9 | ~~Accessibility (ARIA, keyboard)~~ **MOSTLY DONE** | ~~Medium–Critical~~ | ~~Excludes disabled players~~ | **DONE (v0.1.26)** |
 | 10 | ~~File splitting (useCombat + gameStore)~~ **DONE** | ~~Major~~ | ~~Maintainability~~ | **DONE (v0.1.18 + v0.1.19)** |
 | 11 | Magic numbers | Medium | Balance tuning difficulty | Medium |
 | 12 | Unicode → SVG icons | Low | Art consistency | Low |
 | 13 | Zero test coverage | Major | Regression risk | Very High |
-| 14 | Motion safety | Medium | Vestibular/seizure risk | Low |
+| 14 | ~~Motion safety~~ | ~~Medium~~ | ~~Vestibular/seizure risk~~ | **DONE (v0.1.26)** |
 | 15 | Console logs in production | Low | Performance/noise | Low |

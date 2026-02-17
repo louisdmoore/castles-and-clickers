@@ -124,135 +124,107 @@ Updated `constants.js`, `skillEngine.js`, `skillAI.js`, `combatDamageResolution.
 
 ---
 
-## Phase 3: Progression & Shop Rework
+## ~~Phase 3: Progression & Shop Rework~~ DONE (v0.1.20–v0.1.23)
 
-### 3A. Early Game Pacing Fixes — DONE (v0.1.20)
+### ~~3A. Early Game Pacing Fixes~~ DONE (v0.1.20)
 
 - ~~Free skill point at level 1~~ → **Skill point at level 2, no auto-starter skill** — heroes choose their first skill from the tree
 - **Party size wired up:** `getMaxPartySize()` now connected to `endDungeon` and merge (D10→5, D20→6)
 - **Elites at D8:** `ELITE_CONFIG.minLevel` changed from 10 to 8
 
-### 3B. Flat Respec Cost — DONE (v0.1.20)
+### ~~3B. Flat Respec Cost~~ DONE (v0.1.20)
 
 Changed formula in `src/data/skillTrees.js`:
 - **From:** `50 * Math.pow(2, usedSkillPoints - 1)` (exponential, punishing)
 - **To:** `250 * usedSkillPoints` (linear — meaningful early, 2,500g at 10 points instead of 25,600g)
 
-### 3C. Full Shop Rework
+### ~~3C. Shop Rework~~ DONE (v0.1.22–v0.1.23)
 
-**Rarity scaling:**
-- Unlock Rare items at D10, Epic at D20, Legendary at D25
+- **Rarity scaling:** Rare at D10, Epic at D20, Legendary at D25
+- **Consumables tab:** Healing potions, XP scrolls, stat elixirs in `src/data/consumables.js`
+- **"Sell Non-Upgrades" button** for bulk inventory cleanup
+- **Consumable buffs apply to raids** (v0.1.23)
+- **Dungeon buffs refunded on fail/abandon** (v0.1.23)
+- Featured item slot deferred — not implemented
 
-**New consumables tab:**
-- Healing potions, XP scrolls, temporary buffs
-- Create new data file: `src/data/consumables.js`
+### ~~Phase 3 Verification~~ DONE
 
-**Featured item slot:**
-- 1 rotating rare+ item slot that refreshes daily
-
-**Refresh changes:**
-- 2-hour auto-refresh
-- Manual refresh cost scales with dungeon level
-
-**UI overhaul:**
-- Tabs for Equipment / Consumables / Featured
-- Bulk buy/sell support
-
-**Files touched:** `src/store/gameStore.js` (shop actions in homesteadSlice), `src/components/ShopScreen.jsx`, new `src/data/consumables.js`
-
-### Phase 3 Verification
-
-1. `npm run build` — no build errors
-2. `npm run lint` — no new lint warnings
-3. Manual test: shop at D1, D10, D20; respec cost at various skill point counts; verify skill point at level 2, no auto-starter skill
+1. ~~`npm run build` — no build errors~~ ✓
+2. ~~`npm run lint` — no new lint warnings~~ ✓
+3. ~~Manual test: shop at D1, D10, D20; respec cost; consumable usage~~ ✓
 
 ---
 
-## Phase 4: Accessibility (WCAG AA)
+## ~~Phase 4: Accessibility (WCAG AA)~~ DONE (v0.1.26)
 
-### 4A. Motion Safety
+### ~~4A. Motion Safety~~ DONE
 
-Add to `src/index.css`:
-```css
-@media (prefers-reduced-motion: reduce) {
-  *, *::before, *::after {
-    animation-duration: 0.01ms !important;
-    animation-iteration-count: 1 !important;
-    transition-duration: 0.01ms !important;
-  }
-}
-```
+Added `@media (prefers-reduced-motion: reduce)` block to `src/index.css` that sets `animation-duration: 0.01ms !important`, `animation-iteration-count: 1 !important`, and `transition-duration: 0.01ms !important` on all elements. Kills all 24+ keyframe animations and transitions.
 
-### 4B. Color Contrast Fixes
+### ~~4B. Color Contrast Fixes~~ DONE
 
-- Update `--color-text-dim` from `#a0a0b0` to a value meeting 4.5:1 on dark backgrounds
-- Fix `.pixel-label`, `.pixel-speed-btn`, and any gray-400-on-dark-bg instances
-- Audit with browser dev tools contrast checker
+- `--color-text-dim` updated from `#a0a0b0` to `#b8b8c8` (~5.5:1 contrast on `#1a1a2e`)
+- `--color-text-dark` updated from `#606070` to `#8a8a9a`
+- `.pixel-label` and `.pixel-speed-btn` inherit the fix via CSS variables
 
-### 4C. ARIA Labels & Roles
+### ~~4C. ARIA Labels & Roles~~ DONE
 
-- Add `aria-label` to all icon-only buttons (NavBar, GameHUD, speed controls)
-- Add `role="status"` + `aria-live="polite"` to combat log and loot notifications
-- Add `aria-disabled` to locked/inactive buttons
-- Add `<label>` to hero recruitment input
-- Add `aria-expanded` to collapsible sections (RaidSelectorModal)
+- GameHUD: `aria-label` on hamburger button, `role="button"` + `aria-label` on version span
+- NavBar: `aria-label="Main navigation"` on `<nav>`, `aria-disabled`/`aria-current` on buttons
+- CombatLog: `role="log"`, `aria-label="Combat log"`, `aria-live="off"`
+- LootNotifications: `role="status"`, `aria-live="polite"`
+- RaidSelectorModal: `aria-expanded`, `aria-controls` on expand/collapse toggle
+- ModalOverlay: `role="dialog"`, `aria-modal="true"`, `aria-labelledby="modal-title"`, `aria-label="Close"` on close button, `aria-hidden="true"` on backdrop
+- SkillNode: `aria-label` with skill name, tier, and status
 
-### 4D. Focus Management
+### ~~4D. Focus Management~~ DONE
 
-- Add focus trap to `ModalOverlay.jsx` (trap tab within modal, restore focus on close)
-- Add `inert` attribute to background content while modal is open
-- Auto-focus first interactive element on modal open
-- Add visible `:focus-visible` outline styles in CSS
+- Focus trap in `ModalOverlay.jsx`: Tab/Shift+Tab wrap within modal
+- Auto-focus close button on open
+- Focus restore to previous element on close
+- `aria-modal="true"` + focus trap replaces `inert` attribute approach
+- `:focus-visible` styles in CSS: gold outline on `.pixel-btn`/`.pixel-speed-btn`, blue outline on `input`/`select`
 
-### 4E. Keyboard Navigation
+### ~~4E. Keyboard Navigation~~ DONE
 
-- Add `tabIndex` and `keydown` handlers to SkillTreeScreen nodes (arrow keys to navigate, Enter to unlock)
-- Add keyboard shortcuts for game speed control
-- Ensure all interactive elements are reachable via Tab
+- SkillNode: `onFocus`/`onBlur` shows/hides tooltip for keyboard users
+- Version span: keyboard-activatable with Enter/Space, `tabIndex={0}`
+- All interactive elements already use native `<button>` which is tabbable
+- Skipped game speed keyboard shortcuts (would conflict with text inputs)
 
-### Phase 4 Verification
+### ~~Phase 4 Verification~~ DONE
 
-1. `npm run build` — no build errors
-2. `npm run lint` — no new lint warnings
-3. Manual test: Tab through full UI, test with screen reader, check contrast ratios with dev tools
+1. `npm run build` — no build errors ✓
+2. `npm run lint` — no new lint warnings (only pre-existing) ✓
+3. Manual test: Tab through UI, modal focus trap, reduced motion, contrast
 
 ---
 
-## Phase 5: Player Experience
+## Phase 5: Player Experience — DONE (v0.1.27)
 
-### 5A. Save Indicator
+### 5A. Save Indicator — DONE
+- `SaveIndicator` component in `GameHUD.jsx` shows "Saved Xs ago" with green flash animation
+- `throttledStorage.js` has `onSave(cb)` callback for save-state tracking
+- `saveStatus` state in `economySlice.js`, excluded from persistence
+- Warning icon + red text on save failure
 
-- Add a small "Saved" indicator to `GameHUD.jsx` showing timestamp of last save
-- Flash briefly on each save, then fade to subtle text
-- Show warning icon if save failed (integrates with Phase 1B error handling)
+### 5B. Error Toasts — DONE
+- `src/components/ui/Toast.jsx` — pixel-styled toast with 4 types (error/warning/success/info)
+- Toast queue in `economySlice.js` (`toasts` array, `addToast`, `removeToast`)
+- Auto-dismiss 3s, max 5 visible, click to dismiss
+- Added to: `spendGold`, `upgradeBuilding`, `refreshShop`, `buyFromShop`, `buyConsumable`, `unequipItem`, `sellItem`, `recruitFromTavern`, `unlockSkill`, `respecHero`, `refreshTavern`
+- Save failure toast connected in `gameStore.js`
 
-### 5B. Error Toasts
+### 5C. In-Game Encyclopedia — DONE
+- `src/components/EncyclopediaScreen.jsx` — 6 tabs (Combat, Equipment, Classes, Dungeons, Homestead, Status FX)
+- Searchable with keyword filtering across tabs
+- Content sourced live from `balanceConstants.js`, `equipment.js`, `itemAffixes.js`, `classes.js`, `milestones.js`, `homestead.js`, `statusEffects.js`
+- `BookIcon` in `ui.jsx`, accessible as "Help" from NavBar (after Stats)
 
-- Create `src/components/ui/Toast.jsx` — pixel-styled notification component
-- Create a toast queue in the store (or lightweight context)
-- Trigger toasts for: insufficient gold, inventory full, prerequisites not met, save failure
-- Auto-dismiss after 3 seconds, stackable
-
-### 5C. In-Game Encyclopedia
-
-- Create `src/components/EncyclopediaScreen.jsx` — accessible from NavBar
-- Sections: Combat (initiative, dodge, damage), Equipment (rarities, affixes), Skills (tiers, prerequisites), Dungeons (scaling, elites), Raids, Homestead
-- Searchable/filterable
-- Content sourced from game constants where possible (self-documenting)
-- Design philosophy: discovery-based learning, this is a **reference** not a tutorial
-
-### 5D. Contextual Help Tooltips
-
-- Create reusable `src/components/ui/HelpTooltip.jsx`
-- Add small `?` icon buttons next to complex UI elements
-- Click/hover expands a brief explanation
-- Locations: skill tree header, equipment comparison, dodge/speed stats, homestead bonuses, shop pricing
-
-### Phase 5 Verification
-
-1. `npm run build` — no build errors
-2. `npm run lint` — no new lint warnings
-3. Manual test: verify save indicator updates, trigger error toasts, browse encyclopedia, check tooltips
+### 5D. Contextual Help Tooltips — DONE
+- `src/components/ui/HelpTooltip.jsx` — wraps `Tooltip.jsx` with `QuestionIcon` button
+- Added to 5 locations: SkillTreeScreen, EquipmentScreen, HomesteadScreen, ShopScreen, DungeonMap
+- `QuestionIcon` in `ui.jsx`
 
 ---
 
@@ -312,6 +284,6 @@ Organized by class:
 
 - **Execute phases in order** — each phase builds on the previous
 - **Each phase can be given to an independent agent** — all necessary context (file paths, line numbers, approach) is included
-- **Bump version after each phase** — version is in `src/components/GameHUD.jsx` header
+- **Bump version after each phase** — version is in `src/data/changelog.js` as `CURRENT_VERSION`
 - **Line numbers are approximate** — they were accurate at time of audit but may shift after Phase 2 file splits
 - **After Phase 2**, all file path references in later phases should be updated to reflect the new split file structure

@@ -7,6 +7,7 @@ import { scaleUniqueStats } from '../data/uniqueItems';
 import HeroIcon from './icons/HeroIcon';
 import ItemIcon, { WeaponSlotIcon, ArmorSlotIcon, AccessorySlotIcon } from './icons/ItemIcon';
 import { GoldIcon, PartyIcon, StarIcon } from './icons/ui';
+import HelpTooltip from './ui/HelpTooltip';
 
 // Helper to get affix descriptions for an item
 const getAffixDescriptions = (item) => {
@@ -310,7 +311,16 @@ const EquipmentScreen = () => {
 
         {/* Settings - Compact */}
         <div className="bg-gray-900 rounded p-2 space-y-2 text-xs mt-auto">
-          <div className="text-gray-400 font-medium">Settings</div>
+          <div className="text-gray-400 font-medium flex items-center gap-1">
+            Settings
+            <HelpTooltip content={
+              <div className="space-y-1">
+                <div>Rarity tiers: Common, Uncommon, Rare, Epic, Legendary, Unique.</div>
+                <div>Rare+ items can have affixes (special effects).</div>
+                <div>Auto-equip replaces gear when a better item drops. Auto-sell converts junk to gold.</div>
+              </div>
+            } />
+          </div>
           <label className="flex items-center gap-2 cursor-pointer">
             <input
               type="checkbox"

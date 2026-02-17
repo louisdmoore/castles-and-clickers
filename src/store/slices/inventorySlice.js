@@ -78,6 +78,7 @@ export const createInventorySlice = (set, get) => ({
       const item = hero.equipment[slot];
 
       if (state.inventory.length >= state.maxInventory) {
+        get().addToast({ type: 'warning', message: 'Inventory full — cannot unequip' });
         return state; // Inventory full
       }
 
@@ -122,7 +123,10 @@ export const createInventorySlice = (set, get) => ({
     if (!item) return 0;
 
     // Prevent selling unique items
-    if (item.isUnique) return 0;
+    if (item.isUnique) {
+      get().addToast({ type: 'warning', message: 'Cannot sell unique items' });
+      return 0;
+    }
 
     const sellValue = calculateSellValue(item);
 

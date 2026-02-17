@@ -6,6 +6,7 @@ import SkillNode from './SkillNode';
 import HeroIcon from './icons/HeroIcon';
 import { TreeIcon } from './icons/ui';
 import ClassIcon from './icons/ClassIcon';
+import HelpTooltip from './ui/HelpTooltip';
 
 const SkillTreeScreen = () => {
   const {
@@ -221,6 +222,13 @@ const SkillTreeScreen = () => {
               <>
                 <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
                   <ClassIcon classId={selectedHero.classId} size={24} /> {skillTree.name} Skills
+                  <HelpTooltip content={
+                    <div className="space-y-1">
+                      <div>Earn 1 skill point every 2 levels.</div>
+                      <div>Tier 1 requires 2 Tier 0 skills, Tier 2 requires 3 Tier 1 skills, Tier 3 (capstone) requires 4 Tier 2 skills.</div>
+                      <div>Respec cost: 250g per allocated point.</div>
+                    </div>
+                  } />
                 </h3>
 
                 <div className="space-y-6">

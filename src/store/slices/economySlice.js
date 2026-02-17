@@ -51,6 +51,8 @@ export const createEconomySlice = (set, get) => ({
   isRunning: false,
   gameSpeed: 1,
   lastSaveTime: Date.now(),
+  saveStatus: { success: true, timestamp: Date.now() },
+  toasts: [],
 
   // Actions
   addGold: (amount) => {
@@ -65,7 +67,10 @@ export const createEconomySlice = (set, get) => ({
 
   spendGold: (amount) => {
     const { gold } = get();
-    if (gold < amount) return false;
+    if (gold < amount) {
+      get().addToast({ type: 'error', message: 'Not enough gold' });
+      return false;
+    }
     set(state => ({
       gold: state.gold - amount,
       stats: {
@@ -84,11 +89,13 @@ export const createEconomySlice = (set, get) => ({
 
     const currentLevel = homestead[buildingId] || 0;
     if (currentLevel >= building.maxLevel) {
+      get().addToast({ type: 'warning', message: `${building.name} is max level` });
       return { success: false, error: 'Max level reached' };
     }
 
     const cost = getUpgradeCost(building, currentLevel);
     if (gold < cost) {
+      get().addToast({ type: 'error', message: `Not enough gold (need ${cost})` });
       return { success: false, error: 'Not enough gold', cost };
     }
 
@@ -124,7 +131,10 @@ export const createEconomySlice = (set, get) => ({
     const refreshCost = getRefreshCost(highestDungeonCleared);
 
     // Check if manual refresh is affordable
-    if (manual && gold < refreshCost) return false;
+    if (manual && gold < refreshCost) {
+      get().addToast({ type: 'error', message: `Not enough gold to refresh (need ${refreshCost})` });
+      return false;
+    }
 
     // Determine max allowed rarity from milestones
     const maxRarity = getMaxShopRarity(highestDungeonCleared);
@@ -195,8 +205,14 @@ export const createEconomySlice = (set, get) => ({
     const item = shop.items.find(i => i.id === itemId);
     if (!item) return false;
 
-    if (gold < item.shopPrice) return false;
-    if (inventory.length >= maxInventory) return false;
+    if (gold < item.shopPrice) {
+      get().addToast({ type: 'error', message: `Not enough gold (need ${item.shopPrice})` });
+      return false;
+    }
+    if (inventory.length >= maxInventory) {
+      get().addToast({ type: 'warning', message: 'Inventory full' });
+      return false;
+    }
 
     // Remove shop price from item before adding to inventory
     const inventoryItem = { ...item };
@@ -230,12 +246,18 @@ export const createEconomySlice = (set, get) => ({
     // Check stack limit
     const owned = shopConsumables.filter(c => c.templateId === templateId).length;
     const canBuy = Math.min(quantity, template.maxStack - owned);
-    if (canBuy <= 0) return false;
+    if (canBuy <= 0) {
+      get().addToast({ type: 'warning', message: `Max ${template.name} stack reached` });
+      return false;
+    }
 
     // Check gold
     const unitCost = getConsumableCost(templateId, highestDungeonCleared);
     const totalCost = unitCost * canBuy;
-    if (gold < totalCost) return false;
+    if (gold < totalCost) {
+      get().addToast({ type: 'error', message: `Not enough gold (need ${totalCost})` });
+      return false;
+    }
 
     // Create consumable instances
     const newItems = [];
@@ -437,6 +459,21 @@ export const createEconomySlice = (set, get) => ({
       startingLevel: startingHighest,
     };
   },
+
+  addToast: ({ type, message }) => {
+    const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
+    set(state => ({
+      toasts: [...state.toasts.slice(-4), { id, type, message, createdAt: Date.now() }],
+    }));
+  },
+
+  removeToast: (id) => {
+    set(state => ({
+      toasts: state.toasts.filter(t => t.id !== id),
+    }));
+  },
+
+  updateSaveStatus: (status) => set({ saveStatus: status }),
 
   updateLastSaveTime: () => set({ lastSaveTime: Date.now() }),
 });

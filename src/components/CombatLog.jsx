@@ -42,7 +42,7 @@ const CombatLog = () => {
   const recentLogs = useMemo(() => combatLog.slice(-6), [combatLog, combatLogLength]);
 
   return (
-    <div className="pixel-panel-dark p-3 max-h-28 overflow-y-auto text-sm">
+    <div className="pixel-panel-dark p-3 max-h-28 overflow-y-auto text-sm" role="log" aria-label="Combat log" aria-live="off">
       {recentLogs.map((log, i) => (
         <div key={`${combatLogLength - recentLogs.length + i}`} className="text-[var(--color-text-dim)]">
           <LogEntry log={log} />

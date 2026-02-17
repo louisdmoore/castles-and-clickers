@@ -28,6 +28,7 @@ import { DUNGEON_TIERS } from '../data/milestones';
 import { getWorldBossForLevel, getZoneWorldBoss } from '../data/worldBosses';
 import { RAIDS } from '../data/raids';
 import LootNotifications from './LootNotifications';
+import ToastContainer from './ui/Toast';
 import { CheckIcon } from './icons/ui';
 import UniqueDropCelebration from './UniqueDropCelebration';
 import RaidRecapScreen from './RaidRecapScreen';
@@ -52,6 +53,7 @@ const TIER_THEME_COLORS = {
   volcano: '#ef4444',
   void: '#a855f7',
 };
+import EncyclopediaScreen from './EncyclopediaScreen';
 import StatsScreen from './StatsScreen';
 import BestiaryScreen from './BestiaryScreen';
 import RaidSelectorModal from './RaidSelectorModal';
@@ -728,6 +730,10 @@ const GameLayout = () => {
         <BestiaryScreen />
       </ModalOverlay>
 
+      <ModalOverlay isOpen={activeModal === 'encyclopedia'} onClose={closeModal} title="Encyclopedia" size="xl">
+        <EncyclopediaScreen />
+      </ModalOverlay>
+
       <ModalOverlay isOpen={activeModal === 'stats'} onClose={closeModal} title="Statistics" size="lg">
         <StatsScreen />
       </ModalOverlay>
@@ -805,6 +811,7 @@ const GameLayout = () => {
       {/* Other modals */}
       <WelcomeBackModal progress={offlineProgress} onClose={() => setOfflineProgress(null)} />
       <LootNotifications />
+      <ToastContainer />
       <UniqueDropCelebration />
       <RaidRecapScreen />
       <ChangelogModal

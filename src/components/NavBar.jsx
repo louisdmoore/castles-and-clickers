@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useGameStore, calculateSkillPoints, calculateUsedSkillPoints } from '../store/gameStore';
-import { PartyIcon, TreeIcon, BagIcon, HomeIcon, ChestIcon, CrownIcon, SkullIcon, ChartIcon, StarIcon } from './icons/ui';
+import { PartyIcon, TreeIcon, BagIcon, HomeIcon, ChestIcon, CrownIcon, SkullIcon, ChartIcon, StarIcon, BookIcon } from './icons/ui';
 import { PARTY_SLOTS } from '../data/classes';
 import { getAllRaids } from '../data/raids';
 
@@ -9,6 +9,8 @@ const NavButton = ({ id, Icon, label, badge, isActive, isLocked, unlockAt, onCli
     <button
       onClick={() => !isLocked && onClick(id)}
       disabled={isLocked}
+      aria-disabled={isLocked || undefined}
+      aria-current={isActive ? 'page' : undefined}
       className={`pixel-btn relative flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 ${
         isActive ? 'pixel-btn-primary' : ''
       } ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
@@ -144,10 +146,16 @@ const NavBar = ({ activeModal, onOpenModal }) => {
       label: 'Stats',
       badge: null,
     },
+    {
+      id: 'encyclopedia',
+      Icon: BookIcon,
+      label: 'Help',
+      badge: null,
+    },
   ];
 
   return (
-    <nav className="flex items-center gap-1.5 flex-wrap">
+    <nav className="flex items-center gap-1.5 flex-wrap" aria-label="Main navigation">
       {navButtons.map(btn => {
         const isLocked = btn.unlockAt && highestDungeonCleared < btn.unlockAt;
         return (

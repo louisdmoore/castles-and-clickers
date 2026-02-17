@@ -6,6 +6,13 @@ const throttledStorage = (() => {
   let pendingName = null;
   const DELAY = 2000;
 
+  // Save-state tracking
+  let saveCallback = null;
+
+  const notifySave = (success) => {
+    if (saveCallback) saveCallback({ success, timestamp: Date.now() });
+  };
+
   return {
     getItem: (name) => {
       try {
@@ -24,8 +31,10 @@ const throttledStorage = (() => {
           if (pendingValue !== null) {
             try {
               localStorage.setItem(pendingName, pendingValue);
+              notifySave(true);
             } catch (e) {
               console.warn('localStorage.setItem failed:', e);
+              notifySave(false);
             }
           }
         }, DELAY);
@@ -46,13 +55,16 @@ const throttledStorage = (() => {
       if (pendingValue !== null) {
         try {
           localStorage.setItem(pendingName, pendingValue);
+          notifySave(true);
         } catch (e) {
           console.warn('localStorage flush failed:', e);
+          notifySave(false);
         }
         pendingValue = null;
         pendingName = null;
       }
     },
+    onSave: (cb) => { saveCallback = cb; },
   };
 })();
 

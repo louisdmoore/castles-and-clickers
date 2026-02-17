@@ -5,6 +5,7 @@ import {
   ClockIcon, RegenIcon, BarracksIcon, ArmoryIcon, FortressIcon,
   TrainingIcon, TreasuryIcon, AcademyIcon, InfirmaryIcon, StarIcon
 } from './icons/ui';
+import HelpTooltip from './ui/HelpTooltip';
 
 // Map building IDs to icon components
 const BUILDING_ICONS = {
@@ -75,6 +76,13 @@ const HomesteadScreen = () => {
       <div className="flex items-center justify-between">
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
           <CastleIcon size={24} /> Homestead
+          <HelpTooltip content={
+            <div className="space-y-1">
+              <div>Buildings provide permanent bonuses to all heroes.</div>
+              <div>Each level costs ~2.5x the previous level.</div>
+              <div>Unlocks at Dungeon 3.</div>
+            </div>
+          } />
         </h2>
         <div className="text-yellow-400 font-bold flex items-center gap-1">
           <GoldIcon size={18} /> {gold.toLocaleString()} gold

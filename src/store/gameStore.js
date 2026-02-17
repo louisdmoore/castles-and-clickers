@@ -109,6 +109,8 @@ export const useGameStore = create(
             },
             heroHp: {},
             roomCombat: null,
+            saveStatus: { success: true, timestamp: Date.now() },
+            toasts: [],
             dungeonSettings: {
               type: 'normal',
               autoAdvance: false,
@@ -153,6 +155,8 @@ export const useGameStore = create(
           combatLogIndex: 0,
           combatLogCount: 0,
           lootNotifications: [],
+          saveStatus: undefined,
+          toasts: undefined,
           // These are recomputed on dungeon start
           heroHp: state.dungeon ? state.heroHp : {},
         }),
@@ -215,6 +219,15 @@ export const useGameStore = create(
       }
     ))
 );
+
+// Register save-state callback so UI can show save indicator
+throttledStorage.onSave((status) => {
+  const store = useGameStore.getState();
+  store.updateSaveStatus(status);
+  if (!status.success) {
+    store.addToast({ type: 'error', message: 'Failed to save game — localStorage may be full' });
+  }
+});
 
 // Re-export helpers (preserves identical import API for all consumers)
 export { calculateHeroStats, xpForLevel, calculateSkillPoints, calculateUsedSkillPoints, invalidateStatCache, clearStatCache } from './helpers/statCalculator';

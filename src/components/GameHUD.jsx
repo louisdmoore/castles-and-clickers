@@ -1,8 +1,75 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import NavBar from './NavBar';
-import { GoldIcon, TrophyIcon, SkullIcon, BagIcon, MenuIcon } from './icons/ui';
+import { GoldIcon, TrophyIcon, SkullIcon, BagIcon, MenuIcon, WarningIcon } from './icons/ui';
 import { CURRENT_VERSION } from '../data/changelog';
+
+// Relative time display
+function timeAgo(timestamp) {
+  const seconds = Math.floor((Date.now() - timestamp) / 1000);
+  if (seconds < 5) return 'just now';
+  if (seconds < 60) return `${seconds}s ago`;
+  const minutes = Math.floor(seconds / 60);
+  if (minutes < 60) return `${minutes}m ago`;
+  return `${Math.floor(minutes / 60)}h ago`;
+}
+
+const SaveIndicator = () => {
+  const saveStatus = useGameStore(state => state.saveStatus);
+  const [displayText, setDisplayText] = useState('');
+  const flashRef = useRef(null);
+  const spanRef = useRef(null);
+  const lastTimestampRef = useRef(saveStatus?.timestamp);
+
+  // Update relative time display
+  useEffect(() => {
+    if (!saveStatus?.timestamp) return;
+
+    const update = () => setDisplayText(timeAgo(saveStatus.timestamp));
+    update();
+    const id = setInterval(update, 5000);
+    return () => clearInterval(id);
+  }, [saveStatus?.timestamp]);
+
+  // Flash on new save — use DOM class toggle to avoid setState in effect
+  useEffect(() => {
+    if (saveStatus?.timestamp && saveStatus.timestamp !== lastTimestampRef.current) {
+      lastTimestampRef.current = saveStatus.timestamp;
+      const el = spanRef.current;
+      if (el) {
+        el.classList.remove('save-flash');
+        // Force reflow to restart animation
+        void el.offsetWidth;
+        el.classList.add('save-flash');
+      }
+      clearTimeout(flashRef.current);
+      flashRef.current = setTimeout(() => {
+        if (spanRef.current) spanRef.current.classList.remove('save-flash');
+      }, 1500);
+    }
+    return () => clearTimeout(flashRef.current);
+  }, [saveStatus?.timestamp]);
+
+  if (!saveStatus) return null;
+
+  if (!saveStatus.success) {
+    return (
+      <span className="text-xs flex items-center gap-1 text-[var(--color-red)]" role="status">
+        <WarningIcon size={12} /> Save failed
+      </span>
+    );
+  }
+
+  return (
+    <span
+      ref={spanRef}
+      className="text-xs text-[var(--color-text-dark)]"
+      role="status"
+    >
+      Saved {displayText}
+    </span>
+  );
+};
 
 // Throttled header stats hook - updates every 500ms
 function useThrottledHeaderStats() {
@@ -74,6 +141,7 @@ const GameHUD = ({
             onClick={onToggleSidebar}
             className="md:hidden pixel-btn p-1.5 flex items-center justify-center"
             title="Toggle Sidebar"
+            aria-label="Toggle navigation sidebar"
           >
             <MenuIcon size={20} />
           </button>
@@ -81,13 +149,20 @@ const GameHUD = ({
             <h1 className="pixel-title text-base sm:text-lg">
               Castles & Clickers
             </h1>
-            <span
-              className="text-xs text-gray-500 hover:text-[var(--color-gold)] cursor-pointer transition-colors"
-              onClick={onOpenChangelog}
-              title="View changelog"
-            >
-              v{CURRENT_VERSION}
-            </span>
+            <div className="flex items-center gap-2">
+              <span
+                className="text-xs text-gray-500 hover:text-[var(--color-gold)] cursor-pointer transition-colors"
+                onClick={onOpenChangelog}
+                title="View changelog"
+                role="button"
+                aria-label="View changelog"
+                tabIndex={0}
+                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenChangelog(); } }}
+              >
+                v{CURRENT_VERSION}
+              </span>
+              <SaveIndicator />
+            </div>
           </div>
         </div>
 

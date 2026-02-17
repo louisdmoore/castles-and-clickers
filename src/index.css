@@ -39,8 +39,8 @@
   --color-cyan: #44ffff;
 
   --color-text: #f0f0f0;
-  --color-text-dim: #a0a0b0;
-  --color-text-dark: #606070;
+  --color-text-dim: #b8b8c8;
+  --color-text-dark: #8a8a9a;
 }
 
 body {
@@ -339,6 +339,16 @@ svg {
   will-change: transform, opacity;
   transform: translateZ(0);
   backface-visibility: hidden;
+}
+
+/* Save indicator flash */
+@keyframes save-flash {
+  0% { color: #22c55e; }
+  100% { color: var(--color-text-dark); }
+}
+
+.save-flash {
+  animation: save-flash 1.5s ease-out forwards;
 }
 
 /* Pixel blink animation */
@@ -803,6 +813,32 @@ svg {
 @keyframes skill-breathe {
   0%, 100% { transform: scale(1); }
   50% { transform: scale(1.03); }
+}
+
+/* ========================================
+   ACCESSIBILITY
+   ======================================== */
+
+/* Reduce motion for users who prefer it */
+@media (prefers-reduced-motion: reduce) {
+  *, *::before, *::after {
+    animation-duration: 0.01ms !important;
+    animation-iteration-count: 1 !important;
+    transition-duration: 0.01ms !important;
+  }
+}
+
+/* Focus visible indicator for keyboard navigation */
+.pixel-btn:focus-visible,
+.pixel-speed-btn:focus-visible {
+  outline: 2px solid var(--color-gold);
+  outline-offset: 2px;
+}
+
+input:focus-visible,
+select:focus-visible {
+  outline: 2px solid var(--color-blue);
+  outline-offset: 1px;
 }
 
 /* ========================================

@@ -225,6 +225,8 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
         {/* Expand/collapse toggle */}
         <button
           onClick={onToggle}
+          aria-expanded={isExpanded}
+          aria-controls={`raid-details-${raid.id}`}
           className="w-full mt-2 pt-2 border-t border-gray-700/50 text-xs text-gray-500 hover:text-gray-300 transition-colors"
         >
           {isExpanded ? '▲ Hide details' : '▼ Show bosses & drops'}
@@ -233,7 +235,7 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
 
       {/* Expanded raid details */}
       {isExpanded && (
-        <div className="mt-2 ml-4 pixel-panel p-3">
+        <div id={`raid-details-${raid.id}`} className="mt-2 ml-4 pixel-panel p-3">
           {/* Guardians (intermediate bosses) */}
           <div className="mb-3">
             <div className="text-xs text-gray-400 mb-2">Guardians ({raid.wingBosses.length})</div>

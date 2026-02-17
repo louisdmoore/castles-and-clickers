@@ -250,7 +250,10 @@ export const createHeroSlice = (set, get) => ({
     const { tavern, gold, highestDungeonCleared, usedSlotDiscounts } = get();
 
     // Check if manual refresh and can afford
-    if (manual && gold < tavern.refreshCost) return false;
+    if (manual && gold < tavern.refreshCost) {
+      get().addToast({ type: 'error', message: `Not enough gold to refresh tavern (need ${tavern.refreshCost})` });
+      return false;
+    }
 
     // Only show roles where the player has already recruited their first FREE hero
     const availableRoles = [];
@@ -303,7 +306,10 @@ export const createHeroSlice = (set, get) => ({
     if (!tavernHero) return false;
 
     // Check if can afford
-    if (gold < tavernHero.recruitCost) return false;
+    if (gold < tavernHero.recruitCost) {
+      get().addToast({ type: 'error', message: `Not enough gold to recruit (need ${tavernHero.recruitCost})` });
+      return false;
+    }
 
     // Determine where to place the hero
     const targetSlot = slotIndex !== undefined ? slotIndex : null;
@@ -339,6 +345,7 @@ export const createHeroSlice = (set, get) => ({
 
       // If no party slot, go to bench
       if (!placingInParty && (bench.length + pendingBenchCount) >= maxBenchSize) {
+        get().addToast({ type: 'warning', message: 'No empty hero slot available' });
         return false; // No room
       }
     }
@@ -598,12 +605,14 @@ export const createHeroSlice = (set, get) => ({
 
     // Check prerequisites
     if (!arePrerequisitesMet(skill, hero.skills || [], hero.classId)) {
+      get().addToast({ type: 'warning', message: 'Prerequisites not met for this skill' });
       return { success: false, error: 'Prerequisites not met' };
     }
 
     // Check skill points
     const { available } = get().getSkillPoints(heroId);
     if (available <= 0) {
+      get().addToast({ type: 'error', message: 'No skill points available' });
       return { success: false, error: 'No skill points available' };
     }
 
@@ -641,6 +650,7 @@ export const createHeroSlice = (set, get) => ({
 
     const cost = calculateRespecCost(usedPoints);
     if (gold < cost) {
+      get().addToast({ type: 'error', message: `Not enough gold for respec (need ${cost})` });
       return { success: false, error: 'Not enough gold', cost };
     }
 

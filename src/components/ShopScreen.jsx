@@ -12,6 +12,7 @@ import {
 import ItemIcon from './icons/ItemIcon';
 import HeroIcon from './icons/HeroIcon';
 import { GoldIcon, LockIcon, ChestIcon, StarIcon, PotionIcon, ScrollIcon, SwordIcon } from './icons/ui';
+import HelpTooltip from './ui/HelpTooltip';
 import { calculateHeroStats } from '../store/helpers/statCalculator';
 
 const RARITY_LABEL = {
@@ -107,6 +108,13 @@ const ShopScreen = () => {
       <div className="flex items-center justify-between mb-4">
         <h2 className="text-xl font-bold text-white flex items-center gap-2">
           <ChestIcon size={24} /> Item Shop
+          <HelpTooltip content={
+            <div className="space-y-1">
+              <div>Items cost 1.75x their sell value.</div>
+              <div>Shop refreshes every 2 hours, or manually for gold.</div>
+              <div>Higher rarity items unlock at D10 (Rare), D20 (Epic), D25 (Legendary).</div>
+            </div>
+          } />
         </h2>
         <div className="text-yellow-400 font-bold flex items-center gap-1">
           <GoldIcon size={18} /> {gold.toLocaleString()}

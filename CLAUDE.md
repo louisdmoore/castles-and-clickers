@@ -12,8 +12,7 @@ Castles & Clickers is an idle dungeon crawler browser game built with React 19, 
 
 **IMPORTANT: Bump the version number on every git push.**
 
-The version is displayed in the header and located in:
-- `src/components/GameLayout.jsx` (line ~348, in the header h1 element)
+The version is defined in `src/data/changelog.js` as `CURRENT_VERSION` and displayed in `src/components/GameHUD.jsx`.
 
 Use semantic versioning: `v0.0.X` for patches, `v0.X.0` for features, `vX.0.0` for major changes.
 
@@ -146,11 +145,56 @@ Use pixel-styled CSS classes for UI elements:
 - `pixel-bar` / `pixel-bar-fill` - Progress bars
 - `pixel-text` / `pixel-label` / `pixel-title` / `pixel-subtitle` - Typography
 
+## Accessibility
+
+The UI targets WCAG AA compliance (v0.1.26). When adding new components:
+- All `<button>` elements with only an icon need `aria-label`
+- Modals must use `ModalOverlay.jsx` which has focus trap, auto-focus, focus restore, and `role="dialog"`
+- Dynamic notifications should use `role="status"` + `aria-live="polite"` (or `aria-live="off"` if updates are too rapid)
+- New interactive non-button elements need `role`, `tabIndex`, and keyboard handlers (Enter/Space)
+- CSS animations are automatically killed for `prefers-reduced-motion: reduce` users via global rule in `index.css`
+- Use CSS variables `--color-text-dim` / `--color-text-dark` for secondary text — they meet contrast requirements
+
+## Documentation
+
+When completing a phase from `REMEDIATION_PLAN.md`, update these docs:
+- `REMEDIATION_PLAN.md` — Mark the phase as DONE with version number and implementation details
+- `WEAK_POINTS.md` — Mark resolved items with strikethrough and version number
+- `DEVELOPER_GUIDE.md` — Add/update relevant architecture sections
+- `src/data/changelog.js` — Add player-facing changelog entry
+
+## Toast Notifications
+
+User-facing error/success feedback uses the toast system in `economySlice.js`:
+```js
+get().addToast({ type: 'error', message: 'Not enough gold' });
+```
+Types: `error` (red), `warning` (yellow), `success` (green), `info` (blue). All slices can call `get().addToast()` since they share the same `get()` from store composition. Add toast calls to new store actions that can fail.
+
+## Data File Export Names
+
+When importing from game data files, verify actual export names — they don't always match what you'd guess:
+- `equipment.js`: `RARITY` (not `RARITY_CONFIG`) — entries have `.name` and `.multiplier`
+- `itemAffixes.js`: `ITEM_AFFIXES` (not `AFFIX_POOL`) — entries use `.minTier` (not `.tier`)
+- `statusEffects.js`: effects use `.type` for category (not `.category`)
+- `balanceConstants.js`: `DAMAGE_VARIANCE_MIN` + `DAMAGE_VARIANCE_RANGE` (no `DAMAGE_VARIANCE_MAX`)
+- `balanceConstants.js`: `BOSS_LOOT_DROP_CHANCE` / `NORMAL_LOOT_DROP_CHANCE` (not without `_CHANCE`)
+
+## Lint Pitfalls
+
+- **`react-hooks/set-state-in-effect`**: Calling `setState` synchronously inside `useEffect` triggers this. For CSS animations, use ref-based DOM class toggling instead of state (e.g., `el.classList.add('save-flash')` with `void el.offsetWidth` to force reflow).
+- **Unused destructured vars**: Use `[, b]` instead of `[id, b]` when only the value is needed from `Object.entries()`.
+
+## Lint Baseline
+
+`npm run lint` currently reports ~78 pre-existing errors (mostly unused vars in canvas files and React hooks warnings). Do not try to fix these unless specifically asked — just verify your changes don't add new ones.
+
 ## Known Technical Debt
 
 See `WEAK_POINTS.md` for detailed analysis. Key issues:
 - ~~useCombat.js needs splitting~~ (DONE - split into 6 files in v0.1.18)
 - ~~gameStore.js still needs splitting into Zustand slices~~ (DONE - split into 5 slices + 5 helpers in v0.1.19)
-- Magic numbers for game balance scattered in code
-- No TypeScript despite @types packages installed
+- ~~Magic numbers for game balance~~ (DONE - centralized in `src/game/balanceConstants.js` in v0.1.25)
+- ~~Accessibility (ARIA, keyboard, contrast, motion)~~ (DONE - WCAG AA in v0.1.26)
+- No TypeScript despite @types packages installed (removed @types in v0.1.25)
 - No test coverage

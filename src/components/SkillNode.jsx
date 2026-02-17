@@ -38,6 +38,11 @@ const SkillNode = ({ skill, tier, isUnlocked, isAvailable, onUnlock, canAfford }
   const sizeClass = tier === 3 ? 'w-[4.5rem] h-[4.5rem]' : 'w-16 h-16';
   const iconSize = tier === 3 ? 36 : 32;
 
+  // Build aria-label describing the skill state
+  const statusLabel = isUnlocked ? 'Unlocked' : isAvailable && canAfford ? 'Available' : isAvailable ? 'No skill points' : 'Locked';
+  const tierLabel = tier === 3 ? 'Capstone' : `Tier ${tier}`;
+  const ariaLabel = `${skill.name} - ${tierLabel} - ${statusLabel}`;
+
   const animClass = isUnlocked
     ? tier === 3 ? 'skill-capstone-glow' : 'skill-unlocked'
     : isAvailable && canAfford ? 'skill-available-breathe' : '';
@@ -103,7 +108,10 @@ const SkillNode = ({ skill, tier, isUnlocked, isAvailable, onUnlock, canAfford }
       <button
         onClick={handleClick}
         onTouchEnd={handleTouchEnd}
+        onFocus={() => setShowTooltip(true)}
+        onBlur={() => { setShowTooltip(false); setTouchActive(false); }}
         disabled={isUnlocked || !isAvailable || !canAfford}
+        aria-label={ariaLabel}
         className={`
           ${sizeClass} rounded-lg border-2 flex flex-col items-center justify-center
           transition-all duration-200 relative

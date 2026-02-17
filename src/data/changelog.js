@@ -1,9 +1,32 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.1.25';
+export const CURRENT_VERSION = '0.1.27';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.1.27',
+    title: 'Player Experience',
+    date: '2026-02-16',
+    changes: [
+      { type: 'feature', text: 'Save indicator shows when your game was last saved' },
+      { type: 'feature', text: 'Error notifications when actions fail (not enough gold, inventory full, etc.)' },
+      { type: 'feature', text: 'In-game encyclopedia with searchable reference for combat, equipment, and more' },
+      { type: 'feature', text: 'Help tooltips (?) next to complex mechanics' },
+    ],
+  },
+  {
+    version: '0.1.26',
+    title: 'Accessibility Improvements',
+    date: '2026-02-16',
+    changes: [
+      { type: 'feature', text: 'Animations now respect your OS "reduce motion" setting' },
+      { type: 'feature', text: 'Keyboard navigation with visible focus indicators on all buttons' },
+      { type: 'feature', text: 'Modal focus trapping — Tab stays inside open dialogs' },
+      { type: 'feature', text: 'Screen reader improvements: ARIA labels on navigation, combat log, loot alerts, and skill nodes' },
+      { type: 'fix', text: 'Improved contrast on secondary text for better readability' },
+    ],
+  },
   {
     version: '0.1.25',
     title: 'Under-the-Hood Improvements',

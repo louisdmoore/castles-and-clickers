@@ -707,6 +707,34 @@ cost = baseCost × costMultiplier ^ level
 
 ---
 
+## Toast Notification System (v0.1.27)
+
+Toast state lives in `economySlice.js`: `toasts: []`, `addToast({ type, message })`, `removeToast(id)`. Types: `error`, `warning`, `success`, `info`. Toasts auto-dismiss after 3s, max 5 visible. Excluded from persistence.
+
+**Adding a toast from any slice:** Call `get().addToast({ type: 'error', message: 'Not enough gold' })`. All slices share the same `get()` function.
+
+**Component:** `src/components/ui/Toast.jsx` renders a fixed-position container at `top-20 right-4`, separate from loot notifications at `bottom-4 right-4`.
+
+---
+
+## Save Indicator (v0.1.27)
+
+`throttledStorage.onSave(cb)` fires after every localStorage write (success or failure). Callback registered in `gameStore.js` updates `saveStatus` in economySlice. `SaveIndicator` in `GameHUD.jsx` shows relative time with CSS flash animation.
+
+---
+
+## Encyclopedia (v0.1.27)
+
+`src/components/EncyclopediaScreen.jsx` — 6 searchable tabs sourcing data from game constants. Accessed via "Wiki" button in NavBar. Uses `BookIcon` from `ui.jsx`.
+
+---
+
+## Help Tooltips (v0.1.27)
+
+`src/components/ui/HelpTooltip.jsx` — wraps `Tooltip.jsx` with a `?` button. Uses `QuestionIcon`. Added to: SkillTreeScreen, EquipmentScreen, HomesteadScreen, ShopScreen, DungeonMap.
+
+---
+
 ## Performance Patterns
 
 ### 1. Imperative State Access
@@ -917,6 +945,25 @@ Use pixel-styled CSS classes for UI consistency:
 | `pixel-title` | Large title text |
 | `pixel-subtitle` | Medium subtitle text |
 
+### Accessibility
+
+The UI targets WCAG AA compliance (added in v0.1.26):
+
+**Motion safety:** `@media (prefers-reduced-motion: reduce)` in `index.css` kills all animations and transitions for users who prefer reduced motion.
+
+**Color contrast:** CSS variables `--color-text-dim` (#b8b8c8) and `--color-text-dark` (#8a8a9a) meet 4.5:1 contrast ratio on the `#1a1a2e` background.
+
+**Focus indicators:** `:focus-visible` styles provide gold outlines on buttons and blue outlines on inputs for keyboard navigation.
+
+**Modal focus management:** `ModalOverlay.jsx` implements focus trap (Tab/Shift+Tab wrap), auto-focus on open, and focus restore on close. Uses `role="dialog"` + `aria-modal="true"`.
+
+**ARIA attributes:** Key components have ARIA labels and roles:
+- `NavBar`: `aria-label="Main navigation"`, `aria-current`, `aria-disabled`
+- `CombatLog`: `role="log"`, `aria-live="off"`
+- `LootNotifications`: `role="status"`, `aria-live="polite"`
+- `SkillNode`: `aria-label` with name/tier/status, tooltip on focus
+- `RaidSelectorModal`: `aria-expanded`, `aria-controls`
+
 ### Theme Colors
 
 Tier/zone colors used throughout the UI:
@@ -936,8 +983,7 @@ Tier/zone colors used throughout the UI:
 
 **IMPORTANT: Bump the version number on every git push.**
 
-The version is displayed in the UI header and located in:
-- `src/components/GameLayout.jsx` (in the header h1 element)
+The version is defined in `src/data/changelog.js` as `CURRENT_VERSION` and displayed in `GameHUD.jsx`.
 
 Use semantic versioning:
 - `v0.0.X` - Patch: bug fixes, small tweaks

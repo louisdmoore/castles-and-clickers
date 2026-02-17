@@ -1223,6 +1223,46 @@ export const ResetIcon = ({ size }) => (
   </IconWrapper>
 );
 
+// === ENCYCLOPEDIA & HELP ===
+
+export const BookIcon = ({ size }) => (
+  <IconWrapper size={size}>
+    {/* Book cover */}
+    <P x={2} y={2} w={10} h={12} c="#78350f" />
+    <P x={3} y={3} w={8} h={10} c="#92400e" />
+    {/* Pages */}
+    <P x={4} y={3} w={7} h={10} c="#fef3c7" />
+    <P x={5} y={4} w={5} h={1} c="#d1d5db" />
+    <P x={5} y={6} w={5} h={1} c="#d1d5db" />
+    <P x={5} y={8} w={4} h={1} c="#d1d5db" />
+    <P x={5} y={10} w={5} h={1} c="#d1d5db" />
+    {/* Spine */}
+    <P x={3} y={2} w={1} h={12} c="#451a03" />
+    {/* Bookmark */}
+    <P x={9} y={2} w={2} h={3} c="#ef4444" />
+    <P x={9} y={5} w={1} h={1} c="#ef4444" />
+    <P x={10} y={5} w={1} h={1} c="#ef4444" />
+  </IconWrapper>
+);
+
+export const QuestionIcon = ({ size }) => (
+  <IconWrapper size={size}>
+    {/* Circle */}
+    <P x={3} y={2} w={10} h={12} c="#2563eb" />
+    <P x={4} y={1} w={8} h={1} c="#2563eb" />
+    <P x={4} y={14} w={8} h={1} c="#2563eb" />
+    <P x={2} y={4} w={1} h={8} c="#2563eb" />
+    <P x={13} y={4} w={1} h={8} c="#2563eb" />
+    {/* Question mark */}
+    <P x={6} y={4} w={4} h={2} c="#e5e7eb" />
+    <P x={10} y={5} w={1} h={3} c="#e5e7eb" />
+    <P x={8} y={7} w={2} h={2} c="#e5e7eb" />
+    <P x={7} y={9} w={2} h={1} c="#e5e7eb" />
+    {/* Dot */}
+    <P x={7} y={11} w={2} h={2} c="#e5e7eb" />
+  </IconWrapper>
+);
+
 // === MOBILE UI ===
 
 export const MenuIcon = ({ size }) => (

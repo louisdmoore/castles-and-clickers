@@ -6,6 +6,7 @@ import { getWorldBossForLevel, isWorldBossLevel, getWorldBossForTier } from '../
 import { WorldBossIcon } from './icons/worldBosses';
 import { getUniqueItem } from '../data/uniqueItems';
 import { StarIcon } from './icons/ui';
+import HelpTooltip from './ui/HelpTooltip';
 
 // Theme icons for each tier - pixel art SVG components
 const TIER_THEME_ICONS = {
@@ -89,9 +90,18 @@ const DungeonMap = ({ onStart }) => {
                 <TierIcon size={32} />
               </div>
               <div className="flex-1">
-                <h2 className="pixel-title" style={{ color: tierColor }}>
-                  {currentTier.name}
-                </h2>
+                <div className="flex items-center gap-2">
+                  <h2 className="pixel-title" style={{ color: tierColor }}>
+                    {currentTier.name}
+                  </h2>
+                  <HelpTooltip content={
+                    <div className="space-y-1">
+                      <div>Monsters scale with dungeon level.</div>
+                      <div>Elite mobs appear at D8+ with 1.5x stats and guaranteed rare+ drops.</div>
+                      <div>Party size increases at D10 (5 heroes) and D20 (6 heroes).</div>
+                    </div>
+                  } />
+                </div>
                 <p className="pixel-label">
                   Levels {currentTier.minLevel} - {currentTier.maxLevel}
                 </p>
