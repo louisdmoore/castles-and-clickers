@@ -38,8 +38,8 @@
 *Reference: DESIGN_RETHINK.md Sections 3, 5*
 *Goal: Player knows what went wrong and what to change.*
 
-- [ ] Death recap popup on party wipe — data-focused, shows kill order, damage taken vs healing, dominant damage type (Section 3)
-- [ ] Equipment comparison tooltips — use existing `compareToEquipped`, show stat diffs on hover/drop (Section 5.1)
+- [x] Death recap popup on party wipe — data-focused, shows kill order, damage taken vs healing, dominant damage type (Section 3)
+- [x] Equipment comparison tooltips — use existing `compareToEquipped`, show stat diffs on hover/drop (Section 5.1)
 - [ ] Smart auto-equip — suggest + confirm for rare+ items, silent equip below threshold (Section 5.1)
 
 ---
