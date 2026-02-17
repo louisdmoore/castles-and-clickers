@@ -1,9 +1,21 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.1.29';
+export const CURRENT_VERSION = '0.2.0';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.2.0',
+    title: 'See What\'s Happening',
+    date: '2026-02-17',
+    changes: [
+      { type: 'feature', text: 'Contribution meter shows each hero\'s role performance during combat' },
+      { type: 'feature', text: 'Run summary popup after each dungeon — see MVP, biggest hit, and hero breakdown' },
+      { type: 'feature', text: 'Preparation screen between dungeon runs — party overview, dungeon preview with theme and favored drops' },
+      { type: 'feature', text: 'Milestone widget tracks your nearest goals — next level-up, dungeon unlocks, collection progress' },
+      { type: 'feature', text: 'Auto-advance now pauses briefly on the prep screen so you can see what\'s coming' },
+    ],
+  },
   {
     version: '0.1.29',
     title: 'Foundation Work',

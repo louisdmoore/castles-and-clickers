@@ -1,6 +1,6 @@
 # Implementation Progress — Design Rethink
 
-**Current Phase: Phase 1 — v0.2.0 — See What's Happening**
+**Current Phase: Phase 2 — v0.2.1 — Know What To Do**
 
 ---
 
@@ -29,8 +29,8 @@
 - [x] **PREREQ:** Add `runStats` object to `combatSlice.js` state — `{ [heroId]: { damageDealt, healingDone, damageTaken, damagePrevented, controlTime, turnsTaken, kills, biggestHit } }`, initialized on `startDungeon`, updated per-tick in `useCombat`
 - [x] Role-aware contribution meter component (`ContributionMeter`) — reads `runStats`, shows per-hero contribution with role-specific metrics (Section 3)
 - [x] Run summary popup on dungeon completion — MVP, biggest hit, totals, positive message (Section 3)
-- [ ] Preparation phase screen — `POST_RUN` phase between dungeon end and next start, party overview, dungeon preview, auto-dismiss for idle players (Section 4)
-- [ ] Milestone widget — 2-3 nearest goals shown on prep screen / HUD (Section 4)
+- [x] Preparation phase screen — `POST_RUN` phase between dungeon end and next start, party overview, dungeon preview, auto-dismiss for idle players (Section 4)
+- [x] Milestone widget — 2-3 nearest goals shown on prep screen / HUD (Section 4)
 
 ---
 
@@ -116,6 +116,21 @@
 ## Handoff Notes
 
 *Space for sessions to leave notes for the next session. Most recent first.*
+
+### Session 2 (2026-02-17) — Phase 1 Complete (v0.2.0)
+
+**Completed:** All 5 Phase 1 tasks (1 prereq + 4 features).
+
+**Design decisions:**
+- `runStats` accumulator tracks per-hero stats per-run: damageDealt, healingDone, damageTaken, damagePrevented, controlTime, turnsTaken, kills, biggestHit. Updated per tick in useCombat alongside existing lifetime stats.
+- ContributionMeter shows role-aware bars: tanks=blue (damage taken), healers=green (healing done), DPS=red (damage dealt).
+- RunSummary uses `lastRunSummary` state (excluded from persistence) that snapshots runStats before endDungeon clears it. Auto-dismisses after 5s when auto-advance is on.
+- Preparation phase uses `prepPhase` state set by endDungeon. Removed auto-start setTimeout from useGameLoop; PrepScreen component now handles auto-advance via its own 5s timer.
+- Flow: dungeon COMPLETE → 2s transition animation → PrepScreen visible (RunSummary modal on top if applicable) → RunSummary auto-dismisses → PrepScreen auto-dismisses (5s) → next dungeon starts.
+- MilestoneWidget computes 2-3 nearest goals: hero level-up proximity, dungeon unlock distance, unique collection progress, homestead upgrade affordability. Sorted by completion proximity.
+- Removed `combatPauseUntil` unused reactive selector from useGameLoop (was only read imperatively inside gameTick).
+
+**Next up:** Phase 2 — death recap popup, equipment comparison tooltips, smart auto-equip.
 
 ### Session 1 (2026-02-17) — Phase 0 Complete
 
