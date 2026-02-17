@@ -421,7 +421,8 @@ export const createEconomySlice = (set, get) => ({
     const newHighestCleared = startingHighest + levelsProgressed;
 
     // Expand party size if offline progress crossed a milestone
-    const newMaxPartySize = getMaxPartySize(newHighestCleared);
+    const ascensionCount = get().ascension?.count || 0;
+    const newMaxPartySize = getMaxPartySize(newHighestCleared, ascensionCount);
 
     // Apply state updates including dungeon progression
     set(state => ({

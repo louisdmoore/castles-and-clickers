@@ -11,7 +11,7 @@
  *   3. The migration receives the full persisted state and returns the updated state
  */
 
-export const SAVE_VERSION = 2;
+export const SAVE_VERSION = 3;
 
 // Sequential migration functions: fromVersion -> transform
 const MIGRATIONS = {
@@ -48,6 +48,21 @@ const MIGRATIONS = {
         if (hero.trait !== undefined) delete hero.trait;
         return hero;
       });
+    }
+
+    return state;
+  },
+
+  // v2 → v3: Phase 4 — Ascension system
+  2: (state) => {
+    // Initialize ascension state
+    if (!state.ascension) {
+      state.ascension = { count: 0 };
+    }
+
+    // Ensure maxDungeonLevel exists (should already be 30)
+    if (state.maxDungeonLevel === undefined) {
+      state.maxDungeonLevel = 30;
     }
 
     return state;

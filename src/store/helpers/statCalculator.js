@@ -3,6 +3,7 @@ import { getPassiveAffixBonuses } from '../../game/affixEngine';
 import { scaleUniqueStats } from '../../data/uniqueItems';
 import { getSkillById, SKILL_TYPE } from '../../data/skillTrees';
 import { getHeroTrait } from '../../data/heroTraits';
+import { getAscensionStatMultiplier } from '../../data/ascensionMilestones';
 
 // Helper to calculate XP needed for next level
 export const xpForLevel = (level) => Math.floor(100 * Math.pow(1.25, level - 1));
@@ -37,6 +38,18 @@ const updatePartySkillBonusCache = (allHeroes) => {
   partySkillBonusCacheVersion++;
 };
 
+// Module-level ascension count for stat multiplier (avoids passing through every call site)
+let currentAscensionCount = 0;
+
+export const setAscensionCount = (count) => {
+  if (count !== currentAscensionCount) {
+    currentAscensionCount = count;
+    // Invalidate all caches when ascension count changes
+    statCache.clear();
+    heroCacheKeys.clear();
+  }
+};
+
 // Generate a cache key for hero stats - OPTIMIZED: no .sort(), pre-computed party skills
 const getStatCacheKey = (hero, allHeroes = [], homesteadBonuses = null) => {
   // Key components: hero id, level, equipment ids, skills, homestead bonuses, party skills version, highest party level
@@ -63,7 +76,7 @@ const getStatCacheKey = (hero, allHeroes = [], homesteadBonuses = null) => {
   // but we include them so different heroes with same stats but different traits don't collide
   const traitsHash = (hero.traits || []).join(',');
 
-  return `${hero.id}:${hero.level}:${equipmentHash}:${skillsHash}:${partySkillBonusCacheVersion}:${homesteadHash}:${highestPartyLevel}:${traitsHash}`;
+  return `${hero.id}:${hero.level}:${equipmentHash}:${skillsHash}:${partySkillBonusCacheVersion}:${homesteadHash}:${highestPartyLevel}:${traitsHash}:a${currentAscensionCount}`;
 };
 
 // Helper to calculate hero stats including equipment, passive skills, and homestead bonuses
@@ -192,6 +205,15 @@ export const calculateHeroStats = (hero, allHeroes = [], homesteadBonuses = null
         }
       }
     }
+  }
+
+  // Apply ascension stat multiplier (after all other bonuses, multiplicative)
+  if (currentAscensionCount > 0) {
+    const ascMult = getAscensionStatMultiplier(currentAscensionCount);
+    stats.maxHp = Math.floor(stats.maxHp * ascMult);
+    stats.attack = Math.floor(stats.attack * ascMult);
+    stats.defense = Math.floor(stats.defense * ascMult);
+    stats.speed = Math.floor(stats.speed * ascMult);
   }
 
   // OPTIMIZATION: Limit cache size to prevent memory leaks

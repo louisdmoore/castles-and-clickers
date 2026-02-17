@@ -5,8 +5,9 @@ import { persist, createJSONStorage } from 'zustand/middleware';
 import { validationMiddleware } from './helpers/validation';
 import throttledStorage from './helpers/throttledStorage';
 import { DEFAULT_CLASS_PRIORITY } from './helpers/itemScoring';
-import { clearStatCache } from './helpers/statCalculator';
+import { clearStatCache, setAscensionCount } from './helpers/statCalculator';
 import { getMaxPartySize } from '../data/milestones';
+import { getAscensionDungeonCap } from '../data/ascensionMilestones';
 import { resetCombatLogState } from './slices/combatSlice';
 import { SAVE_VERSION, migrate } from './helpers/migrations';
 
@@ -114,6 +115,7 @@ export const useGameStore = create(
             roomCombat: null,
             saveStatus: { success: true, timestamp: Date.now() },
             toasts: [],
+            ascension: { count: 0 },
             dungeonSettings: {
               type: 'normal',
               autoAdvance: false,
@@ -171,8 +173,15 @@ export const useGameStore = create(
         }),
         // Ensure stats has all new fields even if old save doesn't
         merge: (persistedState, currentState) => {
+          // Initialize ascension count for stat calculator
+          const ascensionCount = persistedState?.ascension?.count || 0;
+          setAscensionCount(ascensionCount);
+
+          // Ensure maxDungeonLevel matches ascension cap
+          const ascensionDungeonCap = getAscensionDungeonCap(ascensionCount);
+
           // Derive maxPartySize from progress so existing saves get correct value
-          const derivedMaxPartySize = getMaxPartySize(persistedState?.highestDungeonCleared || 0);
+          const derivedMaxPartySize = getMaxPartySize(persistedState?.highestDungeonCleared || 0, ascensionCount);
           // Sanitize heroes array - ensure it doesn't exceed maxPartySize
           const maxPartySize = Math.max(derivedMaxPartySize, persistedState?.maxPartySize || currentState.maxPartySize || 4);
           let heroes = persistedState?.heroes || [];
@@ -202,6 +211,8 @@ export const useGameStore = create(
             ...persistedState,
             heroes, // Use sanitized heroes
             maxPartySize, // Use derived value from dungeon progress
+            maxDungeonLevel: ascensionDungeonCap, // Derive from ascension count
+            ascension: persistedState?.ascension || { count: 0 },
             shopConsumables: persistedState?.shopConsumables || [],
             pendingDungeonBuffs: persistedState?.pendingDungeonBuffs || [],
             stats: {
@@ -239,5 +250,5 @@ throttledStorage.onSave((status) => {
 });
 
 // Re-export helpers (preserves identical import API for all consumers)
-export { calculateHeroStats, xpForLevel, calculateSkillPoints, calculateUsedSkillPoints, invalidateStatCache, clearStatCache } from './helpers/statCalculator';
+export { calculateHeroStats, xpForLevel, calculateSkillPoints, calculateUsedSkillPoints, invalidateStatCache, clearStatCache, setAscensionCount } from './helpers/statCalculator';
 export { calculateItemScore, calculateSellValue, STAT_PRIORITIES, RARITY_ORDER } from './helpers/itemScoring';

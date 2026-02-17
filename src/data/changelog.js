@@ -1,9 +1,21 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.2.2';
+export const CURRENT_VERSION = '0.3.0';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.3.0',
+    title: 'A New Chapter',
+    date: '2026-02-17',
+    changes: [
+      { type: 'feature', text: 'Ascension system — clear the final dungeon to ascend, resetting progress but gaining permanent stat bonuses and new unlocks' },
+      { type: 'feature', text: 'Each ascension raises the dungeon cap (D35, D40, D45...) and grants +10% to all stats' },
+      { type: 'feature', text: 'Milestone unlocks: 7th party slot at A1, trait rerolling at A2, 8th slot at A3, and more' },
+      { type: 'feature', text: 'Free skill respec on ascension — rebuild your heroes with new knowledge' },
+      { type: 'feature', text: 'Versioned save migration system for future-proof game saves' },
+    ],
+  },
   {
     version: '0.2.2',
     title: 'Make Real Choices',

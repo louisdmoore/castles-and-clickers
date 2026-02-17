@@ -6,7 +6,7 @@ import { DUNGEON_THEMES } from '../data/dungeonThemes';
 import { getAffix } from '../data/itemAffixes';
 import { getWorldBossForLevel } from '../data/worldBosses';
 import ClassIcon from './icons/ClassIcon';
-import { SwordIcon, ShieldIcon, HeartIcon, CrownIcon, ChestIcon } from './icons/ui';
+import { SwordIcon, ShieldIcon, HeartIcon, CrownIcon, ChestIcon, StarIcon } from './icons/ui';
 import MilestoneWidget from './MilestoneWidget';
 
 const DIFFICULTY_STOPS = [1.0, 1.5, 2.0, 2.5, 3.0];
@@ -57,7 +57,7 @@ const DifficultySlider = memo(({ value, onChange }) => {
   );
 });
 
-const PrepScreen = () => {
+const PrepScreen = ({ onOpenAscension }) => {
   const prepPhase = useGameStore(state => state.prepPhase);
   const heroes = useGameStore(state => state.heroes);
   const autoAdvance = useGameStore(state => state.dungeonSettings?.autoAdvance);
@@ -68,6 +68,8 @@ const PrepScreen = () => {
   const dungeonSettings = useGameStore(state => state.dungeonSettings);
   const setDungeonSettings = useGameStore(state => state.setDungeonSettings);
   const highestDungeonCleared = useGameStore(state => state.highestDungeonCleared);
+  const canAscend = useGameStore(state => state.canAscend);
+  const ascension = useGameStore(state => state.ascension);
 
   // Auto-dismiss after 5s when auto-advance is on and run summary is gone
   useEffect(() => {
@@ -203,14 +205,38 @@ const PrepScreen = () => {
             </div>
           )}
 
-          {/* Max level reached panel */}
+          {/* Max level reached / ascension panel */}
           {atMaxLevel && (
             <div className="pixel-panel-dark p-3 flex items-center justify-center">
               <div className="text-center">
-                <div className="pixel-label text-xs mb-1">Max Level Reached</div>
-                <div className="text-xs text-[var(--color-text-dim)]">
-                  Select a dungeon to replay
-                </div>
+                {canAscend() ? (
+                  <>
+                    <div className="flex items-center justify-center gap-1 mb-1">
+                      <StarIcon size={14} />
+                      <span className="pixel-label text-xs" style={{ color: '#f59e0b' }}>Ready to Ascend!</span>
+                    </div>
+                    <div className="text-xs text-[var(--color-text-dim)] mb-2">
+                      Begin a new chapter with permanent bonuses
+                    </div>
+                    <button
+                      onClick={onOpenAscension}
+                      className="pixel-btn text-xs"
+                      style={{ borderColor: '#f59e0b', color: '#f59e0b' }}
+                    >
+                      <span className="flex items-center gap-1">
+                        <StarIcon size={10} />
+                        Ascend to A{(ascension?.count || 0) + 1}
+                      </span>
+                    </button>
+                  </>
+                ) : (
+                  <>
+                    <div className="pixel-label text-xs mb-1">Max Level Reached</div>
+                    <div className="text-xs text-[var(--color-text-dim)]">
+                      Select a dungeon to replay
+                    </div>
+                  </>
+                )}
               </div>
             </div>
           )}

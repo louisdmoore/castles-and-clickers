@@ -4,6 +4,7 @@ import { getSkillById, SKILL_TYPE } from '../data/skillTrees';
 import { STATUS_EFFECTS, STATUS_TYPE } from '../data/statusEffects';
 import { CLASSES, ROLE_INFO } from '../data/classes';
 import HeroIcon from './icons/HeroIcon';
+import ContributionMeter from './ContributionMeter';
 import { RoleIcon } from './icons/ClassIcon';
 import { GhostIcon, FireIcon, ShieldBuffIcon, TauntIcon, EvasionIcon, HasteIcon, RegenIcon, MightIcon, SpeedIcon, SoulStackIcon, HungerStackIcon, VoidStorageIcon, TidalIcon, StealthIcon, SoulReapIcon, PhaseIcon } from './icons/ui';
 import { SkillIcon } from './icons/skills';
@@ -326,6 +327,7 @@ const Sidebar = memo(({
   const highestDungeonCleared = useGameStore(state => state.highestDungeonCleared);
   const dungeonUnlocked = useGameStore(state => state.dungeonUnlocked);
   const maxDungeonLevel = useGameStore(state => state.maxDungeonLevel);
+  const ascensionCount = useGameStore(state => state.ascension?.count || 0);
 
   return (
     <aside className="w-64 pixel-panel-dark flex flex-col h-full" style={{ borderRadius: 0 }}>
@@ -358,6 +360,13 @@ const Sidebar = memo(({
         )}
       </div>
 
+      {/* Contribution Meter - shows during active dungeon */}
+      {dungeon && (
+        <div className="px-3 pb-2 border-b-3 border-[var(--color-border)]">
+          <ContributionMeter />
+        </div>
+      )}
+
       {/* Dungeon Status - Simplified (main info shown in Zone Header above gameplay) */}
       {!dungeon && (
         <div className="p-3 border-b-3 border-[var(--color-border)]">
@@ -370,6 +379,12 @@ const Sidebar = memo(({
       <div className="p-3 border-b-3 border-[var(--color-border)]">
         <h3 className="pixel-subtitle mb-2">Progress</h3>
         <div className="text-xs space-y-1">
+          {ascensionCount > 0 && (
+            <div className="flex justify-between">
+              <span className="pixel-label">Ascension</span>
+              <span style={{ color: '#f59e0b' }}>A{ascensionCount} (+{ascensionCount * 10}%)</span>
+            </div>
+          )}
           <div className="flex justify-between">
             <span className="pixel-label">Highest Cleared</span>
             <span className="text-[var(--color-gold)]">{highestDungeonCleared}/{maxDungeonLevel}</span>

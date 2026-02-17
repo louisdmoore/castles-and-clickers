@@ -1,6 +1,8 @@
 import { RAIDS, isRaidUnlocked } from '../../data/raids';
 import { getMaxPartySize, getDungeonTier } from '../../data/milestones';
 import { DUNGEON_THEMES } from '../../data/dungeonThemes';
+import { getAscensionDungeonCap } from '../../data/ascensionMilestones';
+import { clearStatCache, setAscensionCount } from '../helpers/statCalculator';
 import throttledStorage from '../helpers/throttledStorage';
 
 export const createDungeonSlice = (set, get) => ({
@@ -31,6 +33,7 @@ export const createDungeonSlice = (set, get) => ({
     lastSeenVersion: null,
   },
   maxDungeonLevel: 30,
+  ascension: { count: 0 },
   raidState: {
     active: false,
     raidId: null,
@@ -213,7 +216,7 @@ export const createDungeonSlice = (set, get) => ({
         updates.highestDungeonCleared = newHighest;
 
         // Expand party size based on dungeon progress
-        const newMaxPartySize = getMaxPartySize(newHighest);
+        const newMaxPartySize = getMaxPartySize(newHighest, state.ascension?.count || 0);
         if (newMaxPartySize > (state.maxPartySize || 4)) {
           updates.maxPartySize = newMaxPartySize;
         }
@@ -294,6 +297,94 @@ export const createDungeonSlice = (set, get) => ({
 
     // Reset HP for any new heroes
     get().resetHeroHp();
+  },
+
+  // Ascension: partial reset with persistent progress
+  canAscend: () => {
+    const { highestDungeonCleared, maxDungeonLevel, dungeon } = get();
+    // Can ascend when max dungeon level is cleared and not in a dungeon
+    return highestDungeonCleared >= maxDungeonLevel && !dungeon;
+  },
+
+  performAscension: () => {
+    const { heroes, bench, ascension, highestDungeonCleared, maxDungeonLevel } = get();
+
+    // Guard: must have cleared max dungeon level
+    if (highestDungeonCleared < maxDungeonLevel) return false;
+
+    const newCount = ascension.count + 1;
+    const newDungeonCap = getAscensionDungeonCap(newCount);
+    const newMaxPartySize = getMaxPartySize(9, newCount); // D9 cleared + new ascension count
+
+    // Update ascension count for stat multiplier and clear cache
+    setAscensionCount(newCount);
+    clearStatCache();
+
+    // Reset heroes: level to 10, XP to 0, clear skills (free respec), keep equipment/traits/class
+    const resetHero = (hero) => {
+      if (!hero) return hero;
+      return {
+        ...hero,
+        level: 10,
+        xp: 0,
+        skills: [], // Full respec — all skill points available to reallocate
+      };
+    };
+
+    const resetHeroes = heroes.map(resetHero);
+    const resetBench = bench.map(resetHero);
+
+    set(state => ({
+      // Ascension state
+      ascension: { count: newCount },
+      maxDungeonLevel: newDungeonCap,
+      maxPartySize: newMaxPartySize,
+
+      // Dungeon progress resets to D10
+      highestDungeonCleared: 9, // Cleared through D9, D10 is next
+      dungeonUnlocked: 10,
+
+      // Gold resets to starter fund
+      gold: 10000,
+
+      // Heroes reset to level 10 with free respec
+      heroes: resetHeroes,
+      bench: resetBench,
+
+      // Clear inventory (equipped items on heroes are kept)
+      inventory: [],
+
+      // Clear dungeon state
+      dungeon: null,
+      combat: null,
+      roomCombat: null,
+      isRunning: false,
+      prepPhase: null,
+      lastRunSummary: null,
+      lastDeathRecap: null,
+      heroHp: {},
+
+      // Clear consumables and shop
+      consumables: [],
+      shopConsumables: [],
+      pendingDungeonBuffs: [],
+      shop: { items: [], lastRefresh: 0 },
+
+      // Reset tavern
+      tavern: { ...state.tavern, heroes: [], lastRefresh: 0 },
+
+      // Clear pending changes
+      pendingRecruits: [],
+      pendingPartyChanges: [],
+
+      // Preserve: homestead, ownedUniques, stats, featureUnlocks, equipmentSettings, dungeonSettings
+      // Preserve dungeonProgress raid completions
+    }));
+
+    // Immediate save after ascension
+    throttledStorage.flush();
+
+    return true;
   },
 
   setDungeonSettings: (settings) => {

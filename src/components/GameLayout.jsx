@@ -13,7 +13,6 @@ import { useThrottledDisplay } from '../hooks/useThrottledDisplay';
 // Components
 import CanvasDungeonView from '../canvas/CanvasDungeonView';
 import CombatLog from './CombatLog';
-import ContributionMeter from './ContributionMeter';
 import Sidebar from './Sidebar';
 import ModalOverlay from './ModalOverlay';
 import HeroManagement from './HeroManagement';
@@ -27,6 +26,7 @@ import WelcomeBackModal from './WelcomeBackModal';
 import RunSummary from './RunSummary';
 import DeathRecap from './DeathRecap';
 import PrepScreen from './PrepScreen';
+import AscensionModal from './AscensionModal';
 import GameHUD from './GameHUD';
 import { DUNGEON_TIERS } from '../data/milestones';
 import { getWorldBossForLevel, getZoneWorldBoss } from '../data/worldBosses';
@@ -563,10 +563,9 @@ const GameLayout = () => {
                       onEffectComplete={memoizedRemoveEffect}
                     />
                   </div>
-                  <div className="mt-4 max-h-32">
+                  <div className="mt-3 max-h-24">
                     <CombatLog />
                   </div>
-                  <ContributionMeter />
                 </>
               );
             })()
@@ -575,7 +574,7 @@ const GameLayout = () => {
             <div className="flex-1" />
           ) : prepPhase ? (
             // Post-run preparation screen
-            <PrepScreen />
+            <PrepScreen onOpenAscension={() => setActiveModal('ascension')} />
           ) : raidState?.active && !displayRoomCombat ? (
             // Raid dungeon is loading/setting up
             <div className="flex-1 flex items-center justify-center">
@@ -758,6 +757,11 @@ const GameLayout = () => {
       <ModalOverlay isOpen={activeModal === 'collection'} onClose={closeModal} title="Unique Collection" size="xl">
         <UniqueCollectionScreen />
       </ModalOverlay>
+
+      <AscensionModal
+        isOpen={activeModal === 'ascension'}
+        onClose={closeModal}
+      />
 
       {/* Dungeon Transition Screen */}
       {dungeonTransition && (
