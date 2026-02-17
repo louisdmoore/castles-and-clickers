@@ -11,6 +11,7 @@ import {
   getHeroUniqueItems, getHeroHealingReduction,
 } from '../game/uniqueEngine';
 import { PHASES } from '../game/constants';
+import { getDungeonAffix } from '../data/dungeonAffixes';
 
 // Extracted combat modules
 import {
@@ -167,7 +168,16 @@ export const useCombat = ({ addEffect }) => {
       if (buff.effect?.type === 'xpBuff') xpBuffBonus += buff.effect.multiplier;
     }
 
-    const goldMultiplier = 1 + (homesteadBonuses.goldFind || 0);
+    // Compute gold multiplier — include bountiful affix bonus
+    let affixGoldMult = 1;
+    const affixIds = dungeon?.affixes || [];
+    for (const id of affixIds) {
+      const affix = getDungeonAffix(id);
+      if (affix?.effect?.goldDropMultiplier) {
+        affixGoldMult *= affix.effect.goldDropMultiplier;
+      }
+    }
+    const goldMultiplier = (1 + (homesteadBonuses.goldFind || 0)) * affixGoldMult;
     // Room event XP multipliers (monster_ambush = all heroes, ancient_library = specific hero)
     const roomEventXpMult = roomCombat.roomEventXpMultiplier || 1;
     const roomEventHeroXpBonus = roomCombat.roomEventHeroXpBonus || null;

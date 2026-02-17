@@ -27,6 +27,7 @@ import { applyStatusEffect } from '../game/statusEngine';
 import { resetBossStates } from '../game/bossEngine';
 import { processRoomEvent } from '../game/roomEventHandlers';
 import { getRaidMechanic } from '../data/raids';
+import { getDungeonAffix } from '../data/dungeonAffixes';
 
 /**
  * Hook for dungeon setup and exploration phase logic
@@ -177,6 +178,13 @@ export const useDungeon = ({ addEffect }) => {
       addCombatLog({ type: 'system', message: `${mazeDungeon.rooms.length} rooms to explore` });
     }
 
+    // Log active dungeon affixes
+    const affixIds = dungeon.affixes || [];
+    if (affixIds.length > 0) {
+      const affixNames = affixIds.map(id => getDungeonAffix(id)?.name).filter(Boolean);
+      addCombatLog({ type: 'system', message: `Dungeon Affixes: ${affixNames.join(', ')}` });
+    }
+
     // Set initial state
     setRoomCombat({
       phase: PHASES.EXPLORING,
@@ -196,6 +204,7 @@ export const useDungeon = ({ addEffect }) => {
       combatMonsters: [],
       statusEffects: {},
       usedPhoenixRevives: {},  // Reset phoenix revives for new dungeon
+      roomsCleared: 0,
     });
   }, [addCombatLog, setRoomCombat]);
 
@@ -207,20 +216,46 @@ export const useDungeon = ({ addEffect }) => {
 
     const { heroes: combatHeroes } = roomCombat;
 
-    // Create turn order for this combat
-    const turnOrder = createTurnOrder(combatHeroes.filter(h => h.stats.hp > 0), nearbyMonsters);
+    // Apply bolstering affix: +X% stats per room cleared
+    const dungeon = useGameStore.getState().dungeon;
+    const affixIds = dungeon?.affixes || [];
+    let bolsteringScale = 0;
+    for (const id of affixIds) {
+      const affix = getDungeonAffix(id);
+      if (affix?.effect?.monsterScalingPerRoom) {
+        bolsteringScale += affix.effect.monsterScalingPerRoom;
+      }
+    }
+    let scaledMonsters = nearbyMonsters;
+    if (bolsteringScale > 0 && (roomCombat.roomsCleared || 0) > 0) {
+      const mult = 1 + bolsteringScale * roomCombat.roomsCleared;
+      scaledMonsters = nearbyMonsters.map(m => ({
+        ...m,
+        stats: {
+          ...m.stats,
+          maxHp: Math.floor(m.stats.maxHp * mult),
+          hp: Math.floor(m.stats.hp * mult),
+          attack: Math.floor(m.stats.attack * mult),
+          defense: Math.floor(m.stats.defense * mult),
+          speed: Math.floor(m.stats.speed * mult),
+        },
+      }));
+    }
 
-    addCombatLog({ type: 'system', message: `${nearbyMonsters.length} enemies!` });
+    // Create turn order for this combat
+    const turnOrder = createTurnOrder(combatHeroes.filter(h => h.stats.hp > 0), scaledMonsters);
+
+    addCombatLog({ type: 'system', message: `${scaledMonsters.length} enemies!` });
 
     // Process unique ON_COMBAT_START effects (Kraken's Grasp root, Cloak of Nothing stealth)
     const aliveHeroes = combatHeroes.filter(h => h.stats.hp > 0);
     const initialStatusEffects = { ...(roomCombat.statusEffects || {}) };
     for (const hero of aliveHeroes) {
-      const combatStartResult = processOnCombatStartUniques(hero, nearbyMonsters, {});
+      const combatStartResult = processOnCombatStartUniques(hero, scaledMonsters, {});
 
       // Kraken's Grasp - root all enemies at combat start
       if (combatStartResult.rootEnemies) {
-        for (const enemy of nearbyMonsters) {
+        for (const enemy of scaledMonsters) {
           const mockEnemy = { ...enemy, statusEffects: initialStatusEffects[enemy.id] || [] };
           const statusResult = applyStatusEffect(mockEnemy, 'root', hero, {
             duration: combatStartResult.rootEnemies.duration,
@@ -237,14 +272,25 @@ export const useDungeon = ({ addEffect }) => {
       }
     }
 
-    updateRoomCombat({
+    const combatUpdate = {
       phase: PHASES.COMBAT,
-      combatMonsters: nearbyMonsters.map(m => m.id),
+      combatMonsters: scaledMonsters.map(m => m.id),
       turnOrder,
       currentTurnIndex: 0,
       round: 1,
       statusEffects: initialStatusEffects,
-    });
+    };
+
+    // If bolstering scaled monster stats, update the master monsters array
+    if (bolsteringScale > 0 && (roomCombat.roomsCleared || 0) > 0) {
+      const scaledIds = new Set(scaledMonsters.map(m => m.id));
+      const scaledMap = Object.fromEntries(scaledMonsters.map(m => [m.id, m]));
+      combatUpdate.monsters = roomCombat.monsters.map(m =>
+        scaledIds.has(m.id) ? scaledMap[m.id] : m
+      );
+    }
+
+    updateRoomCombat(combatUpdate);
   }, [addCombatLog, updateRoomCombat]);
 
   // Maximum distance a follower can be from leader before teleporting

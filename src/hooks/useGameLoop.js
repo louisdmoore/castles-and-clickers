@@ -2,6 +2,7 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { findExplorationTarget } from '../game/mazeGenerator';
 import { PHASES } from '../game/constants';
+import { getDungeonAffix } from '../data/dungeonAffixes';
 
 /**
  * Hook for game loop orchestration
@@ -82,7 +83,12 @@ export const useGameLoop = ({
         if (aliveMonsters.length === 0) {
           // OPTIMIZATION: Single batched update
           updateRoomCombat({ phase: PHASES.COMPLETE, tick: 0 });
-          const goldMultiplier = 1 + (homesteadBonuses.goldFind || 0);
+          let affixGoldMult = 1;
+          for (const id of (dungeon?.affixes || [])) {
+            const affix = getDungeonAffix(id);
+            if (affix?.effect?.goldDropMultiplier) affixGoldMult *= affix.effect.goldDropMultiplier;
+          }
+          const goldMultiplier = (1 + (homesteadBonuses.goldFind || 0)) * affixGoldMult;
           const bonus = Math.floor(100 * dungeon.level * goldMultiplier);
           addGold(bonus);
           incrementStat('totalDungeonsCleared');
@@ -100,6 +106,7 @@ export const useGameLoop = ({
             targetPosition: newTarget,
             combatMonsters: [],
             turnOrder: [],
+            roomsCleared: (roomCombat.roomsCleared || 0) + 1,
           });
         }
       } else {

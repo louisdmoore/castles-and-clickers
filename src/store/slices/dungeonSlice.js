@@ -68,13 +68,21 @@ export const createDungeonSlice = (set, get) => ({
 
     // Set up dungeon type
     const dungeonType = options.type || 'normal';
-    const affixes = options.affixes || [];
 
     // Consume pending dungeon buffs into active buffs
     const activeBuffs = pendingDungeonBuffs.length > 0 ? [...pendingDungeonBuffs] : [];
 
     // Get difficulty multiplier from settings
     const difficultyMultiplier = get().dungeonSettings?.difficultyMultiplier || 1.0;
+
+    // Roll dungeon affixes based on difficulty (2.0x→1, 2.5x→1-2, 3.0x→2)
+    let affixes = options.affixes || [];
+    if (affixes.length === 0 && difficultyMultiplier >= 2.0) {
+      const affixCount = difficultyMultiplier >= 3.0 ? 2
+        : difficultyMultiplier >= 2.5 ? (Math.random() < 0.5 ? 2 : 1)
+        : 1;
+      affixes = rollDungeonAffixes(affixCount);
+    }
 
     // Look up favored affixes from dungeon theme for loot targeting
     const tier = getDungeonTier(cappedLevel);
@@ -91,6 +99,7 @@ export const createDungeonSlice = (set, get) => ({
         activeBuffs,
         difficultyMultiplier,
         favoredAffixes,
+        affixes: affixes.map(a => a.id),
       },
       pendingDungeonBuffs: [],
       dungeonProgress: {
@@ -504,6 +513,7 @@ export const createDungeonSlice = (set, get) => ({
         raidDifficulty: difficulty,
         raidUniqueDropBonus: tier.uniqueDropBonus,
         activeBuffs: pendingDungeonBuffs.length > 0 ? [...pendingDungeonBuffs] : [],
+        affixes: raidAffixes.map(a => a.id),
       },
       pendingDungeonBuffs: [],
       roomCombat: null,
