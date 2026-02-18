@@ -15,6 +15,7 @@ export const CHANGELOG = [
       { type: 'feature', text: 'Achievement system — 30 achievements across Combat, Progression, Collection, Challenge, and Economy categories with gold rewards and progress tracking' },
       { type: 'feature', text: 'Essence currency — earned from raids and high-difficulty dungeons, used to awaken max-level unique items for enhanced powers' },
       { type: 'feature', text: 'Raid mastery — track clears per raid to earn permanent stat buffs (+5/10/15%) and unique drop rate bonuses at Apprentice/Veteran/Master tiers' },
+      { type: 'feature', text: 'Progressive disclosure — features unlock as you progress: Skills at D2, Bestiary at D3, Shop/Stats at D5, Difficulty at D10, Raids at D12, Reforging at D15, and Dungeon Intel at D20' },
     ],
   },
   {

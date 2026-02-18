@@ -238,6 +238,16 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Achievement progress bars — only show for stat-based achievements. Custom conditions show no progress (0 or 1). Could show partial progress for multi-step customs
 - [ ] `useGameStore.getState()` called outside selector in AchievementScreen — progress calculation uses full state snapshot. May not react to real-time stat changes while the modal is open
 
+## Progressive Disclosure (v0.5.0)
+
+- [ ] Celebration toast ordering — if multiple milestones unlock at once (e.g., first clear triggers D1 welcome + death recap), do the toasts stack well?
+- [ ] Locked button tooltip — shows "Unlocks at Dungeon X". Is this discoverable enough? Should it be more prominent?
+- [ ] Achievements/Stats gated at D5 — but achievements start tracking from D1. Player may miss early achievement progress
+- [ ] Shop gated at D5 — is this the right level? Players may want to buy gear earlier
+- [ ] `checkFeatureUnlocks` called only after endDungeon — should it also fire on game load for players who already passed milestones without the feature?
+- [ ] Celebration toasts use `addToast` — verify they don't conflict with other post-dungeon toasts (loot, level-up, etc.)
+- [ ] Ascension prompt at D30 — this fires even if the player has already ascended. Should it track whether the player has seen this message?
+
 ## General
 
 - [ ] Lint count crept from ~78 to ~84 — audit whether any are from Phase 1-2 changes

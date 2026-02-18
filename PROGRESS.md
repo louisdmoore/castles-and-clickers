@@ -99,7 +99,7 @@
 
 ---
 
-## Phase 8: v0.5.0+ — Depth
+## Phase 8: v0.5.0+ — Depth ✅
 *Reference: DESIGN_RETHINK.md Sections 6, 7, 9, 10, 13, 15*
 
 - [x] Raid difficulty tiers (Normal/Heroic/Mythic) (Section 10.3)
@@ -109,13 +109,34 @@
 - [x] Achievement system with constraint challenges
 - [x] Essence currency + unique awakening (Section 13.2, 11.2)
 - [x] Raid mastery tracking (Section 10.2)
-- [ ] Progressive disclosure / gated feature unlocks (Section 15)
+- [x] Progressive disclosure / gated feature unlocks (Section 15)
 
 ---
 
 ## Handoff Notes
 
 *Space for sessions to leave notes for the next session. Most recent first.*
+
+### Session 10 (2026-02-17) — Phase 8 Complete (v0.5.0)
+
+**Completed:** Remaining Phase 8 tasks — achievement system, essence + awakening, raid mastery, progressive disclosure.
+
+**All 8 design rethink phases are complete.** Every task in PROGRESS.md is checked off.
+
+**Design decisions:**
+- Achievement system: 30 achievements across 5 categories (Combat, Progression, Collection, Challenge, Economy). `checkAchievements()` called after `endDungeon` and `completeRaid`. Stat tracking in `stats` object (flawlessRuns, speedClears, difficultyClearsAt, soloRoomClears, worldBossKills, rareItemsFound, epicItemsFound, peakGold). Custom conditions check state directly. Gold rewards per achievement. AchievementScreen with progress bars and hidden achievement support.
+- Essence currency: `essence: 0` in economySlice, `addEssence(amount)` action. Earned from raids (50/100/200 for Normal/Heroic/Mythic) and high-difficulty dungeons (10/15/20 at 2.0x/2.5x/3.0x). Save migration v6→v7.
+- Unique awakening: `awakenUnique(templateId)` in inventorySlice costs 500 essence, requires max level (5), flips `awakened: true`. Each unique has `awakenedPower: { name, description }` data — combat effects not wired yet.
+- Raid mastery: `RAID_MASTERY_TIERS` (Apprentice 5 clears +5%, Veteran 10 +10%, Master 25 +15%). Stat buffs applied in useDungeon setupDungeon. Unique drop bonus threaded through enterRaid. Mastery display in RaidSelectorModal with progress bar.
+- Progressive disclosure: `checkFeatureUnlocks()` in dungeonSlice with 10 milestones. NavBar gates (Skills D2, Bestiary D3, Shop/Achievements/Stats D5, Raids/Uniques D12). PrepScreen gates (Difficulty D10, Favored Drops D20). EquipmentScreen gate (Reforge D15). Celebration toasts on first unlock.
+
+**Carried forward:**
+- Unwired combat traits (regenPercent, controlResist, healingMultiplier) — carried since Session 4.
+- MilestoneWidget duplicate `style` attribute bug — carried since Session 4.
+- Conditional XP triggers not wired into combat — carried since Session 8.
+- Only 2 raids have mechanics (sunken_temple, cursed_manor) — sky_fortress, the_abyss, void_throne need Tier 2 mechanics.
+- Awakened powers are data-only (descriptions defined, no combat effects wired).
+- Lint baseline at 81 (down from 82-83). No new errors.
 
 ### Session 9 (2026-02-17) — Phase 8 Started (v0.5.0)
 
