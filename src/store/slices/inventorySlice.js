@@ -322,6 +322,17 @@ export const createInventorySlice = (set, get) => ({
 
   // Process a loot drop with smart auto-sell and auto-equip
   processLootDrop: (item) => {
+    // Track rarity stats for achievements
+    if (item.rarity === 'rare' || item.rarity === 'epic') {
+      set(state => ({
+        stats: {
+          ...state.stats,
+          rareItemsFound: (state.stats.rareItemsFound || 0) + (item.rarity === 'rare' ? 1 : 0),
+          epicItemsFound: (state.stats.epicItemsFound || 0) + (item.rarity === 'epic' ? 1 : 0),
+        },
+      }));
+    }
+
     const {
       equipmentSettings,
       inventory,

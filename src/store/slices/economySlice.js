@@ -4,6 +4,7 @@ import { getMaxShopRarity, getMaxPartySize } from '../../data/milestones';
 import { SHOP_CONSUMABLES, getConsumableCost } from '../../data/consumables';
 import { calculateSellValue } from '../helpers/itemScoring';
 import { clearStatCache } from '../helpers/statCalculator';
+import { evaluateAchievements } from '../helpers/achievementChecker';
 import throttledStorage from '../helpers/throttledStorage';
 
 const RARITY_ORDER = ['common', 'uncommon', 'rare', 'epic', 'legendary'];
@@ -53,16 +54,21 @@ export const createEconomySlice = (set, get) => ({
   lastSaveTime: Date.now(),
   saveStatus: { success: true, timestamp: Date.now() },
   toasts: [],
+  earnedAchievements: [],
 
   // Actions
   addGold: (amount) => {
-    set(state => ({
-      gold: state.gold + amount,
-      stats: {
-        ...state.stats,
-        totalGoldEarned: state.stats.totalGoldEarned + amount,
-      },
-    }));
+    set(state => {
+      const newGold = state.gold + amount;
+      return {
+        gold: newGold,
+        stats: {
+          ...state.stats,
+          totalGoldEarned: state.stats.totalGoldEarned + amount,
+          peakGold: Math.max(state.stats.peakGold || 0, newGold),
+        },
+      };
+    });
   },
 
   spendGold: (amount) => {
@@ -312,10 +318,40 @@ export const createEconomySlice = (set, get) => ({
         if (options.isBoss) {
           stats.totalBossesKilled = (stats.totalBossesKilled || 0) + 1;
         }
+        if (options.isWorldBoss) {
+          stats.worldBossKills = (stats.worldBossKills || 0) + 1;
+        }
       }
 
       return { stats };
     });
+  },
+
+  checkAchievements: () => {
+    const state = get();
+    const newlyEarned = evaluateAchievements(state);
+    if (newlyEarned.length === 0) return;
+
+    // Award each new achievement
+    let totalGoldReward = 0;
+    const newIds = newlyEarned.map(a => a.id);
+    for (const achievement of newlyEarned) {
+      totalGoldReward += achievement.reward?.gold || 0;
+      get().addToast({
+        type: 'success',
+        message: `Achievement: ${achievement.name}!${achievement.reward?.gold ? ` +${achievement.reward.gold}g` : ''}`,
+      });
+    }
+
+    set(state => ({
+      earnedAchievements: [...state.earnedAchievements, ...newIds],
+      gold: state.gold + totalGoldReward,
+      stats: {
+        ...state.stats,
+        totalGoldEarned: state.stats.totalGoldEarned + totalGoldReward,
+        peakGold: Math.max(state.stats.peakGold || 0, state.gold + totalGoldReward),
+      },
+    }));
   },
 
   setGameSpeed: (speed) => set({ gameSpeed: speed }),

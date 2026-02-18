@@ -149,7 +149,7 @@ export const executeHeroSkillAction = (ctx, actor) => {
             const xpForHero = Math.floor(baseXpPerHero * catchUpBonus * heroXpMult);
             addXpToHero(h.id, xpForHero);
           });
-          incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: m.templateId, isBoss: m.isBoss });
+          incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: m.templateId, isBoss: m.isBoss, isWorldBoss: m.isWorldBoss });
 
           if (gold > 0) {
             addEffect({ type: 'goldDrop', position: m.position, amount: gold });

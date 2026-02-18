@@ -100,6 +100,7 @@ export const createDungeonSlice = (set, get) => ({
         difficultyMultiplier,
         favoredAffixes,
         affixes: affixes.map(a => a.id),
+        startTime: Date.now(),
       },
       pendingDungeonBuffs: [],
       dungeonProgress: {
@@ -243,10 +244,29 @@ export const createDungeonSlice = (set, get) => ({
           Math.max(state.dungeonUnlocked, clearedLevel + 1),
           maxDungeonLevel
         );
-        updates.stats = {
+        const updatedStats = {
           ...state.stats,
           totalDungeonsCleared: state.stats.totalDungeonsCleared + 1,
         };
+
+        // Track achievement challenge stats
+        if (deathLog.length === 0) {
+          updatedStats.flawlessRuns = (state.stats.flawlessRuns || 0) + 1;
+        }
+        if (state.dungeon.startTime) {
+          const elapsed = (Date.now() - state.dungeon.startTime) / 1000;
+          if (elapsed < 30) {
+            updatedStats.speedClears = (state.stats.speedClears || 0) + 1;
+          }
+        }
+        const diff = state.dungeon.difficultyMultiplier || 1.0;
+        if (diff >= 2.0) {
+          const clears = { ...(state.stats.difficultyClearsAt || {}) };
+          clears[diff] = (clears[diff] || 0) + 1;
+          updatedStats.difficultyClearsAt = clears;
+        }
+
+        updates.stats = updatedStats;
 
         // Update nextLevel with the new highest for the prep phase
         updates.prepPhase.nextLevel = Math.min(clearedLevel + 1, maxDungeonLevel);
@@ -267,6 +287,9 @@ export const createDungeonSlice = (set, get) => ({
 
     // Immediate save on dungeon completion
     throttledStorage.flush();
+
+    // Check for newly earned achievements
+    get().checkAchievements();
   },
 
   abandonDungeon: () => {
@@ -605,6 +628,9 @@ export const createDungeonSlice = (set, get) => ({
 
     // Immediate save on raid completion
     throttledStorage.flush();
+
+    // Check for newly earned achievements
+    get().checkAchievements();
   },
 
   clearRaidRecap: () => {

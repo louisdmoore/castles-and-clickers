@@ -1,6 +1,6 @@
 import { useMemo } from 'react';
 import { useGameStore, calculateSkillPoints, calculateUsedSkillPoints } from '../store/gameStore';
-import { PartyIcon, TreeIcon, BagIcon, HomeIcon, ChestIcon, CrownIcon, SkullIcon, ChartIcon, StarIcon, BookIcon } from './icons/ui';
+import { PartyIcon, TreeIcon, BagIcon, HomeIcon, ChestIcon, CrownIcon, SkullIcon, ChartIcon, StarIcon, BookIcon, TrophyIcon } from './icons/ui';
 import { PARTY_SLOTS } from '../data/classes';
 import { getAllRaids } from '../data/raids';
 
@@ -138,6 +138,12 @@ const NavBar = ({ activeModal, onOpenModal }) => {
       id: 'bestiary',
       Icon: SkullIcon,
       label: 'Bestiary',
+      badge: null,
+    },
+    {
+      id: 'achievements',
+      Icon: TrophyIcon,
+      label: 'Achieve',
       badge: null,
     },
     {

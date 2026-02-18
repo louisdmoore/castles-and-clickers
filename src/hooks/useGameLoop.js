@@ -81,6 +81,10 @@ export const useGameLoop = ({
         }
 
         if (aliveMonsters.length === 0) {
+          // Track solo room clear for achievements
+          if (aliveHeroes.length === 1) {
+            incrementStat('soloRoomClears');
+          }
           // OPTIMIZATION: Single batched update
           updateRoomCombat({ phase: PHASES.COMPLETE, tick: 0 });
           let affixGoldMult = 1;
@@ -93,6 +97,10 @@ export const useGameLoop = ({
           addGold(bonus);
           incrementStat('totalDungeonsCleared');
           addCombatLog({ type: 'system', message: `Dungeon Complete! +${bonus} gold!` });
+          // Track solo room clear for achievements
+          if (aliveHeroes.length === 1) {
+            incrementStat('soloRoomClears');
+          }
         } else {
           clearEffects();
           resetLastProcessedTurn();

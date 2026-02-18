@@ -1118,7 +1118,7 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
                 addCombatLog({ type: 'death', target: { name: nearbyEnemy.name }, isHero: false });
                 addEffect({ type: 'death', position: nearbyEnemy.position, isHero: false, monsterId: nearbyEnemy.templateId });
                 handleUnitDeath(ctx, nearbyEnemy.id, nearbyEnemy);
-                incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: nearbyEnemy.templateId, isBoss: nearbyEnemy.isBoss });
+                incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: nearbyEnemy.templateId, isBoss: nearbyEnemy.isBoss, isWorldBoss: nearbyEnemy.isWorldBoss });
               }
             }
           }
@@ -1234,7 +1234,7 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
       const heroXpMult = roomEventHeroXpBonus?.[h.id] || 1;
       addXpToHero(h.id, Math.floor(baseXpPerHero * heroXpMult));
     });
-    incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: target.templateId, isBoss: target.isBoss });
+    incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: target.templateId, isBoss: target.isBoss, isWorldBoss: target.isWorldBoss });
 
     if (target.wingBossId) {
       defeatWingBoss(target.wingBossId);
@@ -1367,7 +1367,7 @@ export const processDoubleAttack = (ctx, actor, target, attackResult) => {
     addCombatLog({ type: 'death', target: { name: target.name }, isHero: false });
     addEffect({ type: 'death', position: target.position, isHero: false, monsterId: target.templateId });
     handleUnitDeath(ctx, target.id, target);
-    incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: target.templateId, isBoss: target.isBoss });
+    incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: target.templateId, isBoss: target.isBoss, isWorldBoss: target.isWorldBoss });
 
     if (target.wingBossId) {
       defeatWingBoss(target.wingBossId);
@@ -1415,7 +1415,7 @@ export const processDoubleAttack = (ctx, actor, target, attackResult) => {
         addCombatLog({ type: 'death', target: { name: target.name }, isHero: false });
         addEffect({ type: 'death', position: target.position, isHero: false, monsterId: target.templateId });
         handleUnitDeath(ctx, target.id, target);
-        incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: target.templateId, isBoss: target.isBoss });
+        incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: target.templateId, isBoss: target.isBoss, isWorldBoss: target.isWorldBoss });
       }
     }
   }
@@ -1457,7 +1457,7 @@ export const processAscendanceAOE = (ctx, actor, target, attackResult) => {
         addCombatLog({ type: 'death', target: { name: otherTarget.name }, isHero: false });
         addEffect({ type: 'death', position: otherTarget.position, isHero: false, monsterId: otherTarget.templateId });
         handleUnitDeath(ctx, otherTarget.id, otherTarget);
-        incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: otherTarget.templateId, isBoss: otherTarget.isBoss });
+        incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: otherTarget.templateId, isBoss: otherTarget.isBoss, isWorldBoss: otherTarget.isWorldBoss });
 
         if (otherTarget.wingBossId) {
           defeatWingBoss(otherTarget.wingBossId);

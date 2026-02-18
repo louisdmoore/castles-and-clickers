@@ -11,6 +11,7 @@ import StatsScreen from './StatsScreen';
 import RaidSelectorModal from './RaidSelectorModal';
 import UniqueCollectionScreen from './UniqueCollectionScreen';
 import AscensionModal from './AscensionModal';
+import AchievementScreen from './AchievementScreen';
 
 const ModalManager = ({ activeModal, onClose, onStartDungeon }) => {
   return (
@@ -57,6 +58,10 @@ const ModalManager = ({ activeModal, onClose, onStartDungeon }) => {
 
       <ModalOverlay isOpen={activeModal === 'collection'} onClose={onClose} title="Unique Collection" size="xl">
         <UniqueCollectionScreen />
+      </ModalOverlay>
+
+      <ModalOverlay isOpen={activeModal === 'achievements'} onClose={onClose} title="Achievements" size="lg">
+        <AchievementScreen />
       </ModalOverlay>
 
       <AscensionModal

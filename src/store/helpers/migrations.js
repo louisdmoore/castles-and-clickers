@@ -11,7 +11,7 @@
  *   3. The migration receives the full persisted state and returns the updated state
  */
 
-export const SAVE_VERSION = 5;
+export const SAVE_VERSION = 6;
 
 // Sequential migration functions: fromVersion -> transform
 const MIGRATIONS = {
@@ -103,6 +103,14 @@ const MIGRATIONS = {
       state.bench = state.bench.map(addPrestige);
     }
 
+    return state;
+  },
+
+  // v5 → v6: Phase 8 — Achievement system
+  5: (state) => {
+    if (!state.earnedAchievements) {
+      state.earnedAchievements = [];
+    }
     return state;
   },
 };

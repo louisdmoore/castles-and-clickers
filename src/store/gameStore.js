@@ -224,6 +224,7 @@ export const useGameStore = create(
             shopConsumables: persistedState?.shopConsumables || [],
             pendingDungeonBuffs: persistedState?.pendingDungeonBuffs || [],
             challengeScores: persistedState?.challengeScores || { tower: { best: 0, bestSeed: null } },
+            earnedAchievements: persistedState?.earnedAchievements || [],
             stats: {
               totalGoldEarned: 0,
               totalGoldSpent: 0,
