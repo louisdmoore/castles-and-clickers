@@ -1,7 +1,7 @@
 import { useState, useEffect, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import NavBar from './NavBar';
-import { GoldIcon, EssenceIcon, TrophyIcon, SkullIcon, BagIcon, MenuIcon, WarningIcon } from './icons/ui';
+import { GoldIcon, TrophyIcon, SkullIcon, BagIcon, MenuIcon, WarningIcon } from './icons/ui';
 import { CURRENT_VERSION } from '../data/changelog';
 
 // Relative time display
@@ -77,7 +77,6 @@ function useThrottledHeaderStats() {
     const state = useGameStore.getState();
     return {
       gold: state.gold || 0,
-      essence: state.essence || 0,
       totalDungeonsCleared: state.stats?.totalDungeonsCleared || 0,
       totalMonstersKilled: state.stats?.totalMonstersKilled || 0,
       inventoryCount: state.inventory?.length || 0,
@@ -85,23 +84,21 @@ function useThrottledHeaderStats() {
     };
   });
 
-  const lastRef = useRef({ gold: 0, essence: 0, clears: 0, kills: 0, inv: 0 });
+  const lastRef = useRef({ gold: 0, clears: 0, kills: 0, inv: 0 });
 
   useEffect(() => {
     const update = () => {
       const state = useGameStore.getState();
       const gold = state.gold || 0;
-      const essence = state.essence || 0;
       const clears = state.stats?.totalDungeonsCleared || 0;
       const kills = state.stats?.totalMonstersKilled || 0;
       const inv = state.inventory?.length || 0;
       const last = lastRef.current;
 
-      if (gold !== last.gold || essence !== last.essence || clears !== last.clears || kills !== last.kills || inv !== last.inv) {
-        lastRef.current = { gold, essence, clears, kills, inv };
+      if (gold !== last.gold || clears !== last.clears || kills !== last.kills || inv !== last.inv) {
+        lastRef.current = { gold, clears, kills, inv };
         setHeaderStats({
           gold,
-          essence,
           totalDungeonsCleared: clears,
           totalMonstersKilled: kills,
           inventoryCount: inv,
@@ -174,11 +171,6 @@ const GameHUD = ({
           <span className="pixel-stat pixel-stat-gold">
             <GoldIcon size={16} /> {Math.floor(headerStats.gold).toLocaleString()}
           </span>
-          {headerStats.essence > 0 && (
-            <span className="pixel-stat pixel-stat-blue">
-              <EssenceIcon size={16} /> {headerStats.essence}
-            </span>
-          )}
           <span className="pixel-stat pixel-stat-green hidden sm:inline-flex">
             <TrophyIcon size={16} /> {headerStats.totalDungeonsCleared}
           </span>

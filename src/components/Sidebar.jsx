@@ -137,11 +137,6 @@ const HeroCard = memo(({ hero, combatHero, cooldowns, effects, buffs, usedPhoeni
           <div className="flex justify-between text-xs">
             <span className="text-white truncate flex items-center gap-1">
               {hero.name}
-              {(hero.prestige?.count || 0) > 0 && (
-                <span className="text-amber-400 text-[9px]" title={`${hero.prestige.count} prestige star${hero.prestige.count > 1 ? 's' : ''} (+${hero.prestige.count * 3}% all stats)`}>
-                  {'★'.repeat(Math.min(hero.prestige.count, 5))}{hero.prestige.count > 5 ? `+${hero.prestige.count - 5}` : ''}
-                </span>
-              )}
               <span className="text-yellow-400">Lv{hero.level || 1}</span>
               {roleInfo && (
                 <span className="opacity-50" title={roleInfo.name}>

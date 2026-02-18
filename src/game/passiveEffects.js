@@ -5,7 +5,7 @@
  */
 
 import { getSkillById, SKILL_TYPE } from '../data/skillTrees';
-import { getHeroTrait } from '../data/heroTraits';
+
 
 /**
  * Handler map for passive effect types.
@@ -188,18 +188,6 @@ export const applyPassiveEffects = (hero, trigger, context = {}) => {
     if (handler) {
       handler(bonuses, passive, context, hero);
     }
-  }
-
-  // Apply hero trait combat bonuses
-  for (const traitId of (hero.traits || [])) {
-    const trait = getHeroTrait(traitId);
-    if (!trait?.effect) continue;
-    const e = trait.effect;
-    if (e.critChanceBonus) bonuses.critChance += e.critChanceBonus;
-    if (e.critDamageBonus) bonuses.critDamageBonus += e.critDamageBonus;
-    if (e.dodgeChance) bonuses.dodgeChance += e.dodgeChance;
-    if (e.lifesteal) bonuses.lifestealPercent += e.lifesteal * 100; // Convert from 0.05 to 5%
-    if (e.damageReduction) bonuses.damageReduction += e.damageReduction;
   }
 
   return bonuses;

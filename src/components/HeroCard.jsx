@@ -1,6 +1,6 @@
 import { CLASSES } from '../data/classes';
 import { useGameStore, calculateHeroStats, xpForLevel, calculateSkillPoints, calculateUsedSkillPoints } from '../store/gameStore';
-import { getHeroTrait } from '../data/heroTraits';
+
 import ClassIcon from './icons/ClassIcon';
 import ItemIcon, { WeaponSlotIcon, ArmorSlotIcon, AccessorySlotIcon } from './icons/ItemIcon';
 import { HeartIcon, SwordIcon, ShieldIcon, SpeedIcon } from './icons/ui';
@@ -40,11 +40,6 @@ const HeroCard = ({ hero, onSelect, isSelected, showEquipment = true }) => {
         <div className="flex-1">
           <h3 className="text-white font-bold">
             {hero.name}
-            {(hero.prestige?.count || 0) > 0 && (
-              <span className="text-amber-400 text-xs ml-1" title={`${hero.prestige.count} prestige star${hero.prestige.count > 1 ? 's' : ''} (+${hero.prestige.count * 3}% all stats)`}>
-                {'★'.repeat(Math.min(hero.prestige.count, 5))}
-              </span>
-            )}
           </h3>
           <p className="text-gray-400 text-sm">{classData.name} Lv.{hero.level}</p>
         </div>
@@ -83,25 +78,6 @@ const HeroCard = ({ hero, onSelect, isSelected, showEquipment = true }) => {
           <span className="text-gray-300">{stats.speed}</span>
         </div>
       </div>
-
-      {/* Traits */}
-      {hero.traits?.length > 0 && (
-        <div className="flex flex-wrap gap-1 mb-3">
-          {hero.traits.map(traitId => {
-            const trait = getHeroTrait(traitId);
-            if (!trait) return null;
-            return (
-              <span
-                key={traitId}
-                className="px-1.5 py-0.5 bg-gray-900 rounded text-[10px] text-amber-400 border border-gray-700"
-                title={trait.description}
-              >
-                {trait.name}
-              </span>
-            );
-          })}
-        </div>
-      )}
 
       {/* Equipment */}
       {showEquipment && (

@@ -1,9 +1,9 @@
 import { useState, useMemo, memo } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { RAIDS, getAllRaids, isRaidUnlocked, getRaidUniqueIds, RAID_DIFFICULTY_TIERS, getRaidMechanic, getRaidMastery } from '../data/raids';
+import { RAIDS, getAllRaids, isRaidUnlocked, getRaidUniqueIds, RAID_DIFFICULTY_TIERS } from '../data/raids';
 import { getUniqueItem } from '../data/uniqueItems';
 import { CLASSES } from '../data/classes';
-import { CrownIcon, LockIcon, SkullIcon, CheckIcon, ChevronIcon, GoldIcon } from './icons/ui';
+import { CrownIcon, LockIcon, CheckIcon, ChevronIcon, GoldIcon } from './icons/ui';
 import { RaidBossIcon } from './icons/raidBosses';
 import ItemIcon from './icons/ItemIcon';
 
@@ -156,7 +156,7 @@ const RAID_COLORS = {
 };
 
 // Difficulty tier order for rendering
-const DIFFICULTY_ORDER = ['normal', 'heroic', 'mythic'];
+const DIFFICULTY_ORDER = ['normal', 'heroic'];
 
 // Difficulty tier selector component
 const DifficultySelector = memo(({ selected, onSelect, gold, ascensionCount }) => (
@@ -210,15 +210,11 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
   const [difficulty, setDifficulty] = useState('normal');
   const raidUniqueIds = useMemo(() => getRaidUniqueIds(raid.id), [raid.id]);
   const ownedCount = raidUniqueIds.filter(id => ownedUniques.includes(id)).length;
-  const raidMechanic = useMemo(() => getRaidMechanic(raid.id), [raid.id]);
-
   const isOwned = (itemId) => ownedUniques.includes(itemId);
 
   const totalBosses = raid.wingBosses.length + 1; // +1 for final boss
   const RaidIcon = RAID_ICONS[raid.id] || CrownIcon;
   const raidColor = RAID_COLORS[raid.id] || '#3b82f6';
-
-  const mastery = useMemo(() => getRaidMastery(runCount), [runCount]);
 
   const selectedTier = RAID_DIFFICULTY_TIERS[difficulty];
   const isLocked = selectedTier.ascensionRequired > 0 && ascensionCount < selectedTier.ascensionRequired;
@@ -249,13 +245,6 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
             <div className="flex-1">
               <h3 className="pixel-subtitle">{raid.name}</h3>
               <p className="text-xs text-gray-400 mt-0.5">{raid.description}</p>
-              {raidMechanic && (
-                <div className="text-xs mt-1 flex items-center gap-1" style={{ color: raidColor }}>
-                  <SkullIcon size={10} />
-                  <span className="font-medium">{raidMechanic.name}:</span>
-                  <span className="text-gray-400">{raidMechanic.description}</span>
-                </div>
-              )}
               <div className="text-xs text-gray-500 mt-1">
                 <span className="text-yellow-500">Lv {raid.recommendedLevel}</span> · {totalBosses} bosses
                 {difficulty !== 'normal' && (
@@ -273,11 +262,6 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
               {runCount > 0 && (
                 <div className="text-xs text-gray-500">
                   {runCount} run{runCount !== 1 ? 's' : ''}
-                </div>
-              )}
-              {mastery.label && (
-                <div className="text-[10px] font-bold text-amber-400">
-                  {mastery.label}
                 </div>
               )}
             </div>
@@ -321,40 +305,6 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
             <span className="text-gray-300">{selectedTier.description}</span>
             {selectedTier.uniqueDropBonus > 0 && (
               <span className="text-gray-400"> · +{Math.round(selectedTier.uniqueDropBonus * 100)}% unique drop rate</span>
-            )}
-            {selectedTier.affixCount > 0 && (
-              <span className="text-gray-400"> · {selectedTier.affixCount} random dungeon affixes</span>
-            )}
-          </div>
-        )}
-
-        {/* Raid mastery progress */}
-        {isUnlocked && runCount > 0 && (
-          <div className="mt-2 p-2 pixel-panel-dark">
-            <div className="flex items-center justify-between mb-1">
-              <span className="text-[10px] font-bold text-amber-400">
-                Mastery: {mastery.label || 'Novice'}
-              </span>
-              <span className="text-[10px] text-gray-500">
-                {mastery.statBonus > 0 ? `+${Math.round(mastery.statBonus * 100)}% stats` : ''}
-                {mastery.uniqueDropBonus > 0 ? ` · +${Math.round(mastery.uniqueDropBonus * 100)}% unique drops` : ''}
-              </span>
-            </div>
-            {mastery.nextTier && (
-              <div className="flex items-center gap-2">
-                <div className="pixel-bar h-1.5 flex-1">
-                  <div
-                    className="pixel-bar-fill h-full"
-                    style={{
-                      width: `${Math.min(100, Math.round((runCount / mastery.nextTier.clears) * 100))}%`,
-                      backgroundColor: '#f59e0b',
-                    }}
-                  />
-                </div>
-                <span className="text-[10px] text-gray-500 whitespace-nowrap">
-                  {runCount}/{mastery.nextTier.clears} → {mastery.nextTier.label}
-                </span>
-              </div>
             )}
           </div>
         )}

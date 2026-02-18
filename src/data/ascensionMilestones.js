@@ -23,16 +23,8 @@ export const ASCENSION_MILESTONES = {
     level: 2,
     statBonus: 0.20,
     label: '+20% all stats',
-    unlock: {
-      id: 'trait_reroll',
-      name: 'Trait Rerolling',
-      description: 'Reroll hero traits at the tavern for gold',
-    },
-    bonusUnlock: {
-      id: 'challenge_access',
-      name: 'Challenge Dungeons',
-      description: 'Tower of Trials challenge mode unlocked',
-    },
+    unlock: null,
+    bonusUnlock: null,
     dungeonCap: 40,
   },
   3: {
@@ -44,33 +36,21 @@ export const ASCENSION_MILESTONES = {
       name: '8th Party Slot',
       description: 'Unlock an 8th hero slot with no role restriction',
     },
-    bonusUnlock: {
-      id: 'mythic_raids',
-      name: 'Mythic Raids',
-      description: 'Mythic difficulty tier for all raids',
-    },
+    bonusUnlock: null,
     dungeonCap: 45,
   },
   5: {
     level: 5,
     statBonus: 0.50,
     label: '+50% all stats',
-    unlock: {
-      id: 'capstone_skills',
-      name: 'New Capstone Skills',
-      description: 'Each class gains an additional capstone skill option',
-    },
+    unlock: null,
     dungeonCap: 50,
   },
   10: {
     level: 10,
     statBonus: 1.00,
     label: '+100% all stats',
-    unlock: {
-      id: 'prestige_classes',
-      name: 'Prestige Classes',
-      description: 'Prestige class variants: Dark Knight, Arch Mage, Shadow Ranger, and more',
-    },
+    unlock: null,
     dungeonCap: 60,
   },
 };
@@ -105,7 +85,7 @@ export const getAscensionUnlocks = (ascensionCount) => {
   const unlocks = [];
   for (const [level, milestone] of Object.entries(ASCENSION_MILESTONES)) {
     if (ascensionCount >= Number(level)) {
-      unlocks.push(milestone.unlock);
+      if (milestone.unlock) unlocks.push(milestone.unlock);
       if (milestone.bonusUnlock) {
         unlocks.push(milestone.bonusUnlock);
       }

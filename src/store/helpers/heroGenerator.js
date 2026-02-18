@@ -1,7 +1,7 @@
 import { CLASSES, getClassesByRole } from '../../data/classes';
 import { generateEquipment, getEquipmentForClass } from '../../data/equipment';
 import { getRaidUniqueIds } from '../../data/raids';
-import { rollHeroTraits } from '../../data/heroTraits';
+
 
 // Random name generators for tavern heroes
 const FIRST_NAMES = [
@@ -73,11 +73,6 @@ export const generateTavernHero = (role, dungeonLevel = 1) => {
     }
   });
 
-  // Roll gameplay-affecting traits from the trait pool
-  const traits = rollHeroTraits();
-  // Extra cost per trait (more traits = more valuable hero)
-  baseCost += traits.length * 25;
-
   return {
     id: `tavern_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
     name,
@@ -86,7 +81,6 @@ export const generateTavernHero = (role, dungeonLevel = 1) => {
     xp: 0,
     equipment,
     skills: [],
-    traits,
     recruitCost: Math.floor(baseCost),
     role,
   };
@@ -108,7 +102,6 @@ export const createHero = (classId, name, startingLevel = 1) => {
       accessory: null,
     },
     skills: [],
-    traits: rollHeroTraits(),
   };
 };
 

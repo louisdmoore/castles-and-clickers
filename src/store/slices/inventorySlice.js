@@ -1,26 +1,15 @@
-import { canClassUseEquipment, EQUIPMENT_TEMPLATES, RARITY } from '../../data/equipment';
+import { canClassUseEquipment } from '../../data/equipment';
 import { calculateItemScore, calculateSellValue } from '../helpers/itemScoring';
 import { invalidateStatCache, calculateHeroStats, setUniqueLevels } from '../helpers/statCalculator';
 import { getCollectionForUnique } from '../helpers/heroGenerator';
 import { SHOP_CONSUMABLES } from '../../data/consumables';
-import { ITEM_AFFIXES, AFFIX_TYPE, rollAffix as rollAffixFromPool, buildAffixedName } from '../../data/itemAffixes';
-import { UNIQUE_MAX_LEVEL, UNIQUE_XP_TABLE, AWAKENING_COST, calculateDuplicateValue, getUniqueItem } from '../../data/uniqueItems';
+import { UNIQUE_MAX_LEVEL, UNIQUE_XP_TABLE, calculateDuplicateValue } from '../../data/uniqueItems';
 import throttledStorage from '../helpers/throttledStorage';
-
-// Reforge cost curve: escalating per session, resets on dungeon completion
-const REFORGE_BASE_COSTS = [2000, 3000, 5000, 8000, 12000];
-const getReforgeCostForCount = (count, ascensionCount, locked) => {
-  const baseCost = count < 5 ? REFORGE_BASE_COSTS[count] : 12000 + (count - 4) * 5000;
-  const ascensionMult = 1 + ascensionCount * 0.5;
-  const lockMult = locked ? 2 : 1;
-  return Math.floor(baseCost * ascensionMult * lockMult);
-};
 
 export const createInventorySlice = (set, get) => ({
   // State
   inventory: [],
   maxInventory: 50,
-  reforgeCount: 0,
   consumables: [],
   shopConsumables: [],
   pendingDungeonBuffs: [],
@@ -669,50 +658,6 @@ export const createInventorySlice = (set, get) => ({
     return leveled ? { leveled: true, newLevel } : null;
   },
 
-  // Awaken a max-level unique by spending essence
-  awakenUnique: (templateId) => {
-    const { uniqueLevels, ownedUniques, essence } = get();
-    if (!ownedUniques.includes(templateId)) {
-      get().addToast({ type: 'error', message: 'You do not own this unique' });
-      return false;
-    }
-
-    const current = uniqueLevels[templateId] || { xp: 0, level: 1, awakened: false };
-    if (current.level < UNIQUE_MAX_LEVEL) {
-      get().addToast({ type: 'error', message: 'Unique must be max level to awaken' });
-      return false;
-    }
-    if (current.awakened) {
-      get().addToast({ type: 'warning', message: 'Already awakened' });
-      return false;
-    }
-    if ((essence || 0) < AWAKENING_COST) {
-      get().addToast({ type: 'error', message: `Not enough essence (need ${AWAKENING_COST})` });
-      return false;
-    }
-
-    const item = getUniqueItem(templateId);
-    const newUniqueLevels = {
-      ...uniqueLevels,
-      [templateId]: { ...current, awakened: true },
-    };
-
-    set({
-      uniqueLevels: newUniqueLevels,
-      essence: (essence || 0) - AWAKENING_COST,
-    });
-
-    // Update module-level cache for stat scaling
-    setUniqueLevels(newUniqueLevels);
-
-    get().addToast({
-      type: 'success',
-      message: `${item?.name || 'Unique'} has been awakened!`,
-    });
-
-    throttledStorage.flush();
-    return true;
-  },
 
   getItemScoreForHero: (item, heroId) => {
     const { heroes, equipmentSettings } = get();
@@ -781,150 +726,4 @@ export const createInventorySlice = (set, get) => ({
     }));
   },
 
-  // Reforging / Enchantment
-  getReforgeCost: (locked = false) => {
-    const { reforgeCount, ascension } = get();
-    return getReforgeCostForCount(reforgeCount, ascension?.count || 0, locked);
-  },
-
-  reforgeItem: (itemId, lockedAffixIndex = null) => {
-    const { gold, heroes, inventory } = get();
-
-    // Find item — check equipped items first, then inventory
-    let item = null;
-    let equippedHeroId = null;
-    let equippedSlot = null;
-
-    for (const hero of heroes.filter(Boolean)) {
-      for (const slot of ['weapon', 'armor', 'accessory']) {
-        if (hero.equipment[slot]?.id === itemId) {
-          item = hero.equipment[slot];
-          equippedHeroId = hero.id;
-          equippedSlot = slot;
-          break;
-        }
-      }
-      if (item) break;
-    }
-
-    if (!item) {
-      item = inventory.find(i => i.id === itemId);
-    }
-
-    if (!item || item.isUnique) {
-      get().addToast({ type: 'error', message: 'Cannot reforge this item' });
-      return false;
-    }
-
-    // Must be rare+ to reforge
-    if (!['rare', 'epic', 'legendary'].includes(item.rarity)) {
-      get().addToast({ type: 'error', message: 'Only rare+ items can be reforged' });
-      return false;
-    }
-
-    // Calculate cost
-    const hasLock = lockedAffixIndex !== null && item.affixes?.[lockedAffixIndex];
-    const cost = get().getReforgeCost(!!hasLock);
-
-    if (gold < cost) {
-      get().addToast({ type: 'error', message: `Not enough gold (need ${cost.toLocaleString()})` });
-      return false;
-    }
-
-    // Determine tier from item template
-    const template = EQUIPMENT_TEMPLATES[item.templateId];
-    const tier = template?.tier || 1;
-
-    // Determine affix count — preserve current count, minimum 1
-    const currentAffixCount = item.affixes?.length || 0;
-    const targetAffixCount = Math.max(currentAffixCount, item.rarity === 'rare' ? 1 : 2);
-
-    // Capture old affix names for toast comparison
-    const oldAffixNames = (item.affixes || []).map(id => ITEM_AFFIXES[id]?.name || id);
-
-    // Keep locked affix
-    const lockedAffixId = hasLock ? item.affixes[lockedAffixIndex] : null;
-
-    // Roll new affixes
-    const newAffixes = [];
-    if (lockedAffixId) {
-      newAffixes.push(lockedAffixId);
-    }
-
-    const neededCount = targetAffixCount - newAffixes.length;
-    for (let i = 0; i < neededCount; i++) {
-      const hasPrefix = newAffixes.some(a => ITEM_AFFIXES[a]?.type === AFFIX_TYPE.PREFIX);
-      const hasSuffix = newAffixes.some(a => ITEM_AFFIXES[a]?.type === AFFIX_TYPE.SUFFIX);
-
-      let rollType;
-      if (!hasPrefix && !hasSuffix) {
-        rollType = Math.random() < 0.5 ? AFFIX_TYPE.PREFIX : AFFIX_TYPE.SUFFIX;
-      } else if (!hasPrefix) {
-        rollType = AFFIX_TYPE.PREFIX;
-      } else if (!hasSuffix) {
-        rollType = AFFIX_TYPE.SUFFIX;
-      } else {
-        break; // Already have one of each type
-      }
-
-      const rolled = rollAffixFromPool(item.slot, tier, rollType);
-      if (rolled && !newAffixes.includes(rolled.id)) {
-        newAffixes.push(rolled.id);
-      }
-    }
-
-    // Rebuild item name
-    const qualityPrefix = item.quality === 'ascended' ? 'Ascended ' : item.quality === 'infused' ? 'Infused ' : '';
-    const baseName = template?.name || 'Item';
-    let newName;
-    if (newAffixes.length > 0) {
-      newName = qualityPrefix + buildAffixedName(baseName, newAffixes);
-    } else {
-      const rarityData = RARITY[item.rarity];
-      newName = qualityPrefix + `${rarityData?.name || ''} ${baseName}`;
-    }
-
-    const updatedItem = {
-      ...item,
-      affixes: newAffixes.length > 0 ? newAffixes : undefined,
-      name: newName,
-    };
-
-    set(state => {
-      const stateUpdates = {
-        gold: state.gold - cost,
-        reforgeCount: state.reforgeCount + 1,
-        stats: {
-          ...state.stats,
-          totalGoldSpent: (state.stats.totalGoldSpent || 0) + cost,
-        },
-      };
-
-      if (equippedHeroId) {
-        stateUpdates.heroes = state.heroes.map(h => {
-          if (!h || h.id !== equippedHeroId) return h;
-          return {
-            ...h,
-            equipment: { ...h.equipment, [equippedSlot]: updatedItem },
-          };
-        });
-      } else {
-        stateUpdates.inventory = state.inventory.map(i =>
-          i.id === itemId ? updatedItem : i
-        );
-      }
-
-      return stateUpdates;
-    });
-
-    // Invalidate stat cache after state update (affixes affect stats)
-    if (equippedHeroId) {
-      invalidateStatCache(equippedHeroId);
-    }
-
-    const newAffixNames = newAffixes.map(id => ITEM_AFFIXES[id]?.name || id);
-    const affixChange = `[${oldAffixNames.join(', ')}] → [${newAffixNames.join(', ')}]`;
-    get().addToast({ type: 'success', message: `Reforged! ${affixChange}` });
-    return true;
-  },
 });

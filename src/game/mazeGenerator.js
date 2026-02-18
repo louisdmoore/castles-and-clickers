@@ -5,8 +5,8 @@ import { getMonstersByTier, getBossByTier, ELITE_CONFIG, createEliteMonster, get
 import { getThemeForLevel, getThemeForRaid } from '../data/dungeonThemes';
 import { isWorldBossLevel, getWorldBossForLevel } from '../data/worldBosses';
 import { createWorldBossInstance, initBossState } from './bossEngine';
-import { RAIDS, getRaidMechanic } from '../data/raids';
-import { rollRoomEvent } from '../data/roomEvents';
+import { RAIDS } from '../data/raids';
+
 
 // Tile types for the dungeon grid
 export const TILE = {
@@ -486,19 +486,6 @@ export function generateMazeDungeon(level) {
   // Find boss room
   const bossRoom = rooms.length > 1 ? rooms[rooms.length - 1] : rooms[0];
 
-  // Roll room events for eligible rooms (not entrance, boss, or treasure rooms)
-  const usedEvents = [];
-  for (const room of rooms) {
-    if (room.type === MAZE_ROOM_TYPES.ENTRANCE || room.type === MAZE_ROOM_TYPES.BOSS || room.type === MAZE_ROOM_TYPES.TREASURE) {
-      continue;
-    }
-    const event = rollRoomEvent(usedEvents);
-    if (event) {
-      room.event = { id: event.id, name: event.name, type: event.type };
-      if (event.effect?.oncePerRun) usedEvents.push(event.id);
-    }
-  }
-
   // Generate decorations based on theme
   const decorations = generateDecorations(grid, rooms, level);
 
@@ -919,86 +906,6 @@ export function placeMonsters(dungeon, level, options = {}) {
 
   // Apply dungeon type multiplier (elite = 1.5x, raid = 2.0x)
   const typeMultiplier = (options.statMultiplier || 1.0) * earlyGameMultiplier;
-  const affixes = options.affixes || [];
-
-  // Helper to apply affixes to a monster
-  // Supports both legacy affix format and DUNGEON_AFFIXES format (monsterStatMultiplier, etc.)
-  const applyAffixes = (monster) => {
-    if (affixes.length === 0) return monster;
-
-    const modified = { ...monster, stats: { ...monster.stats } };
-
-    for (const affix of affixes) {
-      const effect = affix.effect;
-
-      // DUNGEON_AFFIXES format: monsterStatMultiplier: { maxHp: 1.3, attack: 1.2, ... }
-      if (effect.monsterStatMultiplier) {
-        const mult = effect.monsterStatMultiplier;
-        if (mult.maxHp) {
-          modified.stats.maxHp = Math.floor(modified.stats.maxHp * mult.maxHp);
-          modified.stats.hp = modified.stats.maxHp;
-        }
-        if (mult.attack) {
-          modified.stats.attack = Math.floor(modified.stats.attack * mult.attack);
-        }
-        if (mult.defense) {
-          modified.stats.defense = Math.floor(modified.stats.defense * mult.defense);
-        }
-        if (mult.speed) {
-          modified.stats.speed = Math.floor(modified.stats.speed * mult.speed);
-        }
-      }
-      if (effect.monsterLifesteal) {
-        const existing = modified.passive?.lifesteal || 0;
-        modified.passive = { ...(modified.passive || {}), lifesteal: existing + effect.monsterLifesteal };
-      }
-      if (effect.monsterReflectDamage) {
-        const existing = modified.passive?.reflectDamage || 0;
-        modified.passive = { ...(modified.passive || {}), reflectDamage: existing + effect.monsterReflectDamage };
-      }
-      // monsterScalingPerRoom is applied per-room during combat, not at creation time
-      // goldDropMultiplier is applied at gold drop time, not at creation time
-
-      // Legacy affix format (existing support)
-      if (effect.hpMultiplier) {
-        modified.stats.maxHp = Math.floor(modified.stats.maxHp * effect.hpMultiplier);
-        modified.stats.hp = modified.stats.maxHp;
-      }
-      if (effect.damageMultiplier) {
-        modified.stats.attack = Math.floor(modified.stats.attack * effect.damageMultiplier);
-      }
-      if (effect.defenseMultiplier) {
-        modified.stats.defense = Math.floor(modified.stats.defense * effect.defenseMultiplier);
-      }
-      if (effect.speedBonus) {
-        modified.stats.speed += effect.speedBonus;
-      }
-      if (effect.lifesteal) {
-        modified.passive = { ...(modified.passive || {}), lifesteal: effect.lifesteal };
-      }
-      if (effect.onHitStatus) {
-        modified.onHitStatus = effect.onHitStatus;
-      }
-      if (effect.reflectDamage) {
-        modified.passive = { ...(modified.passive || {}), reflectDamage: effect.reflectDamage };
-      }
-      if (effect.regenPercent) {
-        modified.passive = { ...(modified.passive || {}), regenPercent: effect.regenPercent };
-      }
-      if (effect.startingShield) {
-        modified.shield = Math.floor(modified.stats.maxHp * effect.startingShield);
-      }
-      if (effect.deathExplosion) {
-        modified.deathExplosion = effect.deathExplosion;
-      }
-      if (effect.onDeathAllyBuff) {
-        modified.onDeathAllyBuff = effect.onDeathAllyBuff;
-      }
-    }
-
-    return modified;
-  };
-
   for (const room of dungeon.rooms) {
     const roomSize = room.width * room.height;
     const monsterCount = getMonsterCount(room.type, roomSize, level);
@@ -1052,7 +959,7 @@ export function placeMonsters(dungeon, level, options = {}) {
           if (bossMonster.phases) {
             initBossState(bossMonster);
           }
-          monsters.push(applyAffixes(bossMonster));
+          monsters.push(bossMonster);
           continue;
         }
       }
@@ -1064,7 +971,7 @@ export function placeMonsters(dungeon, level, options = {}) {
           const center = getRoomCenter(room);
           worldBoss.position = { x: center.x, y: center.y };
           worldBoss.roomIndex = room.index;
-          monsters.push(applyAffixes(worldBoss));
+          monsters.push(worldBoss);
           continue;
         }
       }
@@ -1100,7 +1007,7 @@ export function placeMonsters(dungeon, level, options = {}) {
             max: Math.floor(boss.goldReward.max * scaleFactor),
           },
         };
-        monsters.push(applyAffixes(baseMonster));
+        monsters.push(baseMonster);
       }
       continue;
     }
@@ -1143,7 +1050,7 @@ export function placeMonsters(dungeon, level, options = {}) {
       if (bossMonster.phases) {
         initBossState(bossMonster);
       }
-      monsters.push(applyAffixes(bossMonster));
+      monsters.push(bossMonster);
       continue;
     }
 
@@ -1185,7 +1092,7 @@ export function placeMonsters(dungeon, level, options = {}) {
       if (bossMonster.phases) {
         initBossState(bossMonster);
       }
-      monsters.push(applyAffixes(bossMonster));
+      monsters.push(bossMonster);
       continue;
     }
 
@@ -1239,7 +1146,7 @@ export function placeMonsters(dungeon, level, options = {}) {
           max: Math.floor(template.goldReward.max * scaleFactor),
         },
       };
-      monsters.push(applyAffixes(baseMonster));
+      monsters.push(baseMonster);
     }
   }
 
@@ -1290,7 +1197,7 @@ export function placeMonsters(dungeon, level, options = {}) {
           max: Math.floor(template.goldReward.max * scaleFactor),
         },
       };
-      monsters.push(applyAffixes(baseMonster));
+      monsters.push(baseMonster);
     }
   }
 
@@ -1324,19 +1231,6 @@ export function placeMonsters(dungeon, level, options = {}) {
       const idx = monsters.indexOf(monster);
       if (idx !== -1) {
         monsters[idx] = createEliteMonster(monster);
-      }
-    }
-  }
-
-  // Apply raid-specific monster passives (Section 10.1)
-  if (options.raidId) {
-    const raidMechanic = getRaidMechanic(options.raidId);
-    if (raidMechanic?.monsterPassive) {
-      for (const monster of monsters) {
-        monster.passive = {
-          ...(monster.passive || {}),
-          ...raidMechanic.monsterPassive,
-        };
       }
     }
   }

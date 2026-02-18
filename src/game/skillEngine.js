@@ -10,7 +10,7 @@
  */
 
 import { getSkillById, SKILL_TYPE } from '../data/skillTrees';
-import { getHeroTrait } from '../data/heroTraits';
+
 import {
   PET_DODGE_BONUS, SHADOW_CLONE_HP_PERCENT, SHADOW_CLONE_DEFENSE_PERCENT,
   RAISED_UNDEAD_HP_PERCENT, RAISED_UNDEAD_ATTACK_PERCENT, RAISED_UNDEAD_DEFENSE_PERCENT,
@@ -41,14 +41,6 @@ export const getHealingBonuses = (hero) => {
     }
     if (passive.type === 'dual_bonus' && passive.healingBonus) {
       healingMultiplier += passive.healingBonus;
-    }
-  }
-
-  // Devoted trait: +15% healing done
-  for (const traitId of (hero.traits || [])) {
-    const trait = getHeroTrait(traitId);
-    if (trait?.effect?.healingMultiplier) {
-      healingMultiplier *= trait.effect.healingMultiplier;
     }
   }
 

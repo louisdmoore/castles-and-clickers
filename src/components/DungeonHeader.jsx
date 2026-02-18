@@ -1,6 +1,5 @@
 import { DUNGEON_TIERS } from '../data/milestones';
 import { RAIDS, RAID_DIFFICULTY_TIERS } from '../data/raids';
-import { getDungeonAffix } from '../data/dungeonAffixes';
 import { getWorldBossForLevel, getZoneWorldBoss } from '../data/worldBosses';
 import { PHASES } from '../game/constants';
 import {
@@ -115,7 +114,7 @@ const DungeonHeader = ({ dungeon, phase, enemyCount, displayRoomCombat, highestD
                 {currentTier.name}
               </div>
               <div className="pixel-label">
-                {dungeon.isTower ? `Tower Floor ${dungeon.towerFloor}` : `Level ${dungeon.level}`}
+                Level {dungeon.level}
               </div>
             </div>
           </div>
@@ -186,26 +185,6 @@ const DungeonHeader = ({ dungeon, phase, enemyCount, displayRoomCombat, highestD
         <div className={`pixel-label ${phaseInfo.color}`}>
           {phaseInfo.text}
         </div>
-
-        {/* Active dungeon affixes */}
-        {dungeon.affixes?.length > 0 && (
-          <div className="flex items-center gap-1">
-            {dungeon.affixes.map(id => {
-              const affix = getDungeonAffix(id);
-              if (!affix) return null;
-              return (
-                <span
-                  key={id}
-                  className="px-1.5 py-0.5 rounded text-[10px] font-medium border"
-                  style={{ color: affix.color, borderColor: `${affix.color}60`, backgroundColor: `${affix.color}15` }}
-                  title={affix.description}
-                >
-                  {affix.name}
-                </span>
-              );
-            })}
-          </div>
-        )}
 
         {/* Enemy progress */}
         <div className="flex items-center gap-2 ml-auto">

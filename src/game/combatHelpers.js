@@ -132,8 +132,8 @@ export const handleUnitDeath = (ctx, unitId, monster = null) => {
   newBuffs[unitId] = isUndeadSummon ? {} : { ghost: true };
   newStatusEffects[unitId] = [];
 
-  // Handle death explosion affix (Explosive dungeon affix or elite affix)
-  // Support both number format (dungeon affix) and object format (elite affix)
+  // Handle death explosion (elite affix)
+  // Support both number format and object format
   const explosionData = monster?.deathExplosion;
   const hasExplosion = explosionData && (
     typeof explosionData === 'number' ? explosionData > 0 : explosionData.damage > 0
@@ -161,7 +161,7 @@ export const handleUnitDeath = (ctx, unitId, monster = null) => {
     addEffect({ type: 'aoeGround', position: monster.position, color: '#ef4444' });
   }
 
-  // Handle Bolstering affix - surviving monsters gain attack when ally dies
+  // Handle Rallying elite affix - surviving monsters gain attack when ally dies
   if (monster && monster.onDeathAllyBuff) {
     const attackBonus = monster.onDeathAllyBuff.attack || 0;
     if (attackBonus > 0) {

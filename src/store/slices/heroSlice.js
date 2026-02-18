@@ -1,16 +1,10 @@
 import { CLASSES, PARTY_SLOTS } from '../../data/classes';
 import { getSkillById, arePrerequisitesMet, calculateRespecCost } from '../../data/skillTrees';
-import { getHeroTrait } from '../../data/heroTraits';
+
 import { createHero, generateTavernHero } from '../helpers/heroGenerator';
 import { calculateHeroStats, invalidateStatCache, clearStatCache, calculateSkillPoints, calculateUsedSkillPoints } from '../helpers/statCalculator';
 import throttledStorage from '../helpers/throttledStorage';
 import { xpForLevel } from '../helpers/statCalculator';
-
-// Prestige constants
-export const PRESTIGE_MIN_LEVEL = 25;  // Must be level 25+ to prestige
-export const PRESTIGE_RESET_LEVEL = 10; // Reset to level 10 after prestige
-export const PRESTIGE_STAT_BONUS = 0.03; // +3% all stats per star
-export const MAX_PRESTIGE_STARS = 10;  // Cap at 10 stars (30% max bonus)
 
 export const createHeroSlice = (set, get) => ({
   // State
@@ -327,13 +321,7 @@ export const createHeroSlice = (set, get) => ({
       const heroes = state.heroes.map(hero => {
         if (hero.id !== heroId) return hero;
 
-        // Apply XP multiplier from traits (e.g., Quick Learner +15%)
-        let xpMult = 1.0;
-        for (const traitId of (hero.traits || [])) {
-          const trait = getHeroTrait(traitId);
-          if (trait?.effect?.xpMultiplier) xpMult *= trait.effect.xpMultiplier;
-        }
-        let newXp = hero.xp + Math.floor(xp * xpMult);
+        let newXp = hero.xp + xp;
         let newLevel = hero.level;
         const oldLvl = hero.level;
 
@@ -571,58 +559,4 @@ export const createHeroSlice = (set, get) => ({
     return calculateHeroStats(hero, heroes);
   },
 
-  // Prestige a hero: reset level/XP to 10, gain a permanent star (+3% all stats)
-  prestigeHero: (heroId) => {
-    const { heroes, bench, dungeon } = get();
-
-    // Can't prestige during dungeon
-    if (dungeon) {
-      get().addToast({ type: 'error', message: 'Cannot prestige during a dungeon' });
-      return false;
-    }
-
-    // Find hero in party or bench
-    const hero = heroes.filter(Boolean).find(h => h.id === heroId) || bench.find(h => h.id === heroId);
-    if (!hero) return false;
-
-    // Check level requirement
-    if (hero.level < PRESTIGE_MIN_LEVEL) {
-      get().addToast({ type: 'error', message: `Hero must be level ${PRESTIGE_MIN_LEVEL}+ to prestige` });
-      return false;
-    }
-
-    // Check prestige cap
-    if ((hero.prestige?.count || 0) >= MAX_PRESTIGE_STARS) {
-      get().addToast({ type: 'warning', message: `${hero.name} has reached maximum prestige (${MAX_PRESTIGE_STARS} stars)` });
-      return false;
-    }
-
-    const newPrestige = { count: (hero.prestige?.count || 0) + 1 };
-
-    // Clear stat caches
-    clearStatCache();
-
-    // Update hero: reset level/XP, keep everything else, increment prestige
-    const updateHero = (h) => {
-      if (!h || h.id !== heroId) return h;
-      return {
-        ...h,
-        level: PRESTIGE_RESET_LEVEL,
-        xp: 0,
-        skills: [], // Free respec on prestige
-        prestige: newPrestige,
-      };
-    };
-
-    set(state => ({
-      heroes: state.heroes.map(h => h ? updateHero(h) : h),
-      bench: state.bench.map(updateHero),
-    }));
-
-    // Immediate save
-    throttledStorage.flush();
-
-    get().addToast({ type: 'success', message: `Prestige! ${hero.name} gained a star (${newPrestige.count} total)` });
-    return true;
-  },
 });

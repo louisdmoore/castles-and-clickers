@@ -29,7 +29,7 @@ import {
   getEnrageDamageBonus, getBossState, getWorldBossLoot,
 } from './bossEngine';
 import { applyStatusEffect } from './statusEngine';
-import { STATUS_EFFECTS, getActiveCombos } from '../data/statusEffects';
+import { STATUS_EFFECTS } from '../data/statusEffects';
 import {
   calculateDodgeChance, calculateDoubleAttackChance,
 } from './constants';
@@ -90,35 +90,21 @@ export const calculateBasicAttackDamage = (ctx, actor, target) => {
   const targetDefenseBonus = target.isHero ? defenseBonus : 1;
   const actorCritBonus = actor.isHero ? critBonus : 0;
 
-  // Check for execute bonus (Executioner's affix + Headsman synergy)
+  // Check for execute bonus (Executioner's affix)
   let executeMultiplier = 1;
   if (heroData) {
     const executeBonus = getExecuteBonus(heroData, target);
     if (executeBonus) {
       executeMultiplier = 1 + executeBonus.bonus;
     }
-    // Stack synergy execute bonus
-    if (affixBonuses.synergyExecuteBonus > 0 && affixBonuses.synergyExecuteThreshold > 0) {
-      const targetHpPercent = target.stats.hp / target.stats.maxHp;
-      if (targetHpPercent <= affixBonuses.synergyExecuteThreshold) {
-        executeMultiplier += affixBonuses.synergyExecuteBonus;
-      }
-    }
   }
 
-  // Check for berserker bonus (Berserker's affix + Blood Rage synergy)
+  // Check for berserker bonus (Berserker's affix)
   let berserkerMultiplier = 1;
   if (heroData) {
     const berserkerBonus = getBerserkerBonus({ ...heroData, stats: actor.stats });
     if (berserkerBonus) {
       berserkerMultiplier = 1 + (berserkerBonus.bonus / 100);
-    }
-    // Stack synergy low HP damage bonus
-    if (affixBonuses.synergyLowHpDamageBonus > 0 && affixBonuses.synergyLowHpThreshold > 0) {
-      const heroHpPercent = actor.stats.hp / actor.stats.maxHp;
-      if (heroHpPercent <= affixBonuses.synergyLowHpThreshold) {
-        berserkerMultiplier += affixBonuses.synergyLowHpDamageBonus;
-      }
     }
   }
 
@@ -185,43 +171,19 @@ export const calculateBasicAttackDamage = (ctx, actor, target) => {
 
   // Apply unique damageReduction as self-nerf (Leviathan's Heart)
   const uniqueDamageReductionMultiplier = 1 - (uniqueBonuses.damageReduction || 0);
-  // Check status effect combos on target (on_attack trigger)
-  const targetStatusIds = (newStatusEffects[target.id] || []).map(s => s.id);
-  const attackCombos = targetStatusIds.length > 0 ? getActiveCombos(targetStatusIds, 'on_attack') : [];
-  let comboMultiplier = 1;
-  let comboGuaranteedCrit = false;
-  for (const combo of attackCombos) {
-    if (combo.effect.guaranteedCrit) comboGuaranteedCrit = true;
-    if (combo.effect.damageMultiplier) comboMultiplier *= combo.effect.damageMultiplier;
-    addCombatLog({ type: 'system', message: `${combo.comboMessage} ${actor.name} triggers ${combo.name} on ${target.name}!` });
-  }
-
-  let dmg = Math.floor(baseDmg * passiveBonuses.damageMultiplier * uniqueBonuses.damageMultiplier * uniqueDamageReductionMultiplier * executeMultiplier * berserkerMultiplier * vengeanceMultiplier * tauntPartyMultiplier * buffDamageMultiplier * weaknessMultiplier * bossDamageMultiplier * stealthMultiplier * rootedMultiplier * shieldBonusMultiplier * comboMultiplier);
+  let dmg = Math.floor(baseDmg * passiveBonuses.damageMultiplier * uniqueBonuses.damageMultiplier * uniqueDamageReductionMultiplier * executeMultiplier * berserkerMultiplier * vengeanceMultiplier * tauntPartyMultiplier * buffDamageMultiplier * weaknessMultiplier * bossDamageMultiplier * stealthMultiplier * rootedMultiplier * shieldBonusMultiplier);
   let isCrit = false;
 
   // Base crit chance
   const baseCritChance = actor.isHero && DPS_CLASSES.includes(actor.classId) ? BASE_CRIT_CHANCE_DPS : BASE_CRIT_CHANCE_OTHER;
 
   const totalCritChance = baseCritChance + (passiveBonuses.critChance || 0) + actorCritBonus + affixBonuses.critChanceBonus + (uniqueBonuses.critChance || 0);
-  if (comboGuaranteedCrit || Math.random() < totalCritChance) {
+  if (Math.random() < totalCritChance) {
     let critMultiplier = BASE_CRIT_MULTIPLIER + (passiveBonuses.critDamageBonus || 0);
     if (heroData) {
       const critAffixResult = processOnCritAffixes(heroData, dmg, target);
       critMultiplier *= critAffixResult.bonusDamageMultiplier;
 
-      // on_crit combo: hemorrhage (refresh bleed duration)
-      const critCombos = targetStatusIds.length > 0 ? getActiveCombos(targetStatusIds, 'on_crit') : [];
-      for (const combo of critCombos) {
-        if (combo.effect.refreshStatus) {
-          const targetEffects = newStatusEffects[target.id] || [];
-          const statusToRefresh = targetEffects.find(s => s.id === combo.effect.refreshStatus);
-          if (statusToRefresh) {
-            const template = STATUS_EFFECTS[combo.effect.refreshStatus];
-            statusToRefresh.duration = template?.duration || statusToRefresh.duration;
-            addCombatLog({ type: 'system', message: `${combo.comboMessage} ${target.name}'s ${combo.effect.refreshStatus} is refreshed!` });
-          }
-        }
-      }
     }
     dmg = Math.floor(dmg * critMultiplier);
     isCrit = true;
@@ -321,14 +283,6 @@ export const resolveHeroTargetDamage = (ctx, actor, target, attackResult) => {
     baseDodgeChance += target.bonusDodge;
   }
   baseDodgeChance += targetUniqueAccuracyReduction + targetUniqueMissChance;
-  // Quicksilver synergy dodge bonus
-  if (target.isHero) {
-    const targetHeroForSynergy = heroes.find(h => h.id === target.id);
-    if (targetHeroForSynergy) {
-      const targetAffixBonuses = getPassiveAffixBonuses(targetHeroForSynergy);
-      baseDodgeChance += targetAffixBonuses.synergyDodgeChance || 0;
-    }
-  }
   const dodged = Math.random() < baseDodgeChance;
 
   if (dodged) {
@@ -358,10 +312,6 @@ export const resolveHeroTargetDamage = (ctx, actor, target, attackResult) => {
     );
     totalDamageReduction += onDamageTakenResult.damageReduction;
     reflectDamage = onDamageTakenResult.reflectDamage;
-
-    // Ironclad synergy damage reduction
-    const targetSynergyBonuses = getPassiveAffixBonuses(targetHeroData);
-    totalDamageReduction += targetSynergyBonuses.synergyDamageReduction || 0;
 
     const skillOnDamageTaken = getOnDamageTakenEffects(target, dmg, actor);
     totalDamageReduction += skillOnDamageTaken.damageReduction;
@@ -862,11 +812,6 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
     const onHitResult = processOnHitAffixes(heroData, dmg, target, isCrit);
     let totalLifesteal = onHitResult.lifestealAmount || 0;
 
-    // Sustain synergy (Siphon) lifesteal
-    if (attackResult.affixBonuses?.synergyLifesteal > 0) {
-      totalLifesteal += Math.floor(dmg * attackResult.affixBonuses.synergyLifesteal);
-    }
-
     const skillOnHitEffects = getOnHitEffects(actor, dmg);
     totalLifesteal += skillOnHitEffects.healAmount;
 
@@ -1243,11 +1188,8 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
     const gold = Math.floor(baseGold * goldMultiplier);
     addGold(gold);
     const baseXpPerHero = Math.floor((target.xpReward / heroes.length) * xpMultiplier);
-    const roomEventHeroXpBonus = ctx.roomEventHeroXpBonus;
     heroes.forEach(h => {
-      // Ancient Library: specific hero gets bonus XP this room
-      const heroXpMult = roomEventHeroXpBonus?.[h.id] || 1;
-      addXpToHero(h.id, Math.floor(baseXpPerHero * heroXpMult));
+      addXpToHero(h.id, baseXpPerHero);
     });
     incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: target.templateId, isBoss: target.isBoss, isWorldBoss: target.isWorldBoss });
 
@@ -1320,7 +1262,7 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
       } else {
         addCombatLog({ type: 'system', message: `${item.name} (inventory full!)` });
       }
-    } else if (Math.random() < Math.min(1.0, (target.isBoss ? BOSS_LOOT_DROP_CHANCE : NORMAL_LOOT_DROP_CHANCE) * (dungeon.difficultyMultiplier || 1.0) * (1 + (ctx.roomEventLootBonus || 0)))) {
+    } else if (Math.random() < Math.min(1.0, (target.isBoss ? BOSS_LOOT_DROP_CHANCE : NORMAL_LOOT_DROP_CHANCE) * (dungeon.difficultyMultiplier || 1.0))) {
       const item = generateEquipment(dungeon.level, { lootMultiplier: dungeon.difficultyMultiplier || 1.0, favoredAffixes: dungeon.favoredAffixes });
       const result = processLootDrop(item);
       addEffect({ type: 'lootDrop', position: target.position, slot: item.slot, rarityColor: item.rarityColor || '#9ca3af' });

@@ -25,9 +25,7 @@ import {
 import { resetUniqueStates, processOnCombatStartUniques, processOnRoomStartUniques, getUniquePassiveBonuses } from '../game/uniqueEngine';
 import { applyStatusEffect } from '../game/statusEngine';
 import { resetBossStates } from '../game/bossEngine';
-import { processRoomEvent } from '../game/roomEventHandlers';
-import { getRaidMechanic, getRaidMastery } from '../data/raids';
-import { getDungeonAffix } from '../data/dungeonAffixes';
+
 
 /**
  * Hook for dungeon setup and exploration phase logic
@@ -80,7 +78,6 @@ export const useDungeon = ({ addEffect }) => {
     const allMonsters = placeMonsters(mazeDungeon, dungeon.level, {
       dungeonType,
       statMultiplier: raidMultiplier * difficultyMultiplier,
-      affixes: dungeonProgress?.activeAffixes || [],
       raidId: isRaid ? dungeon.raidId : undefined,
     });
 
@@ -102,9 +99,6 @@ export const useDungeon = ({ addEffect }) => {
       }
     }
 
-    // Get raid mechanic for hero debuffs
-    const raidMechanic = isRaid ? getRaidMechanic(dungeon.raidId) : null;
-
     const combatHeroes = sortedHeroes.map((hero, i) => {
       const classData = CLASSES[hero.classId];
       const stats = calculateHeroStats(hero, heroes, homesteadBonuses);
@@ -116,26 +110,6 @@ export const useDungeon = ({ addEffect }) => {
         stats.maxHp = Math.floor(stats.maxHp * (1 + elixirBuffs.defense));
       }
       if (elixirBuffs.speed > 0) stats.speed = Math.floor(stats.speed * (1 + elixirBuffs.speed));
-
-      // Apply raid-specific hero debuffs (e.g., Sunken Temple water curse: -20% speed)
-      if (isRaid && raidMechanic?.heroDebuff) {
-        const debuff = raidMechanic.heroDebuff;
-        if (debuff.stat === 'speed') {
-          stats.speed = Math.floor(stats.speed * debuff.multiplier);
-        }
-      }
-
-      // Apply raid mastery stat buffs
-      if (isRaid) {
-        const raidClears = state.stats?.raidRuns?.[dungeon.raidId] || 0;
-        const mastery = getRaidMastery(raidClears);
-        if (mastery.statBonus > 0) {
-          stats.attack = Math.floor(stats.attack * (1 + mastery.statBonus));
-          stats.defense = Math.floor(stats.defense * (1 + mastery.statBonus));
-          stats.maxHp = Math.floor(stats.maxHp * (1 + mastery.statBonus));
-          stats.speed = Math.floor(stats.speed * (1 + mastery.statBonus));
-        }
-      }
 
       // Apply unique item maxHpMultiplier (Leviathan's Heart - 2x HP)
       const uniqueBonuses = getUniquePassiveBonuses({ ...hero, stats });
@@ -156,7 +130,6 @@ export const useDungeon = ({ addEffect }) => {
         attackRange: classData.attackRange || 1,
         isHero: true,
         skills: hero.skills || [],
-        traits: hero.traits || [],
       };
     });
 
@@ -182,24 +155,9 @@ export const useDungeon = ({ addEffect }) => {
     if (isRaid && mazeDungeon.raidData) {
       addCombatLog({ type: 'system', message: `Raid: ${mazeDungeon.raidData.name}` });
       addCombatLog({ type: 'system', message: `${mazeDungeon.wingBossIds?.length || 0} wing bosses + final boss` });
-      if (raidMechanic) {
-        addCombatLog({ type: 'system', message: `${raidMechanic.name}: ${raidMechanic.description}` });
-      }
-      const raidClears = state.stats?.raidRuns?.[dungeon.raidId] || 0;
-      const masteryInfo = getRaidMastery(raidClears);
-      if (masteryInfo.label) {
-        addCombatLog({ type: 'system', message: `Raid Mastery: ${masteryInfo.label} (+${Math.round(masteryInfo.statBonus * 100)}% stats)` });
-      }
     } else {
       addCombatLog({ type: 'system', message: `Dungeon Level ${dungeon.level}` });
       addCombatLog({ type: 'system', message: `${mazeDungeon.rooms.length} rooms to explore` });
-    }
-
-    // Log active dungeon affixes
-    const affixIds = dungeon.affixes || [];
-    if (affixIds.length > 0) {
-      const affixNames = affixIds.map(id => getDungeonAffix(id)?.name).filter(Boolean);
-      addCombatLog({ type: 'system', message: `Dungeon Affixes: ${affixNames.join(', ')}` });
     }
 
     // Set initial state
@@ -233,46 +191,20 @@ export const useDungeon = ({ addEffect }) => {
 
     const { heroes: combatHeroes } = roomCombat;
 
-    // Apply bolstering affix: +X% stats per room cleared
-    const dungeon = useGameStore.getState().dungeon;
-    const affixIds = dungeon?.affixes || [];
-    let bolsteringScale = 0;
-    for (const id of affixIds) {
-      const affix = getDungeonAffix(id);
-      if (affix?.effect?.monsterScalingPerRoom) {
-        bolsteringScale += affix.effect.monsterScalingPerRoom;
-      }
-    }
-    let scaledMonsters = nearbyMonsters;
-    if (bolsteringScale > 0 && (roomCombat.roomsCleared || 0) > 0) {
-      const mult = 1 + bolsteringScale * roomCombat.roomsCleared;
-      scaledMonsters = nearbyMonsters.map(m => ({
-        ...m,
-        stats: {
-          ...m.stats,
-          maxHp: Math.floor(m.stats.maxHp * mult),
-          hp: Math.floor(m.stats.hp * mult),
-          attack: Math.floor(m.stats.attack * mult),
-          defense: Math.floor(m.stats.defense * mult),
-          speed: Math.floor(m.stats.speed * mult),
-        },
-      }));
-    }
-
     // Create turn order for this combat
-    const turnOrder = createTurnOrder(combatHeroes.filter(h => h.stats.hp > 0), scaledMonsters);
+    const turnOrder = createTurnOrder(combatHeroes.filter(h => h.stats.hp > 0), nearbyMonsters);
 
-    addCombatLog({ type: 'system', message: `${scaledMonsters.length} enemies!` });
+    addCombatLog({ type: 'system', message: `${nearbyMonsters.length} enemies!` });
 
     // Process unique ON_COMBAT_START effects (Kraken's Grasp root, Cloak of Nothing stealth)
     const aliveHeroes = combatHeroes.filter(h => h.stats.hp > 0);
     const initialStatusEffects = { ...(roomCombat.statusEffects || {}) };
     for (const hero of aliveHeroes) {
-      const combatStartResult = processOnCombatStartUniques(hero, scaledMonsters, {});
+      const combatStartResult = processOnCombatStartUniques(hero, nearbyMonsters, {});
 
       // Kraken's Grasp - root all enemies at combat start
       if (combatStartResult.rootEnemies) {
-        for (const enemy of scaledMonsters) {
+        for (const enemy of nearbyMonsters) {
           const mockEnemy = { ...enemy, statusEffects: initialStatusEffects[enemy.id] || [] };
           const statusResult = applyStatusEffect(mockEnemy, 'root', hero, {
             duration: combatStartResult.rootEnemies.duration,
@@ -291,24 +223,15 @@ export const useDungeon = ({ addEffect }) => {
 
     const combatUpdate = {
       phase: PHASES.COMBAT,
-      combatMonsters: scaledMonsters.map(m => m.id),
+      combatMonsters: nearbyMonsters.map(m => m.id),
       turnOrder,
       currentTurnIndex: 0,
       round: 1,
       statusEffects: initialStatusEffects,
     };
 
-    // If bolstering scaled monster stats, update the master monsters array
-    if (bolsteringScale > 0 && (roomCombat.roomsCleared || 0) > 0) {
-      const scaledIds = new Set(scaledMonsters.map(m => m.id));
-      const scaledMap = Object.fromEntries(scaledMonsters.map(m => [m.id, m]));
-      combatUpdate.monsters = roomCombat.monsters.map(m =>
-        scaledIds.has(m.id) ? scaledMap[m.id] : m
-      );
-    }
-
     updateRoomCombat(combatUpdate);
-  }, [addCombatLog, updateRoomCombat]);
+  }, [addCombatLog, addEffect, updateRoomCombat]);
 
   // Maximum distance a follower can be from leader before teleporting
   const MAX_FOLLOWER_DISTANCE = 6;
@@ -422,11 +345,6 @@ export const useDungeon = ({ addEffect }) => {
     if (currentRoomIndex !== -1 && currentRoomIndex !== lastRoomIndex) {
       const roomChangeUpdates = { lastExploreRoomIndex: currentRoomIndex };
 
-      // Clear per-room event modifiers from previous room
-      roomChangeUpdates.roomEventXpMultiplier = null;
-      roomChangeUpdates.roomEventHeroXpBonus = null;
-      roomChangeUpdates.roomEventSkipCombat = null;
-
       // Process unique item ON_ROOM_START effects (Ancient Bark shield)
       const newBuffs = { ...(roomCombat.buffs || {}) };
       for (const hero of aliveHeroes) {
@@ -438,26 +356,6 @@ export const useDungeon = ({ addEffect }) => {
         }
       }
       roomChangeUpdates.buffs = newBuffs;
-
-      // Process room event if this room has one
-      const currentRoom = mazeDungeon.rooms[currentRoomIndex];
-      if (currentRoom?.event) {
-        const eventResult = processRoomEvent(currentRoom.event.id, {
-          combatHeroes,
-          dungeon,
-          roomCombat,
-          addGold,
-          addCombatLog,
-          syncHeroHp,
-          processLootDrop,
-          addEffect,
-          partyPosition,
-          getState: () => useGameStore.getState(),
-        });
-        if (eventResult) {
-          Object.assign(roomChangeUpdates, eventResult);
-        }
-      }
 
       updateRoomCombat(roomChangeUpdates);
     }
@@ -472,10 +370,8 @@ export const useDungeon = ({ addEffect }) => {
     }
 
     // Passive healing during exploration (base 0.5% + infirmary bonus)
-    // Disabled in Tower of Trials — no healing between floors
-    const isTower = dungeon?.isTower;
-    const baseHealPercent = isTower ? 0 : 0.005;
-    const infirmaryBonus = isTower ? 0 : (homesteadBonuses.healBetweenDungeons || 0);
+    const baseHealPercent = 0.005;
+    const infirmaryBonus = homesteadBonuses.healBetweenDungeons || 0;
     const totalHealPercent = baseHealPercent + infirmaryBonus;
 
     // Apply passive healing and track which heroes were healed
@@ -501,31 +397,6 @@ export const useDungeon = ({ addEffect }) => {
       if (anyHealed) {
         // Sync HP to persistent store
         syncHeroHp(hpUpdates);
-      }
-    }
-
-    // Crumbling Floor event: skip all non-boss monsters in this room
-    // Re-read roomCombat since room event processing may have updated it
-    const updatedRoomCombat = useGameStore.getState().roomCombat;
-    if (updatedRoomCombat?.roomEventSkipCombat) {
-      const roomToSkip = mazeDungeon.rooms[currentRoomIndex];
-      if (roomToSkip) {
-        // Kill all non-boss monsters positioned within this room
-        const monstersToSkip = monsters.filter(m => {
-          if (m.stats.hp <= 0 || m.isBoss) return false;
-          return m.position.x >= roomToSkip.x && m.position.x < roomToSkip.x + roomToSkip.width &&
-                 m.position.y >= roomToSkip.y && m.position.y < roomToSkip.y + roomToSkip.height;
-        });
-        if (monstersToSkip.length > 0) {
-          const updatedMonsters = monsters.map(m => {
-            if (monstersToSkip.some(ms => ms.id === m.id)) {
-              return { ...m, stats: { ...m.stats, hp: 0 } };
-            }
-            return m;
-          });
-          updateRoomCombat({ monsters: updatedMonsters, roomEventSkipCombat: null });
-          return true;
-        }
       }
     }
 

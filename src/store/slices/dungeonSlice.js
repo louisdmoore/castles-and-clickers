@@ -1,14 +1,9 @@
-import { RAIDS, isRaidUnlocked, getRaidDifficultyTier, getRaidMastery } from '../../data/raids';
+import { RAIDS, isRaidUnlocked, getRaidDifficultyTier } from '../../data/raids';
 import { getMaxPartySize, getDungeonTier } from '../../data/milestones';
 import { DUNGEON_THEMES } from '../../data/dungeonThemes';
-import { getAscensionDungeonCap, hasAscensionUnlock } from '../../data/ascensionMilestones';
-import { rollDungeonAffixes } from '../../data/dungeonAffixes';
+import { getAscensionDungeonCap } from '../../data/ascensionMilestones';
 import { clearStatCache, setAscensionCount } from '../helpers/statCalculator';
 import throttledStorage from '../helpers/throttledStorage';
-
-// Tower of Trials: map floor number to effective dungeon level
-// Floors 1-5 map to D10-D14, then +1 per floor, scaling beyond max dungeon level
-const getTowerEffectiveLevel = (floor) => Math.min(9 + floor, 50);
 
 export const createDungeonSlice = (set, get) => ({
   // State
@@ -23,7 +18,6 @@ export const createDungeonSlice = (set, get) => ({
     completedRaidWings: [],
     weeklyRaidCompletions: [],
     lastWeeklyReset: Date.now(),
-    activeAffixes: [],
   },
   dungeonSettings: {
     type: 'normal',
@@ -49,8 +43,6 @@ export const createDungeonSlice = (set, get) => ({
   lastRunSummary: null,
   lastDeathRecap: null,
   prepPhase: null, // { nextLevel, success, dungeonType }
-  challengeScores: { tower: { best: 0, bestSeed: null } },
-  towerState: null, // { floor, seed, active } — transient, not persisted
 
   // Actions
   startDungeon: (level, options = {}) => {
@@ -75,15 +67,6 @@ export const createDungeonSlice = (set, get) => ({
     // Get difficulty multiplier from settings
     const difficultyMultiplier = get().dungeonSettings?.difficultyMultiplier || 1.0;
 
-    // Roll dungeon affixes based on difficulty (2.0x→1, 2.5x→1-2, 3.0x→2)
-    let affixes = options.affixes || [];
-    if (affixes.length === 0 && difficultyMultiplier >= 2.0) {
-      const affixCount = difficultyMultiplier >= 3.0 ? 2
-        : difficultyMultiplier >= 2.5 ? (Math.random() < 0.5 ? 2 : 1)
-        : 1;
-      affixes = rollDungeonAffixes(affixCount);
-    }
-
     // Look up favored affixes from dungeon theme for loot targeting
     const tier = getDungeonTier(cappedLevel);
     const theme = DUNGEON_THEMES[tier.theme];
@@ -99,14 +82,12 @@ export const createDungeonSlice = (set, get) => ({
         activeBuffs,
         difficultyMultiplier,
         favoredAffixes,
-        affixes: affixes.map(a => a.id),
         startTime: Date.now(),
       },
       pendingDungeonBuffs: [],
       dungeonProgress: {
         ...dungeonProgress,
         currentType: dungeonType,
-        activeAffixes: affixes,
       },
       combat: null,
       roomCombat: { phase: 'setup', tick: 0 }, // Initialize so game loop can start
@@ -134,7 +115,6 @@ export const createDungeonSlice = (set, get) => ({
 
     // Snapshot dungeon data before clearing state
     const dungeonLevel = get().dungeon?.level;
-    const dungeonDifficulty = get().dungeon?.difficultyMultiplier || 1.0;
     const runSummary = {
       success,
       dungeonLevel,
@@ -204,7 +184,6 @@ export const createDungeonSlice = (set, get) => ({
         roomCombat: null,
         isRunning: false,
         consumables: [], // Clear consumables on dungeon exit
-        reforgeCount: 0, // Reset reforge cost escalation
         lastDungeonSuccess: success, // Track victory or defeat for transition screen
         lastRunSummary: totalDamage > 0 ? runSummary : null,
         lastDeathRecap: deathRecap,
@@ -216,7 +195,6 @@ export const createDungeonSlice = (set, get) => ({
         dungeonProgress: {
           ...state.dungeonProgress,
           currentType: 'normal',
-          activeAffixes: [],
         },
       };
 
@@ -289,14 +267,6 @@ export const createDungeonSlice = (set, get) => ({
     // Check for newly unlocked features (progressive disclosure)
     get().checkFeatureUnlocks();
 
-    // Award essence for high-difficulty dungeon clears (2.0x+ difficulty)
-    if (success && dungeonDifficulty >= 2.0) {
-      const essenceAmount = dungeonDifficulty >= 3.0 ? 20
-        : dungeonDifficulty >= 2.5 ? 15
-        : 10;
-      get().addEssence(essenceAmount);
-    }
-
     // Immediate save on dungeon completion
     throttledStorage.flush();
 
@@ -327,7 +297,6 @@ export const createDungeonSlice = (set, get) => ({
           ...state.dungeonProgress,
           currentType: 'normal',
           currentRaidId: null,
-          activeAffixes: [],
         },
         ...raidCleanup,
       };
@@ -372,7 +341,7 @@ export const createDungeonSlice = (set, get) => ({
     setAscensionCount(newCount);
     clearStatCache();
 
-    // Reset heroes: level to 10, XP to 0, clear skills (free respec), keep equipment/traits/class
+    // Reset heroes: level to 10, XP to 0, clear skills (free respec), keep equipment/class
     const resetHero = (hero) => {
       if (!hero) return hero;
       return {
@@ -498,8 +467,7 @@ export const createDungeonSlice = (set, get) => ({
       { key: 'shopUnlocked', check: () => highestDungeonCleared >= 5, message: 'The Shop is open — buy gear and consumables!' },
       { key: 'difficultyUnlocked', check: () => highestDungeonCleared >= 10, message: 'Difficulty Slider unlocked — risk vs. reward!' },
       { key: 'raidsUnlocked', check: () => highestDungeonCleared >= 12, message: 'Raids unlocked — face the greatest challenges!' },
-      { key: 'reforgeUnlocked', check: () => highestDungeonCleared >= 15, message: 'The Forge is open — reforge your gear!' },
-      { key: 'lootTargetingUnlocked', check: () => highestDungeonCleared >= 20, message: 'Dungeon Intel — each zone favors different loot!' },
+{ key: 'lootTargetingUnlocked', check: () => highestDungeonCleared >= 20, message: 'Dungeon Intel — each zone favors different loot!' },
       { key: 'ascensionPrompt', check: () => highestDungeonCleared >= 30, message: 'You have mastered the dungeon. A new path awaits...' },
     ];
 
@@ -535,7 +503,7 @@ export const createDungeonSlice = (set, get) => ({
     // Get difficulty tier config
     const tier = getRaidDifficultyTier(difficulty);
 
-    // Check ascension requirement (Mythic requires Ascension 3)
+    // Check ascension requirement
     if (tier.ascensionRequired > 0 && (ascension?.count || 0) < tier.ascensionRequired) return false;
 
     // Check and deduct gold cost (Heroic costs 50,000 gold)
@@ -547,9 +515,6 @@ export const createDungeonSlice = (set, get) => ({
       }
       set(state => ({ gold: state.gold - tier.goldCost }));
     }
-
-    // Roll dungeon affixes for Mythic
-    const raidAffixes = tier.affixCount > 0 ? rollDungeonAffixes(tier.affixCount) : [];
 
     // Snapshot hero HP at raid start
     const hpSnapshot = {};
@@ -572,7 +537,6 @@ export const createDungeonSlice = (set, get) => ({
         ...state.dungeonProgress,
         currentType: 'raid',
         currentRaidId: raidId,
-        activeAffixes: raidAffixes,
       },
       dungeon: {
         level: raid.requiredLevel,
@@ -581,9 +545,8 @@ export const createDungeonSlice = (set, get) => ({
         raidId,
         difficultyMultiplier: tier.statMultiplier,
         raidDifficulty: difficulty,
-        raidUniqueDropBonus: tier.uniqueDropBonus + getRaidMastery(get().stats?.raidRuns?.[raidId] || 0).uniqueDropBonus,
+        raidUniqueDropBonus: tier.uniqueDropBonus,
         activeBuffs: pendingDungeonBuffs.length > 0 ? [...pendingDungeonBuffs] : [],
-        affixes: raidAffixes.map(a => a.id),
       },
       pendingDungeonBuffs: [],
       roomCombat: null,
@@ -630,7 +593,6 @@ export const createDungeonSlice = (set, get) => ({
     if (!raid) return;
 
     // Record completion
-    const raidDifficulty = raidState.difficulty || 'normal';
     const completionKey = `${raidState.raidId}:complete`;
 
     // Collect loot info from combat log
@@ -673,12 +635,6 @@ export const createDungeonSlice = (set, get) => ({
       roomCombat: null,
       isRunning: false,
     }));
-
-    // Award essence for raid completion
-    const essenceReward = raidDifficulty === 'mythic' ? 200
-      : raidDifficulty === 'heroic' ? 100
-      : 50;
-    get().addEssence(essenceReward);
 
     // Immediate save on raid completion
     throttledStorage.flush();
@@ -727,200 +683,4 @@ export const createDungeonSlice = (set, get) => ({
     });
   },
 
-  // ========================================
-  // TOWER OF TRIALS (CHALLENGE MODE)
-  // ========================================
-
-  canAccessTower: () => {
-    const { ascension, dungeon } = get();
-    return hasAscensionUnlock(ascension?.count || 0, 'challenge_access') && !dungeon;
-  },
-
-  startTowerOfTrials: () => {
-    const { heroes, initializeHeroHp, initRunStats } = get();
-    if (heroes.filter(Boolean).length === 0) return false;
-
-    // Generate a seed for this run
-    const seed = Math.floor(Math.random() * 0xFFFFFF).toString(16).toUpperCase().padStart(6, '0');
-
-    initializeHeroHp();
-    initRunStats();
-
-    const startFloor = 1;
-    // Tower uses dungeon level scaling: floor N maps to effective dungeon level
-    const effectiveLevel = getTowerEffectiveLevel(startFloor);
-
-    // Look up theme for flavor
-    const tier = getDungeonTier(Math.min(effectiveLevel, 30));
-    const theme = DUNGEON_THEMES[tier.theme];
-
-    set({
-      towerState: { floor: startFloor, seed, active: true },
-      dungeon: {
-        level: effectiveLevel,
-        currentRoom: 0,
-        totalRooms: 5 + Math.floor(effectiveLevel / 2),
-        completed: false,
-        type: 'tower',
-        isTower: true,
-        towerFloor: startFloor,
-        towerSeed: seed,
-        activeBuffs: [],
-        difficultyMultiplier: 1.0,
-        favoredAffixes: theme?.favoredAffixes || [],
-      },
-      dungeonProgress: {
-        ...get().dungeonProgress,
-        currentType: 'tower',
-        activeAffixes: [],
-      },
-      combat: null,
-      roomCombat: { phase: 'setup', tick: 0 },
-      combatLog: [],
-      isRunning: true,
-      prepPhase: null,
-      lastRunSummary: null,
-      lastDeathRecap: null,
-    });
-    return true;
-  },
-
-  // Called when a tower floor is completed — advance to next floor without healing
-  advanceTowerFloor: () => {
-    const { towerState, initRunStats } = get();
-    if (!towerState?.active) return;
-
-    const nextFloor = towerState.floor + 1;
-    const effectiveLevel = getTowerEffectiveLevel(nextFloor);
-
-    const tier = getDungeonTier(Math.min(effectiveLevel, 30));
-    const theme = DUNGEON_THEMES[tier.theme];
-
-    // Reset per-run stats for the new floor
-    initRunStats();
-
-    set(state => ({
-      towerState: { ...state.towerState, floor: nextFloor },
-      dungeon: {
-        level: effectiveLevel,
-        currentRoom: 0,
-        totalRooms: 5 + Math.floor(Math.min(effectiveLevel, 30) / 2),
-        completed: false,
-        type: 'tower',
-        isTower: true,
-        towerFloor: nextFloor,
-        towerSeed: state.towerState.seed,
-        activeBuffs: [],
-        difficultyMultiplier: 1.0,
-        favoredAffixes: theme?.favoredAffixes || [],
-      },
-      combat: null,
-      roomCombat: { phase: 'setup', tick: 0 },
-      combatLog: [],
-      isRunning: true,
-    }));
-  },
-
-  // Called when the party wipes in the tower — record score and end
-  endTowerRun: () => {
-    const { towerState, runStats, heroes, deathLog } = get();
-    if (!towerState?.active) return;
-
-    const floor = towerState.floor;
-    const seed = towerState.seed;
-
-    // Build run summary
-    const runSummary = {
-      success: false,
-      dungeonLevel: getTowerEffectiveLevel(floor),
-      timestamp: Date.now(),
-      heroStats: {},
-      isTower: true,
-      towerFloor: floor,
-    };
-    let totalDamage = 0;
-    let mvpId = null;
-    let mvpDamage = 0;
-    let biggestHit = 0;
-    let biggestHitHero = null;
-
-    for (const hero of heroes.filter(Boolean)) {
-      const stats = runStats[hero.id];
-      if (!stats) continue;
-      runSummary.heroStats[hero.id] = { name: hero.name, classId: hero.classId, ...stats };
-      totalDamage += stats.damageDealt || 0;
-      if ((stats.damageDealt || 0) > mvpDamage) {
-        mvpDamage = stats.damageDealt;
-        mvpId = hero.id;
-      }
-      if ((stats.biggestHit || 0) > biggestHit) {
-        biggestHit = stats.biggestHit;
-        biggestHitHero = hero.name;
-      }
-    }
-    runSummary.totalDamage = totalDamage;
-    runSummary.mvpId = mvpId;
-    runSummary.biggestHit = biggestHit;
-    runSummary.biggestHitHero = biggestHitHero;
-
-    // Build death recap
-    let deathRecap = null;
-    if (deathLog.length > 0) {
-      deathRecap = {
-        dungeonLevel: getTowerEffectiveLevel(floor),
-        timestamp: Date.now(),
-        deaths: deathLog,
-        heroStats: {},
-        isTower: true,
-        towerFloor: floor,
-      };
-      for (const hero of heroes.filter(Boolean)) {
-        const stats = runStats[hero.id];
-        if (!stats) continue;
-        deathRecap.heroStats[hero.id] = {
-          name: hero.name,
-          classId: hero.classId,
-          damageTaken: stats.damageTaken || 0,
-          healingReceived: stats.healingReceived || 0,
-          damageDealt: stats.damageDealt || 0,
-        };
-      }
-    }
-
-    // Update high score
-    set(state => {
-      const currentBest = state.challengeScores?.tower?.best || 0;
-      const isNewBest = floor > currentBest;
-
-      return {
-        towerState: null,
-        dungeon: null,
-        combat: null,
-        roomCombat: null,
-        isRunning: false,
-        lastRunSummary: totalDamage > 0 ? runSummary : null,
-        lastDeathRecap: deathRecap,
-        lastTowerResult: { floor, seed, isNewBest },
-        prepPhase: null, // No prep phase after tower — go back to menu
-        challengeScores: {
-          ...state.challengeScores,
-          tower: {
-            best: isNewBest ? floor : currentBest,
-            bestSeed: isNewBest ? seed : state.challengeScores?.tower?.bestSeed,
-          },
-        },
-        dungeonProgress: {
-          ...state.dungeonProgress,
-          currentType: 'normal',
-          activeAffixes: [],
-        },
-      };
-    });
-
-    // Reset HP and process pending changes
-    get().resetHeroHp();
-    throttledStorage.flush();
-  },
-
-  dismissTowerResult: () => set({ lastTowerResult: null }),
 });

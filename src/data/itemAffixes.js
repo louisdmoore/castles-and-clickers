@@ -301,71 +301,10 @@ export const ITEM_AFFIXES = {
   },
 };
 
-// Synergy bonuses granted when a hero has 2+ affixes sharing a tag
-// Achievable pairs:
-//   speed: of_haste (weapon/accessory) + of_swiftness (weapon/accessory)
-//   fortify: of_vitality + of_warding + of_fortitude + of_the_titan (armor/accessory combos)
-//   healing: of_regeneration + of_the_phoenix (armor/accessory)
-//   execution: executioner (prefix) + of_slaying (suffix) on same weapon
-//   berserker: berserker (prefix) + of_fortitude or of_the_titan (armor suffix)
-//   sustain: vampiric (prefix) + of_regeneration (armor/accessory suffix)
-export const AFFIX_SYNERGY_BONUSES = {
-  speed: {
-    minCount: 2,
-    label: 'Quicksilver',
-    description: '+10% dodge chance',
-    bonus: { dodgeChance: 0.10 },
-  },
-  fortify: {
-    minCount: 2,
-    label: 'Ironclad',
-    description: '+10% damage reduction',
-    bonus: { damageReduction: 0.10 },
-  },
-  healing: {
-    minCount: 2,
-    label: 'Lifebond',
-    description: '+15% healing received',
-    bonus: { healingReceived: 0.15 },
-  },
-  execution: {
-    minCount: 2,
-    label: 'Headsman',
-    description: '+20% damage to enemies below 30% HP',
-    bonus: { executeBonus: 0.20, executeThreshold: 0.30 },
-  },
-  berserker: {
-    minCount: 2,
-    label: 'Blood Rage',
-    description: '+20% damage when below 50% HP',
-    bonus: { lowHpDamageBonus: 0.20, lowHpThreshold: 0.50 },
-  },
-  sustain: {
-    minCount: 2,
-    label: 'Siphon',
-    description: '+8% lifesteal',
-    bonus: { lifesteal: 0.08 },
-  },
-};
-
-// Count matching affix tags across a hero's equipped items and return active synergies
-export const getActiveSynergies = (affixIds) => {
-  const tagCounts = {};
-  for (const id of affixIds) {
-    const affix = ITEM_AFFIXES[id];
-    if (!affix?.tags) continue;
-    for (const tag of affix.tags) {
-      tagCounts[tag] = (tagCounts[tag] || 0) + 1;
-    }
-  }
-  const active = [];
-  for (const [tag, synergy] of Object.entries(AFFIX_SYNERGY_BONUSES)) {
-    if ((tagCounts[tag] || 0) >= synergy.minCount) {
-      active.push({ tag, ...synergy });
-    }
-  }
-  return active;
-};
+// Affix synergy system removed in Phase 1 (The Cut)
+// Stub exports to prevent import errors
+export const AFFIX_SYNERGY_BONUSES = {};
+export const getActiveSynergies = () => [];
 
 // Get affix by ID
 export const getAffix = (id) => ITEM_AFFIXES[id];

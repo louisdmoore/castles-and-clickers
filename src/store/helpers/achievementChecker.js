@@ -22,7 +22,6 @@ const getStatValue = (statKey, state) => {
     case 'uniqueItemsFound': return (state.ownedUniques || []).length;
     case 'rareItemsFound': return state.stats?.rareItemsFound || 0;
     case 'epicItemsFound': return state.stats?.epicItemsFound || 0;
-    case 'towerHighScore': return state.challengeScores?.tower || 0;
     case 'homesteadUpgrades': {
       const h = state.homestead || {};
       return Object.values(h).reduce((sum, v) => sum + (typeof v === 'number' ? v : 0), 0);

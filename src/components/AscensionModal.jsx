@@ -134,7 +134,7 @@ const AscensionModal = ({ isOpen, onClose }) => {
                 What's Preserved
               </div>
               <ul className="space-y-1 text-xs text-[var(--color-text-dim)]">
-                <li>Heroes (classes, names, traits, equipped gear)</li>
+                <li>Heroes (classes, names, equipped gear)</li>
                 <li>Homestead building levels</li>
                 <li>Unique item collection</li>
                 <li>Lifetime stats and achievements</li>

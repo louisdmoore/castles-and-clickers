@@ -46,7 +46,6 @@ export const useGameStore = create(
 
           set({
             gold: 100,
-            essence: 0,
             heroes: [],
             bench: [],
             usedSlotDiscounts: [],
@@ -91,7 +90,6 @@ export const useGameStore = create(
               autoEquipUpgrades: true,
               classPriority: { ...DEFAULT_CLASS_PRIORITY },
             },
-            reforgeCount: 0,
             lootNotifications: [],
             homestead: {
               barracks: 0,
@@ -119,7 +117,6 @@ export const useGameStore = create(
             saveStatus: { success: true, timestamp: Date.now() },
             toasts: [],
             ascension: { count: 0 },
-            challengeScores: { tower: { best: 0, bestSeed: null } },
             dungeonSettings: {
               type: 'normal',
               autoAdvance: false,
@@ -138,7 +135,6 @@ export const useGameStore = create(
               completedRaidWings: [],
               weeklyRaidCompletions: [],
               lastWeeklyReset: Date.now(),
-              activeAffixes: [],
             },
             raidState: {
               active: false,
@@ -224,9 +220,7 @@ export const useGameStore = create(
             uniqueLevels: persistedState?.uniqueLevels || {},
             shopConsumables: persistedState?.shopConsumables || [],
             pendingDungeonBuffs: persistedState?.pendingDungeonBuffs || [],
-            challengeScores: persistedState?.challengeScores || { tower: { best: 0, bestSeed: null } },
             earnedAchievements: persistedState?.earnedAchievements || [],
-            essence: persistedState?.essence || 0,
             stats: {
               totalGoldEarned: 0,
               totalGoldSpent: 0,

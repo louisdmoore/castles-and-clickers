@@ -2,7 +2,6 @@ import { useEffect, useCallback, useRef } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { findExplorationTarget } from '../game/mazeGenerator';
 import { PHASES } from '../game/constants';
-import { getDungeonAffix } from '../data/dungeonAffixes';
 
 /**
  * Hook for game loop orchestration
@@ -87,12 +86,7 @@ export const useGameLoop = ({
           }
           // OPTIMIZATION: Single batched update
           updateRoomCombat({ phase: PHASES.COMPLETE, tick: 0 });
-          let affixGoldMult = 1;
-          for (const id of (dungeon?.affixes || [])) {
-            const affix = getDungeonAffix(id);
-            if (affix?.effect?.goldDropMultiplier) affixGoldMult *= affix.effect.goldDropMultiplier;
-          }
-          const goldMultiplier = (1 + (homesteadBonuses.goldFind || 0)) * affixGoldMult;
+          const goldMultiplier = (1 + (homesteadBonuses.goldFind || 0));
           const bonus = Math.floor(100 * dungeon.level * goldMultiplier);
           addGold(bonus);
           incrementStat('totalDungeonsCleared');
@@ -143,13 +137,7 @@ export const useGameLoop = ({
         resetLastProcessedTurn();
 
         // Check dungeon type for completion handling
-        if (dungeon.isTower) {
-          // Tower of Trials: advance to next floor (no healing)
-          const { advanceTowerFloor } = useGameStore.getState();
-          clearRoomCombat();
-          addCombatLog({ type: 'system', message: `Floor ${dungeon.towerFloor} cleared!` });
-          advanceTowerFloor();
-        } else if (dungeon.isRaid) {
+        if (dungeon.isRaid) {
           const { completeRaid } = useGameStore.getState();
           completeRaid();
           clearRoomCombat();
@@ -172,12 +160,7 @@ export const useGameLoop = ({
         resetLastProcessedTurn();
         incrementStat('totalDeaths');
 
-        if (dungeon.isTower) {
-          // Tower of Trials: end the run, record score
-          const { endTowerRun } = useGameStore.getState();
-          clearRoomCombat();
-          endTowerRun();
-        } else if (dungeon.isRaid) {
+        if (dungeon.isRaid) {
           const { abandonRaid } = useGameStore.getState();
           abandonRaid();
           clearRoomCombat();

@@ -22,7 +22,6 @@ import { ChartIcon } from './icons/ui';
 import WelcomeBackModal from './WelcomeBackModal';
 import RunSummary from './RunSummary';
 import DeathRecap from './DeathRecap';
-import TowerResult from './TowerResult';
 import LootNotifications from './LootNotifications';
 import ToastContainer from './ui/Toast';
 import UniqueDropCelebration from './UniqueDropCelebration';
@@ -119,7 +118,7 @@ const GameLayout = () => {
       setDungeonTransition({
         level: dungeon.level,
         type: dungeon.type || 'normal',
-        towerFloor: dungeon.towerFloor,
+
         isRetry,
       });
       const timer = setTimeout(() => setDungeonTransition(null), 1200);
@@ -132,7 +131,7 @@ const GameLayout = () => {
       setDungeonTransition({
         level: dungeon.level,
         type: dungeon.type || 'normal',
-        towerFloor: dungeon.towerFloor,
+
         isRetry: false,
       });
       const timer = setTimeout(() => setDungeonTransition(null), 1200);
@@ -346,7 +345,6 @@ const GameLayout = () => {
       <WelcomeBackModal progress={offlineProgress} onClose={() => setOfflineProgress(null)} />
       <RunSummary />
       <DeathRecap />
-      <TowerResult />
       <LootNotifications />
       <ToastContainer />
       <UniqueDropCelebration />

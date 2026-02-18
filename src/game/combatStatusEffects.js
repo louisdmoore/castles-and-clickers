@@ -7,8 +7,7 @@ import { processStatusEffectsOnTurnStart } from './statusEngine';
 import { processOnTurnStartAffixes, checkPhoenixRevive } from './affixEngine';
 import { getPerTurnEffects, getHotBonuses, getDotLifestealPercent, hasArmorVsDot } from './skillEngine';
 import { getHeroHealingReduction, tickUniqueEffects } from './uniqueEngine';
-import { getHeroTrait } from '../data/heroTraits';
-import { getActiveCombos } from '../data/statusEffects';
+
 import { rollRaidDrop, getWingBoss } from '../data/raids';
 import { generateEquipment } from '../data/equipment';
 import { buildHeroHpMap, getNextTurnState, handleUnitDeath } from './combatHelpers';
@@ -66,23 +65,6 @@ export const processHeroTurnStartAffixes = (ctx, actor) => {
         // Don't update state here - will be applied at end of turn to avoid loop
       }
 
-      // Enduring trait: 1% max HP regen per turn
-      if (actor.stats.hp < actor.stats.maxHp) {
-        for (const traitId of (heroData.traits || [])) {
-          const trait = getHeroTrait(traitId);
-          if (trait?.effect?.regenPercent) {
-            let traitRegen = Math.floor(actor.stats.maxHp * trait.effect.regenPercent);
-            const regenReduction = getHeroHealingReduction(heroData);
-            if (regenReduction > 0) traitRegen = Math.floor(traitRegen * (1 - regenReduction));
-            if (traitRegen > 0) {
-              ctx.regenHealAmount = (ctx.regenHealAmount || 0) + Math.min(traitRegen, actor.stats.maxHp - actor.stats.hp);
-              ctx.regenHeroId = actor.id;
-              ctx.regenHeroPosition = actor.position;
-              ctx.regenHeroName = actor.name;
-            }
-          }
-        }
-      }
     }
   } else {
     // Process monster regen passive at turn start
@@ -241,16 +223,6 @@ export const processStatusEffectDamage = (ctx, actor) => {
   // Apply DOT damage
   if (statusResult.damage > 0) {
     let dotDamage = statusResult.damage;
-
-    // Check on_dot_tick combos (Toxic Fire, Exposed Wound)
-    const dotTargetStatusIds = actorEffects.map(s => s.id);
-    const dotCombos = getActiveCombos(dotTargetStatusIds, 'on_dot_tick');
-    for (const combo of dotCombos) {
-      if (combo.effect.dotDamageMultiplier) {
-        dotDamage = Math.floor(dotDamage * combo.effect.dotDamageMultiplier);
-        addCombatLog({ type: 'system', message: `${combo.comboMessage} ${actor.name} suffers amplified DoT damage!` });
-      }
-    }
 
     // Check for Lich Form dotImmune buff
     const actorBuffs = newBuffs[actor.id] || {};

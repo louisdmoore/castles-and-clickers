@@ -1,6 +1,6 @@
 // Affix processing engine for equipment special effects
 
-import { ITEM_AFFIXES, AFFIX_TRIGGER, getActiveSynergies } from '../data/itemAffixes';
+import { ITEM_AFFIXES, AFFIX_TRIGGER } from '../data/itemAffixes';
 
 /**
  * Get all affixes from a hero's equipped items
@@ -47,14 +47,7 @@ export const getHeroAffixIds = (hero) => {
 };
 
 /**
- * Get active synergy bonuses for a hero based on affix tag matching
- */
-export const getHeroSynergies = (hero) => {
-  return getActiveSynergies(getHeroAffixIds(hero));
-};
-
-/**
- * Process PASSIVE affixes - returns stat modifiers including synergy bonuses
+ * Process PASSIVE affixes - returns stat modifiers from individual affixes
  */
 export const getPassiveAffixBonuses = (hero) => {
   const bonuses = {
@@ -64,16 +57,6 @@ export const getPassiveAffixBonuses = (hero) => {
     damageMultiplier: 1,
     damageTakenMultiplier: 1,
     debuffDurationReduction: 0,
-    // Synergy-derived bonuses (populated below)
-    synergyDodgeChance: 0,
-    synergyDamageReduction: 0,
-    synergyHealingReceived: 0,
-    synergyExecuteBonus: 0,
-    synergyExecuteThreshold: 0,
-    synergyLowHpDamageBonus: 0,
-    synergyLowHpThreshold: 0,
-    synergyLifesteal: 0,
-    activeSynergies: [],
   };
 
   const passiveAffixes = getAffixesByTrigger(hero, AFFIX_TRIGGER.PASSIVE);
@@ -97,25 +80,6 @@ export const getPassiveAffixBonuses = (hero) => {
     if (effect.damageTakenIncrease) {
       bonuses.damageTakenMultiplier += effect.damageTakenIncrease;
     }
-  }
-
-  // Apply synergy bonuses from tag matching
-  const synergies = getHeroSynergies(hero);
-  bonuses.activeSynergies = synergies;
-  for (const synergy of synergies) {
-    const b = synergy.bonus;
-    if (b.dodgeChance) bonuses.synergyDodgeChance += b.dodgeChance;
-    if (b.damageReduction) bonuses.synergyDamageReduction += b.damageReduction;
-    if (b.healingReceived) bonuses.synergyHealingReceived += b.healingReceived;
-    if (b.executeBonus) {
-      bonuses.synergyExecuteBonus += b.executeBonus;
-      bonuses.synergyExecuteThreshold = Math.max(bonuses.synergyExecuteThreshold, b.executeThreshold || 0);
-    }
-    if (b.lowHpDamageBonus) {
-      bonuses.synergyLowHpDamageBonus += b.lowHpDamageBonus;
-      bonuses.synergyLowHpThreshold = Math.max(bonuses.synergyLowHpThreshold, b.lowHpThreshold || 0);
-    }
-    if (b.lifesteal) bonuses.synergyLifesteal += b.lifesteal;
   }
 
   return bonuses;

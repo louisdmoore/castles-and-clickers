@@ -2,94 +2,14 @@ import { useState, useMemo } from 'react';
 import { useGameStore, calculateHeroStats, calculateSellValue, STAT_PRIORITIES } from '../store/gameStore';
 import { CLASSES } from '../data/classes';
 import { canClassUseEquipment } from '../data/equipment';
-import { ITEM_AFFIXES, getActiveSynergies } from '../data/itemAffixes';
+import { ITEM_AFFIXES } from '../data/itemAffixes';
 import { scaleUniqueStats } from '../data/uniqueItems';
 import HeroIcon from './icons/HeroIcon';
 import ItemIcon, { WeaponSlotIcon, ArmorSlotIcon, AccessorySlotIcon } from './icons/ItemIcon';
-import { GoldIcon, PartyIcon, StarIcon, ArrowUpIcon, SparkleIcon, ForgeIcon, LockIcon } from './icons/ui';
+import { GoldIcon, PartyIcon, StarIcon, ArrowUpIcon, SparkleIcon } from './icons/ui';
 import HelpTooltip from './ui/HelpTooltip';
 import Tooltip from './ui/Tooltip';
 import EquipmentTooltip from './ui/EquipmentTooltip';
-
-// Cost helper for reforge display (mirrors store logic)
-const getReforgeCostForDisplay = (count, ascensionCount, locked) => {
-  const COSTS = [2000, 3000, 5000, 8000, 12000];
-  const baseCost = count < 5 ? COSTS[count] : 12000 + (count - 4) * 5000;
-  return Math.floor(baseCost * (1 + ascensionCount * 0.5) * (locked ? 2 : 1));
-};
-
-// Reforging panel for equipped items
-const ReforgePanel = ({ item }) => {
-  const { gold, reforgeCount, reforgeItem, getReforgeCost, ascension } = useGameStore();
-  const [lockedIndex, setLockedIndex] = useState(null);
-
-  const affixes = item.affixes || [];
-  const hasLock = lockedIndex !== null;
-  const cost = getReforgeCost(hasLock);
-  const canAfford = gold >= cost;
-  const nextCost = getReforgeCostForDisplay(reforgeCount + 1, ascension?.count || 0, false);
-
-  const handleReforge = () => {
-    const success = reforgeItem(item.id, lockedIndex);
-    if (success) setLockedIndex(null);
-  };
-
-  return (
-    <div className="bg-gray-900 rounded p-2 space-y-1.5">
-      <div className="text-gray-400 text-xs font-medium flex items-center gap-1">
-        <ForgeIcon size={14} />
-        Reforge
-        <span className="text-gray-600 text-[10px] ml-auto">#{reforgeCount + 1}</span>
-      </div>
-      {affixes.length > 0 && (
-        <div className="space-y-0.5">
-          <div className="text-[10px] text-gray-500">Click affix to lock (2x cost):</div>
-          {affixes.map((affixId, idx) => {
-            const affix = ITEM_AFFIXES[affixId];
-            if (!affix) return null;
-            const isLocked = lockedIndex === idx;
-            return (
-              <button
-                key={affixId}
-                onClick={() => setLockedIndex(isLocked ? null : idx)}
-                className={`w-full text-left px-2 py-1 rounded text-[11px] flex items-center gap-1.5 transition-all ${
-                  isLocked
-                    ? 'bg-yellow-600/20 border border-yellow-500/60'
-                    : 'bg-gray-800 border border-gray-700 hover:border-gray-500'
-                }`}
-                aria-label={`${isLocked ? 'Unlock' : 'Lock'} ${affix.name}`}
-              >
-                {isLocked && <LockIcon size={10} />}
-                <span className="text-purple-400 font-medium">{affix.name}</span>
-                <span className="text-gray-500 text-[10px] truncate">{affix.description}</span>
-              </button>
-            );
-          })}
-        </div>
-      )}
-      <button
-        onClick={handleReforge}
-        disabled={!canAfford}
-        className={`w-full py-1.5 rounded text-xs font-medium flex items-center justify-center gap-1 ${
-          canAfford
-            ? 'bg-purple-600 hover:bg-purple-500 text-white'
-            : 'bg-gray-700 text-gray-500 cursor-not-allowed'
-        }`}
-        aria-label={`Reforge item for ${cost.toLocaleString()} gold`}
-      >
-        <ForgeIcon size={14} />
-        Reforge
-        <GoldIcon size={12} />
-        <span>{cost.toLocaleString()}</span>
-      </button>
-      {reforgeCount > 0 && (
-        <div className="text-[9px] text-gray-600 text-center">
-          Next: {nextCost.toLocaleString()}g &middot; Resets on dungeon clear
-        </div>
-      )}
-    </div>
-  );
-};
 
 // Helper to get affix descriptions for an item
 const getAffixDescriptions = (item) => {
@@ -281,7 +201,6 @@ const EquipmentScreen = () => {
     updateEquipmentSettings,
     setClassPriority,
     compareToEquipped,
-    highestDungeonCleared,
   } = useGameStore();
 
   const [selectedHeroId, setSelectedHeroId] = useState(heroes[0]?.id || null);
@@ -291,16 +210,6 @@ const EquipmentScreen = () => {
   const selectedHero = heroes.find(h => h.id === selectedHeroId);
   const stats = selectedHero ? calculateHeroStats(selectedHero, heroes) : null;
   const highestPartyLevel = heroes.length > 0 ? Math.max(...heroes.map(h => h.level)) : 1;
-
-  const heroSynergies = useMemo(() => {
-    if (!selectedHero) return [];
-    const affixIds = [];
-    for (const slot of ['weapon', 'armor', 'accessory']) {
-      const item = selectedHero.equipment[slot];
-      if (item?.affixes) affixIds.push(...item.affixes);
-    }
-    return getActiveSynergies(affixIds);
-  }, [selectedHero]);
 
   const processedInventory = useMemo(() => {
     let items = [...inventory];
@@ -372,19 +281,6 @@ const EquipmentScreen = () => {
           </div>
         )}
 
-        {/* Active Synergies */}
-        {heroSynergies.length > 0 && (
-          <div className="bg-gray-900 rounded px-2 py-1 space-y-0.5">
-            {heroSynergies.map(s => (
-              <div key={s.tag} className="flex items-center gap-1 text-[10px]">
-                <SparkleIcon size={10} />
-                <span className="text-purple-300 font-medium">{s.label}</span>
-                <span className="text-gray-500">{s.description}</span>
-              </div>
-            ))}
-          </div>
-        )}
-
         {/* Equipment Slots */}
         {selectedHero && (
           <div className="space-y-1">
@@ -410,13 +306,6 @@ const EquipmentScreen = () => {
           >
             Unequip
           </button>
-        )}
-
-        {/* Reforge Panel - rare+ non-unique equipped items (unlocks at D15) */}
-        {highestDungeonCleared >= 15 && selectedSlot && selectedHero?.equipment[selectedSlot] &&
-          !selectedHero.equipment[selectedSlot].isUnique &&
-          ['rare', 'epic', 'legendary'].includes(selectedHero.equipment[selectedSlot].rarity) && (
-          <ReforgePanel item={selectedHero.equipment[selectedSlot]} />
         )}
 
         {/* Settings - Compact */}

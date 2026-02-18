@@ -43,8 +43,6 @@ const DungeonTransition = ({ transition, lastDungeonSuccess, raidState }) => {
             ? (lastDungeonSuccess ? 'Preparing next adventure...' : 'The party has fallen...')
             : raidState?.active && RAIDS[raidState.raidId]
             ? RAIDS[raidState.raidId].name
-            : transition.type === 'tower'
-            ? `Tower Floor ${transition.towerFloor || transition.level}`
             : `Dungeon Level ${transition.level}`}
         </p>
         <div className="flex justify-center gap-1">

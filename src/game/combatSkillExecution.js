@@ -10,7 +10,7 @@ import {
   hasCCImmunity,
 } from './skillEngine';
 import { getHeroHealingReduction, isHeroImmuneToStatus, getHeroUniqueItems } from './uniqueEngine';
-import { getHeroTrait } from '../data/heroTraits';
+
 import { getUniqueItem } from '../data/uniqueItems';
 import { applyStatusEffect } from './statusEngine';
 import { STATUS_EFFECTS } from '../data/statusEffects';
@@ -141,14 +141,12 @@ export const executeHeroSkillAction = (ctx, actor) => {
           const gold = Math.floor(baseGold * goldMultiplier);
           addGold(gold);
 
-          // Award XP with bonus for underleveled heroes + room event bonuses
+          // Award XP with bonus for underleveled heroes
           const baseXpPerHero = Math.floor((m.xpReward / heroes.length) * xpMultiplier);
-          const roomEventHeroXpBonus = ctx.roomEventHeroXpBonus;
           heroes.forEach(h => {
             const levelDiff = dungeon.level - h.level;
             const catchUpBonus = levelDiff > 0 ? 1 + (levelDiff * 0.10) : 1;
-            const heroXpMult = roomEventHeroXpBonus?.[h.id] || 1;
-            const xpForHero = Math.floor(baseXpPerHero * catchUpBonus * heroXpMult);
+            const xpForHero = Math.floor(baseXpPerHero * catchUpBonus);
             addXpToHero(h.id, xpForHero);
           });
           incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: m.templateId, isBoss: m.isBoss, isWorldBoss: m.isWorldBoss });
@@ -305,19 +303,8 @@ export const executeHeroSkillAction = (ctx, actor) => {
         const targetHealReduction = getHeroHealingReduction(heroes.find(hr => hr.id === result.targetId) || {});
         const buffHealReduction = (newBuffs[result.targetId] || {}).healingReduction || 0;
         const totalHealReduction = Math.min(1, targetHealReduction + buffHealReduction);
-        // Lifebond synergy + Devoted trait: bonus healing received
-        const targetHeroForSynergy = heroes.find(hr => hr.id === result.targetId);
-        const synergyHealBonus = targetHeroForSynergy ? (getPassiveAffixBonuses(targetHeroForSynergy).synergyHealingReceived || 0) : 0;
-        let traitHealReceivedMult = 1.0;
-        if (targetHeroForSynergy) {
-          for (const traitId of (targetHeroForSynergy.traits || [])) {
-            const trait = getHeroTrait(traitId);
-            if (trait?.effect?.healingReceivedMultiplier) traitHealReceivedMult *= trait.effect.healingReceivedMultiplier;
-          }
-        }
         const baseHealAmount = totalHealReduction > 0 ? Math.floor(result.amount * (1 - totalHealReduction)) : result.amount;
-        const afterSynergyHeal = synergyHealBonus > 0 ? Math.floor(baseHealAmount * (1 + synergyHealBonus)) : baseHealAmount;
-        const reducedHealAmount = Math.floor(afterSynergyHeal * traitHealReceivedMult);
+        const reducedHealAmount = baseHealAmount;
         const actualHealAmount = Math.min(reducedHealAmount, h.stats.maxHp - h.stats.hp);
         h.stats.hp = Math.min(h.stats.maxHp, h.stats.hp + reducedHealAmount);
         if (targetHealReduction > 0) {

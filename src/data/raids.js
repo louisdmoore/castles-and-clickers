@@ -17,7 +17,7 @@ export const RAID_DIFFICULTY_TIERS = {
   },
   heroic: {
     id: 'heroic',
-    name: 'Heroic',
+    name: 'Hard',
     statMultiplier: 1.5,
     goldCost: 50000,
     ascensionRequired: 0,
@@ -26,71 +26,24 @@ export const RAID_DIFFICULTY_TIERS = {
     color: '#f59e0b',
     description: '1.5x monster stats, better unique drops',
   },
-  mythic: {
-    id: 'mythic',
-    name: 'Mythic',
-    statMultiplier: 2.0,
-    goldCost: 0,
-    ascensionRequired: 3,
-    uniqueDropBonus: 1.0,  // +100% unique drop rates
-    affixCount: 2,         // 2 stacked dungeon affixes
-    color: '#ef4444',
-    description: '2.0x monster stats + 2 random affixes',
-  },
 };
 
 export const getRaidDifficultyTier = (difficulty) =>
   RAID_DIFFICULTY_TIERS[difficulty] || RAID_DIFFICULTY_TIERS.normal;
 
-// Raid-specific mechanics (Section 10.1 — Tier 1: data-only, no engine changes)
-export const RAID_MECHANICS = {
-  sunken_temple: {
-    id: 'water_curse',
-    name: 'Water Curse',
-    description: 'All heroes start with -20% speed',
-    heroDebuff: { stat: 'speed', multiplier: 0.80, duration: 999 },
-  },
-  cursed_manor: {
-    id: 'ghost_ward',
-    name: 'Ghost Ward',
-    description: 'All enemies take 75% reduced physical damage',
-    monsterPassive: { damageReduction: 0.75 },
-  },
-};
+// Raid-specific mechanics removed in Phase 1 (The Cut)
+// Stub exports to prevent import errors
+export const RAID_MECHANICS = {};
+export const getRaidMechanic = () => null;
 
-export const getRaidMechanic = (raidId) => RAID_MECHANICS[raidId] || null;
-
-// Raid mastery system (Section 10.2)
-// Track clears per raid, unlock raid-specific permanent stat buffs at milestones
-export const RAID_MASTERY_TIERS = [
-  { clears: 5, statBonus: 0.05, label: 'Apprentice', reward: '+5% stats in this raid' },
-  { clears: 10, statBonus: 0.10, label: 'Veteran', reward: '+10% stats in this raid' },
-  { clears: 25, statBonus: 0.15, label: 'Master', reward: '+15% stats, unique drop rate boost' },
-];
+// Raid mastery system removed in Phase 1 (The Cut)
+// Stub exports to prevent import errors
+export const RAID_MASTERY_TIERS = [];
 
 // Get mastery info for a raid based on clear count
-export const getRaidMastery = (clears) => {
-  let tier = null;
-  let nextTier = RAID_MASTERY_TIERS[0];
-  for (const t of RAID_MASTERY_TIERS) {
-    if (clears >= t.clears) {
-      tier = t;
-    } else {
-      nextTier = t;
-      break;
-    }
-  }
-  if (tier === RAID_MASTERY_TIERS[RAID_MASTERY_TIERS.length - 1]) {
-    nextTier = null; // Max mastery reached
-  }
-  return {
-    tier,
-    nextTier,
-    statBonus: tier?.statBonus || 0,
-    label: tier?.label || null,
-    uniqueDropBonus: tier?.clears >= 25 ? 0.25 : 0, // +25% unique drop rate at Master
-  };
-};
+export const getRaidMastery = () => ({
+  tier: null, nextTier: null, statBonus: 0, label: null, uniqueDropBonus: 0,
+});
 
 const AI = {
   BOSS: 'boss',

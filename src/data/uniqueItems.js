@@ -13,9 +13,6 @@
 
 export const UNIQUE_MAX_LEVEL = 5;
 
-// Essence cost to awaken a max-level unique
-export const AWAKENING_COST = 500;
-
 // XP needed to reach each level (cumulative thresholds)
 // Level 1 starts at 0 XP, level 2 at 500, etc.
 export const UNIQUE_XP_TABLE = [0, 500, 2000, 5000, 12000];

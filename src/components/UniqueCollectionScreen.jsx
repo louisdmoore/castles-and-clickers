@@ -1,11 +1,11 @@
 import { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
-import { UNIQUE_ITEMS, getUniqueItem, scaleUniqueStats, UNIQUE_MAX_LEVEL, UNIQUE_XP_TABLE, AWAKENING_COST, getUniqueLevelScale } from '../data/uniqueItems';
+import { UNIQUE_ITEMS, getUniqueItem, scaleUniqueStats, UNIQUE_MAX_LEVEL, UNIQUE_XP_TABLE, getUniqueLevelScale } from '../data/uniqueItems';
 import { RAIDS, getRaidUniqueIds } from '../data/raids';
 import { WORLD_BOSSES } from '../data/worldBosses';
 import { CLASSES } from '../data/classes';
 import ItemIcon from './icons/ItemIcon';
-import { CheckIcon, StarIcon, CrownIcon, SkullIcon, LockIcon, EssenceIcon } from './icons/ui';
+import { CheckIcon, StarIcon, CrownIcon, SkullIcon, LockIcon } from './icons/ui';
 
 // Helper to format class restrictions
 const formatClassRestrictions = (classes) => {
@@ -109,8 +109,6 @@ const UniqueItemCard = ({ itemId, isOwned, isSelected, onSelect, uniqueLevel }) 
 const UniqueDetailPanel = ({ itemId, isOwned, highestPartyLevel }) => {
   const item = getUniqueItem(itemId);
   const uniqueLevels = useGameStore(state => state.uniqueLevels || {});
-  const essence = useGameStore(state => state.essence || 0);
-  const awakenUnique = useGameStore(state => state.awakenUnique);
   if (!item) return null;
 
   const slotLabel = {
@@ -162,7 +160,7 @@ const UniqueDetailPanel = ({ itemId, isOwned, highestPartyLevel }) => {
               Level {levelData.level}/{UNIQUE_MAX_LEVEL}
             </span>
             {isMaxLevel ? (
-              <span className="text-xs text-amber-400 font-bold">{levelData.awakened ? 'AWAKENED' : 'MAX'}</span>
+              <span className="text-xs text-amber-400 font-bold">MAX</span>
             ) : (
               <span className="text-xs text-gray-400">{levelData.xp}/{xpForNext} XP</span>
             )}
@@ -210,51 +208,17 @@ const UniqueDetailPanel = ({ itemId, isOwned, highestPartyLevel }) => {
           </div>
 
           {/* Unique Power */}
-          <div className={`pixel-panel-dark p-3 mb-3 ${levelData.awakened ? 'border border-amber-500/40' : ''}`}>
+          <div className="pixel-panel-dark p-3 mb-3">
             <div className="flex items-center gap-2 mb-2">
-              <StarIcon size={14} className={levelData.awakened ? 'text-amber-400' : 'text-cyan-400 unique-sparkle'} />
-              <span className={`font-bold ${levelData.awakened ? 'text-amber-300' : 'unique-text-shimmer'}`}>
-                {levelData.awakened && item.awakenedPower ? item.awakenedPower.name : item.uniquePower.name}
+              <StarIcon size={14} className="text-cyan-400 unique-sparkle" />
+              <span className="font-bold unique-text-shimmer">
+                {item.uniquePower.name}
               </span>
-              {levelData.awakened && (
-                <span className="text-[10px] px-1.5 py-0.5 bg-amber-900/40 text-amber-400 rounded border border-amber-500/30 font-bold">
-                  AWAKENED
-                </span>
-              )}
             </div>
             <p className="text-sm text-gray-300">
-              {levelData.awakened && item.awakenedPower ? item.awakenedPower.description : item.uniquePower.description}
+              {item.uniquePower.description}
             </p>
           </div>
-
-          {/* Awaken button — shown for max level, not yet awakened */}
-          {isMaxLevel && !levelData.awakened && item.awakenedPower && (
-            <div className="pixel-panel-dark p-3 mb-3 border border-amber-500/20">
-              <div className="flex items-center gap-2 mb-2">
-                <StarIcon size={14} className="text-amber-500/50" />
-                <span className="text-sm font-bold text-amber-400/70">Awakened Power Preview</span>
-              </div>
-              <p className="text-sm text-gray-500 mb-2">
-                <span className="text-amber-400/60 font-medium">{item.awakenedPower.name}:</span>{' '}
-                {item.awakenedPower.description}
-              </p>
-              <button
-                className={`pixel-btn w-full text-sm flex items-center justify-center gap-2 ${
-                  essence >= AWAKENING_COST ? 'pixel-btn-primary' : 'opacity-50 cursor-not-allowed'
-                }`}
-                onClick={() => essence >= AWAKENING_COST && awakenUnique(itemId)}
-                disabled={essence < AWAKENING_COST}
-              >
-                <EssenceIcon size={14} />
-                Awaken ({AWAKENING_COST} Essence)
-              </button>
-              {essence < AWAKENING_COST && (
-                <div className="text-[10px] text-gray-500 mt-1 text-center">
-                  You have {essence} / {AWAKENING_COST} Essence
-                </div>
-              )}
-            </div>
-          )}
 
           {/* Flavor text */}
           <div className="text-sm text-gray-500 italic">"{item.flavor}"</div>

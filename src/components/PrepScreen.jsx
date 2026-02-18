@@ -5,7 +5,7 @@ import { getDungeonTier } from '../data/milestones';
 import { DUNGEON_THEMES } from '../data/dungeonThemes';
 import { getAffix } from '../data/itemAffixes';
 import { getWorldBossForLevel } from '../data/worldBosses';
-import { hasAscensionUnlock } from '../data/ascensionMilestones';
+
 import ClassIcon from './icons/ClassIcon';
 import { SwordIcon, ShieldIcon, HeartIcon, CrownIcon, ChestIcon, StarIcon } from './icons/ui';
 import MilestoneWidget from './MilestoneWidget';
@@ -15,9 +15,9 @@ const DIFFICULTY_STOPS = [1.0, 1.5, 2.0, 2.5, 3.0];
 const DIFFICULTY_INFO = {
   1.0: { label: 'Normal', color: '#9ca3af', desc: 'Standard difficulty' },
   1.5: { label: 'Hard', color: '#fbbf24', desc: '+50% enemy stats, +50% drop rate' },
-  2.0: { label: 'Brutal', color: '#f97316', desc: '+100% enemy stats, +100% drops, Infused gear, +1 dungeon affix' },
-  2.5: { label: 'Nightmare', color: '#ef4444', desc: '+150% enemy stats, +150% drops, higher Infused rate, +1-2 affixes' },
-  3.0: { label: 'Mythic', color: '#a855f7', desc: '+200% enemy stats, +200% drops, Ascended gear, +2 affixes' },
+  2.0: { label: 'Brutal', color: '#f97316', desc: '+100% enemy stats, +100% drops, Infused gear' },
+  2.5: { label: 'Nightmare', color: '#ef4444', desc: '+150% enemy stats, +150% drops, higher Infused rate' },
+  3.0: { label: 'Infernal', color: '#a855f7', desc: '+200% enemy stats, +200% drops, Ascended gear' },
 };
 
 const DifficultySlider = memo(({ value, onChange }) => {
@@ -71,9 +71,6 @@ const PrepScreen = ({ onOpenAscension }) => {
   const highestDungeonCleared = useGameStore(state => state.highestDungeonCleared);
   const canAscend = useGameStore(state => state.canAscend);
   const ascension = useGameStore(state => state.ascension);
-  const challengeScores = useGameStore(state => state.challengeScores);
-  const startTowerOfTrials = useGameStore(state => state.startTowerOfTrials);
-  const canAccessTower = hasAscensionUnlock(ascension?.count || 0, 'challenge_access');
 
   // Auto-dismiss after 5s when auto-advance is on and run summary is gone
   useEffect(() => {
@@ -153,9 +150,6 @@ const PrepScreen = ({ onOpenAscension }) => {
                   <ClassIcon classId={hero.classId} size={16} />
                   <span className="pixel-label text-xs truncate flex-1">
                     {hero.name}
-                    {(hero.prestige?.count || 0) > 0 && (
-                      <span className="text-amber-400 ml-0.5">{'★'.repeat(Math.min(hero.prestige.count, 5))}</span>
-                    )}
                   </span>
                   <span className="text-xs text-[var(--color-text-dim)]">Lv{hero.level}</span>
                   <RoleIcon size={10} className={
@@ -263,38 +257,6 @@ const PrepScreen = ({ onOpenAscension }) => {
         <div className="mb-4">
           <MilestoneWidget />
         </div>
-
-        {/* Tower of Trials */}
-        {canAccessTower && (
-          <div className="pixel-panel-dark p-3 mb-4">
-            <div className="flex items-center justify-between">
-              <div>
-                <div className="flex items-center gap-1">
-                  <SwordIcon size={12} />
-                  <span className="pixel-label text-xs" style={{ color: '#a855f7' }}>Tower of Trials</span>
-                </div>
-                <div className="text-[10px] text-[var(--color-text-dim)] mt-0.5">
-                  Endless floors. No healing. How far can you go?
-                </div>
-                {(challengeScores?.tower?.best || 0) > 0 && (
-                  <div className="text-[10px] mt-0.5" style={{ color: '#fbbf24' }}>
-                    Best: Floor {challengeScores.tower.best}
-                    {challengeScores.tower.bestSeed && (
-                      <span className="text-[var(--color-text-dim)] ml-1">#{challengeScores.tower.bestSeed}</span>
-                    )}
-                  </div>
-                )}
-              </div>
-              <button
-                onClick={startTowerOfTrials}
-                className="pixel-btn text-xs"
-                style={{ borderColor: '#a855f7', color: '#a855f7' }}
-              >
-                Enter Tower
-              </button>
-            </div>
-          </div>
-        )}
 
         {/* Auto-advance indicator */}
         {autoAdvance && canEnter && (
