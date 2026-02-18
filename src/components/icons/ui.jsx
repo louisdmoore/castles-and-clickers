@@ -41,6 +41,25 @@ export const GoldIcon = ({ size }) => (
   </IconWrapper>
 );
 
+export const EssenceIcon = ({ size }) => (
+  <IconWrapper size={size}>
+    {/* Crystal shape */}
+    <P x={7} y={1} w={2} h={1} c="#e0f2fe" />
+    <P x={6} y={2} w={4} h={2} c="#7dd3fc" />
+    <P x={5} y={4} w={6} h={2} c="#38bdf8" />
+    <P x={4} y={6} w={8} h={3} c="#0ea5e9" />
+    <P x={5} y={9} w={6} h={2} c="#0284c7" />
+    <P x={6} y={11} w={4} h={2} c="#0369a1" />
+    <P x={7} y={13} w={2} h={1} c="#075985" />
+    {/* Inner glow */}
+    <P x={7} y={4} w={2} h={2} c="#bae6fd" />
+    <P x={6} y={6} w={2} h={2} c="#7dd3fc" />
+    {/* Sparkle */}
+    <P x={10} y={2} w={1} h={1} c="#e0f2fe" />
+    <P x={3} y={8} w={1} h={1} c="#e0f2fe" />
+  </IconWrapper>
+);
+
 export const XPIcon = ({ size }) => (
   <IconWrapper size={size}>
     {/* Star */}

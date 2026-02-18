@@ -11,7 +11,7 @@
  *   3. The migration receives the full persisted state and returns the updated state
  */
 
-export const SAVE_VERSION = 6;
+export const SAVE_VERSION = 7;
 
 // Sequential migration functions: fromVersion -> transform
 const MIGRATIONS = {
@@ -110,6 +110,14 @@ const MIGRATIONS = {
   5: (state) => {
     if (!state.earnedAchievements) {
       state.earnedAchievements = [];
+    }
+    return state;
+  },
+
+  // v6 → v7: Phase 8 — Essence currency
+  6: (state) => {
+    if (state.essence === undefined) {
+      state.essence = 0;
     }
     return state;
   },

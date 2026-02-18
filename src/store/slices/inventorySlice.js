@@ -4,7 +4,7 @@ import { invalidateStatCache, calculateHeroStats, setUniqueLevels } from '../hel
 import { getCollectionForUnique } from '../helpers/heroGenerator';
 import { SHOP_CONSUMABLES } from '../../data/consumables';
 import { ITEM_AFFIXES, AFFIX_TYPE, rollAffix as rollAffixFromPool, buildAffixedName } from '../../data/itemAffixes';
-import { UNIQUE_MAX_LEVEL, UNIQUE_XP_TABLE, calculateDuplicateValue } from '../../data/uniqueItems';
+import { UNIQUE_MAX_LEVEL, UNIQUE_XP_TABLE, AWAKENING_COST, calculateDuplicateValue, getUniqueItem } from '../../data/uniqueItems';
 import throttledStorage from '../helpers/throttledStorage';
 
 // Reforge cost curve: escalating per session, resets on dungeon completion
@@ -667,6 +667,51 @@ export const createInventorySlice = (set, get) => ({
     }
 
     return leveled ? { leveled: true, newLevel } : null;
+  },
+
+  // Awaken a max-level unique by spending essence
+  awakenUnique: (templateId) => {
+    const { uniqueLevels, ownedUniques, essence } = get();
+    if (!ownedUniques.includes(templateId)) {
+      get().addToast({ type: 'error', message: 'You do not own this unique' });
+      return false;
+    }
+
+    const current = uniqueLevels[templateId] || { xp: 0, level: 1, awakened: false };
+    if (current.level < UNIQUE_MAX_LEVEL) {
+      get().addToast({ type: 'error', message: 'Unique must be max level to awaken' });
+      return false;
+    }
+    if (current.awakened) {
+      get().addToast({ type: 'warning', message: 'Already awakened' });
+      return false;
+    }
+    if ((essence || 0) < AWAKENING_COST) {
+      get().addToast({ type: 'error', message: `Not enough essence (need ${AWAKENING_COST})` });
+      return false;
+    }
+
+    const item = getUniqueItem(templateId);
+    const newUniqueLevels = {
+      ...uniqueLevels,
+      [templateId]: { ...current, awakened: true },
+    };
+
+    set({
+      uniqueLevels: newUniqueLevels,
+      essence: (essence || 0) - AWAKENING_COST,
+    });
+
+    // Update module-level cache for stat scaling
+    setUniqueLevels(newUniqueLevels);
+
+    get().addToast({
+      type: 'success',
+      message: `${item?.name || 'Unique'} has been awakened!`,
+    });
+
+    throttledStorage.flush();
+    return true;
   },
 
   getItemScoreForHero: (item, heroId) => {

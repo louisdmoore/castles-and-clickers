@@ -13,6 +13,9 @@
 
 export const UNIQUE_MAX_LEVEL = 5;
 
+// Essence cost to awaken a max-level unique
+export const AWAKENING_COST = 500;
+
 // XP needed to reach each level (cumulative thresholds)
 // Level 1 starts at 0 XP, level 2 at 500, etc.
 export const UNIQUE_XP_TABLE = [0, 500, 2000, 5000, 12000];
@@ -78,6 +81,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { worldBoss: 'forest_ancient' },
     tags: ['defense', 'offense'],
     conditionalXp: { trigger: 'on_shield_absorb', description: 'Bonus XP when shield absorbs damage' },
+    awakenedPower: {
+      name: 'Ancient Fortress',
+      description: 'Shield increased to 35% max HP. While shielded, attacks deal 25% bonus damage and heal for 5% of damage dealt.',
+    },
   },
 
   // Level 20 World Boss - The Fallen King
@@ -106,6 +113,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { worldBoss: 'fallen_king' },
     tags: ['berserker', 'sustain'],
     conditionalXp: { trigger: 'on_low_hp', description: 'Bonus XP when fighting below 30% HP' },
+    awakenedPower: {
+      name: 'Wrath of the Fallen',
+      description: 'Threshold raised to 40% HP. Grants +75% damage, +40% lifesteal, and immunity to crowd control for 4 turns.',
+    },
   },
 
   // Level 25 World Boss - Inferno Lord
@@ -132,6 +143,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { worldBoss: 'inferno_lord' },
     tags: ['fire', 'dot', 'aoe'],
     conditionalXp: { trigger: 'on_burn_kill', description: 'Bonus XP when enemies die while burning' },
+    awakenedPower: {
+      name: 'Eruption',
+      description: 'Burns deal double damage. Death explosions deal 40% max HP and apply Burn to all hit enemies.',
+    },
   },
 
   // Level 30 World Boss - Void Emperor
@@ -158,6 +173,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { worldBoss: 'void_emperor' },
     tags: ['sustain', 'cheat_death'],
     conditionalXp: { trigger: 'on_damage_stored', description: 'Bonus XP when storing damage for Void Absorption' },
+    awakenedPower: {
+      name: 'Void Rebirth',
+      description: 'Stores 30% of damage dealt. On death trigger, heal for stored damage and gain +50% damage for 3 turns.',
+    },
   },
 
   // =====================================================
@@ -187,6 +206,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'sunken_temple', wing: 'temple_entrance' },
     tags: ['offense', 'sustain'],
     conditionalXp: { trigger: 'on_tidal_proc', description: 'Bonus XP when Tidal Rhythm procs' },
+    awakenedPower: {
+      name: 'Tsunami',
+      description: 'Every 2nd attack deals triple damage and heals for 20% of damage dealt. Tidal procs splash to nearby enemies.',
+    },
   },
 
   serpents_fang: {
@@ -212,6 +235,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'sunken_temple', wing: 'drowned_sanctum' },
     tags: ['critical', 'offense'],
     conditionalXp: { trigger: 'on_crit', description: 'Bonus XP when the wielder crits' },
+    awakenedPower: {
+      name: 'Endless Chain',
+      description: 'Chain chance increased to 65%. Each chain hit can also crit, triggering further chains.',
+    },
   },
 
   // =====================================================
@@ -240,6 +267,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'cursed_manor', wing: 'the_foyer' },
     tags: ['evasion', 'offense'],
     conditionalXp: { trigger: 'on_dodge', description: 'Bonus XP when phasing through attacks' },
+    awakenedPower: {
+      name: 'Ethereal Form',
+      description: 'Phase chance increased to 35%. After phasing, your next attack deals +150% damage and ignores defense.',
+    },
   },
 
   banshees_wail: {
@@ -268,6 +299,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'cursed_manor', wing: 'the_ballroom' },
     tags: ['offense', 'stacking'],
     conditionalXp: { trigger: 'on_kill', description: 'Bonus XP when the wielder kills enemies' },
+    awakenedPower: {
+      name: 'Soul Storm',
+      description: 'Max stacks increased to 8 at 15% per stack. Stacks no longer reset on damage taken.',
+    },
   },
 
   vampires_embrace: {
@@ -292,6 +327,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'cursed_manor', wing: 'the_tower' },
     tags: ['vampiric', 'sustain'],
     conditionalXp: { trigger: 'on_lifesteal', description: 'Bonus XP when lifestealing damage' },
+    awakenedPower: {
+      name: 'Blood Feast',
+      description: 'Lifesteal increased to 35%. Healing reduction removed. Overhealing converts to a damage shield.',
+    },
   },
 
   // =====================================================
@@ -321,6 +360,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'sky_fortress', wing: 'outer_ramparts' },
     tags: ['lightning', 'aoe', 'control'],
     conditionalXp: { trigger: 'on_chain_hit', description: 'Bonus XP when chain lightning hits extra targets' },
+    awakenedPower: {
+      name: 'Thunderstorm',
+      description: 'Chains to 4 additional enemies for 55% damage. Shocked enemies take 20% more damage from all sources.',
+    },
   },
 
   thunder_guard: {
@@ -345,6 +388,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'sky_fortress', wing: 'thunder_halls' },
     tags: ['defense', 'thorns'],
     conditionalXp: { trigger: 'on_retaliate', description: 'Bonus XP when retaliating with storm damage' },
+    awakenedPower: {
+      name: 'Lightning Bulwark',
+      description: 'Retaliation chance increased to 50% and deals 75% of defense as damage. Retaliations stun the attacker for 1 turn.',
+    },
   },
 
   eye_of_the_storm: {
@@ -369,6 +416,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'sky_fortress', wing: 'storm_throne' },
     tags: ['speed', 'evasion'],
     conditionalXp: { trigger: 'on_dodge', description: 'Bonus XP when enemies miss the wielder' },
+    awakenedPower: {
+      name: 'Tempest Core',
+      description: 'Speed tripled instead of doubled. Enemies targeting you have 50% reduced accuracy and deal 20% less damage.',
+    },
   },
 
   // =====================================================
@@ -400,6 +451,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'the_abyss', wing: 'the_depths' },
     tags: ['offense', 'stacking'],
     conditionalXp: { trigger: 'on_kill', description: 'Bonus XP when the wielder kills enemies' },
+    awakenedPower: {
+      name: 'Insatiable',
+      description: 'Each kill increases attack by 8% instead of 5%. Also grants +3% speed per kill.',
+    },
   },
 
   krakens_grasp: {
@@ -425,6 +480,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'the_abyss', wing: 'the_trench' },
     tags: ['control', 'offense'],
     conditionalXp: { trigger: 'on_combat_start', description: 'Bonus XP at the start of each combat' },
+    awakenedPower: {
+      name: 'Abyssal Grip',
+      description: 'Root duration increased to 2 turns. First attack against rooted enemies deals quadruple damage and stuns for 1 turn.',
+    },
   },
 
   leviathans_heart: {
@@ -449,6 +508,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'the_abyss', wing: 'the_void_below' },
     tags: ['defense', 'fortify'],
     conditionalXp: { trigger: 'on_damage_taken', description: 'Bonus XP when taking damage' },
+    awakenedPower: {
+      name: 'Titan\'s Endurance',
+      description: 'Max HP tripled instead of doubled. Damage reduction reduced to only 15%. Regenerate 1% max HP per turn.',
+    },
   },
 
   // =====================================================
@@ -477,6 +540,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'void_throne', wing: 'realitys_edge' },
     tags: ['offense', 'evasion'],
     conditionalXp: { trigger: 'on_double_hit', description: 'Bonus XP when attacks hit twice' },
+    awakenedPower: {
+      name: 'Reality Shatter',
+      description: 'Double hit chance increased to 25%. Enemy miss chance increased to 25%. Critical hits always double hit.',
+    },
   },
 
   nullblade: {
@@ -501,6 +568,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'void_throne', wing: 'the_shattered' },
     tags: ['offense', 'execution'],
     conditionalXp: { trigger: 'on_kill', description: 'Bonus XP when killing enemies' },
+    awakenedPower: {
+      name: 'Annihilating Edge',
+      description: 'Ignores 75% of enemy defense. Enemies below 20% HP are instantly executed.',
+    },
   },
 
   cloak_of_nothing: {
@@ -525,6 +596,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'void_throne', wing: 'the_nothing' },
     tags: ['evasion', 'offense'],
     conditionalXp: { trigger: 'on_stealth_attack', description: 'Bonus XP when attacking from stealth' },
+    awakenedPower: {
+      name: 'Absolute Nothing',
+      description: 'Invisible for 3 turns. Stealth attack deals +300% damage and applies a 3-turn stun.',
+    },
   },
 
   void_gods_crown: {
@@ -551,6 +626,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'void_throne', wing: 'the_throne' },
     tags: ['defense', 'cheat_death'],
     conditionalXp: { trigger: 'on_cheat_death', description: 'Bonus XP when cheating death' },
+    awakenedPower: {
+      name: 'Void Apotheosis',
+      description: 'Invulnerability lasts 3 turns. After revival, gain +100% all stats for the remainder of the room.',
+    },
   },
 
   entropy_accessory: {
@@ -575,6 +654,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'void_throne', wing: 'the_throne' },
     tags: ['offense', 'execution'],
     conditionalXp: { trigger: 'on_hit', description: 'Bonus XP when attacking enemies' },
+    awakenedPower: {
+      name: 'Heat Death',
+      description: 'Max HP reduction increased to 8% (3% for bosses). Enemies below 25% max HP take 50% more damage.',
+    },
   },
 
   // =====================================================
@@ -605,6 +688,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'dragon_sanctum', wing: 2 },
     tags: ['fire', 'dot'],
     conditionalXp: { trigger: 'on_burn_apply', description: 'Bonus XP when applying burn' },
+    awakenedPower: {
+      name: 'Dragonfire',
+      description: '+35% fire damage. Burns deal double damage and spread to adjacent enemies on tick.',
+    },
   },
 
   // Rogue Weapons
@@ -630,6 +717,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'shadow_realm', wing: 1 },
     tags: ['critical', 'evasion'],
     conditionalXp: { trigger: 'on_crit', description: 'Bonus XP when landing critical hits' },
+    awakenedPower: {
+      name: 'Assassin\'s Mark',
+      description: 'Crits deal +150% damage, grant invisibility for 2 turns, and guarantee crit on next attack.',
+    },
   },
 
   // Mage Weapons
@@ -655,6 +746,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'dragon_sanctum', wing: 1 },
     tags: ['frost', 'control', 'aoe'],
     conditionalXp: { trigger: 'on_freeze', description: 'Bonus XP when freezing enemies' },
+    awakenedPower: {
+      name: 'Permafrost',
+      description: 'Freeze triggers every 7th attack. Frozen enemies take 50% more damage and shatter on death, dealing AoE ice damage.',
+    },
   },
 
   // Ranger Weapons
@@ -680,6 +775,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'dragon_sanctum', wing: 2 },
     tags: ['speed', 'execution'],
     conditionalXp: { trigger: 'on_kill', description: 'Bonus XP when killing enemies' },
+    awakenedPower: {
+      name: 'Gale Force',
+      description: 'After killing an enemy, take two extra turns instead of one. +3 movement range.',
+    },
   },
 
   // Necromancer Weapons
@@ -708,6 +807,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'lich_throne', wing: 2 },
     tags: ['offense', 'stacking'],
     conditionalXp: { trigger: 'on_kill', description: 'Bonus XP when harvesting souls' },
+    awakenedPower: {
+      name: 'Devouring Scythe',
+      description: 'Kills grant +8% max HP and +5 attack, stacking up to 15 times. At max stacks, gain lifesteal.',
+    },
   },
 
   // Armor
@@ -734,6 +837,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'lich_throne', wing: 1 },
     tags: ['defense', 'cheat_death'],
     conditionalXp: { trigger: 'on_cheat_death', description: 'Bonus XP when defying death' },
+    awakenedPower: {
+      name: 'Eternal Guardian',
+      description: 'Survives lethal damage twice per dungeon. On activation, gain invulnerability for 2 turns and heal 50% HP.',
+    },
   },
 
   dragonscale_mantle: {
@@ -758,6 +865,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'dragon_sanctum', wing: 2 },
     tags: ['defense', 'fortify'],
     conditionalXp: { trigger: 'on_resist_status', description: 'Bonus XP when resisting burn or freeze' },
+    awakenedPower: {
+      name: 'Primordial Scales',
+      description: 'Immune to all status effects. +25% all elemental resistance. Reflect 15% of damage taken.',
+    },
   },
 
   shadow_cloak: {
@@ -781,6 +892,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'shadow_realm', wing: 2 },
     tags: ['evasion'],
     conditionalXp: { trigger: 'on_dodge', description: 'Bonus XP when avoiding attacks' },
+    awakenedPower: {
+      name: 'Living Shadow',
+      description: '35% chance to avoid attacks. After avoiding, become invisible for 1 turn and next attack guaranteed crit.',
+    },
   },
 
   // Accessories
@@ -805,6 +920,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'arcane_tower', wing: 2 },
     tags: ['offense', 'execution'],
     conditionalXp: { trigger: 'on_cooldown_reset', description: 'Bonus XP when resetting cooldowns' },
+    awakenedPower: {
+      name: 'Arcane Mastery',
+      description: 'Kills reset cooldowns and boost next skill damage by 50%. Skills cost no mana for 1 turn after a kill.',
+    },
   },
 
   blood_pendant: {
@@ -828,6 +947,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'vampire_castle', wing: 2 },
     tags: ['sustain', 'support'],
     conditionalXp: { trigger: 'on_party_heal', description: 'Bonus XP when healing from party damage' },
+    awakenedPower: {
+      name: 'Crimson Pact',
+      description: 'Heal 8% of all party damage dealt. When any ally would die, sacrifice 20% of your HP to save them (once per room).',
+    },
   },
 
   boots_of_blinding_speed: {
@@ -852,6 +975,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'wind_temple', wing: 2 },
     tags: ['speed'],
     conditionalXp: { trigger: 'on_first_action', description: 'Bonus XP when acting first in combat' },
+    awakenedPower: {
+      name: 'Time Warp',
+      description: 'Always act first. +4 movement range. Take two turns before any enemy acts at combat start.',
+    },
   },
 
   amulet_of_reflection: {
@@ -875,6 +1002,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'crystal_caverns', wing: 2 },
     tags: ['defense', 'thorns'],
     conditionalXp: { trigger: 'on_reflect', description: 'Bonus XP when reflecting damage' },
+    awakenedPower: {
+      name: 'Perfect Mirror',
+      description: 'Reflect 50% of damage taken. Reflected damage can crit. Gain 10% of reflected damage as healing.',
+    },
   },
 
   crown_of_command: {
@@ -898,6 +1029,10 @@ export const UNIQUE_ITEMS = {
     dropSource: { raid: 'fallen_kingdom', wing: 2 },
     tags: ['support'],
     conditionalXp: { trigger: 'on_party_buff', description: 'Bonus XP while party benefits from Rally' },
+    awakenedPower: {
+      name: 'Supreme Command',
+      description: 'Party gains +15% all stats. Whenever a party member kills an enemy, all allies heal for 3% of max HP.',
+    },
   },
 };
 

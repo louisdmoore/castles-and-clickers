@@ -46,6 +46,7 @@ export const useGameStore = create(
 
           set({
             gold: 100,
+            essence: 0,
             heroes: [],
             bench: [],
             usedSlotDiscounts: [],
@@ -225,6 +226,7 @@ export const useGameStore = create(
             pendingDungeonBuffs: persistedState?.pendingDungeonBuffs || [],
             challengeScores: persistedState?.challengeScores || { tower: { best: 0, bestSeed: null } },
             earnedAchievements: persistedState?.earnedAchievements || [],
+            essence: persistedState?.essence || 0,
             stats: {
               totalGoldEarned: 0,
               totalGoldSpent: 0,

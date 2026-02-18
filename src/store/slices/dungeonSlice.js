@@ -132,8 +132,9 @@ export const createDungeonSlice = (set, get) => ({
   endDungeon: (success) => {
     const { maxDungeonLevel, processPendingRecruits, runStats, heroes, deathLog } = get();
 
-    // Snapshot run stats for the summary popup before clearing state
+    // Snapshot dungeon data before clearing state
     const dungeonLevel = get().dungeon?.level;
+    const dungeonDifficulty = get().dungeon?.difficultyMultiplier || 1.0;
     const runSummary = {
       success,
       dungeonLevel,
@@ -284,6 +285,14 @@ export const createDungeonSlice = (set, get) => ({
 
     // Check if dungeon clear unlocks auto-advance (D5)
     get().checkAutoAdvanceUnlock();
+
+    // Award essence for high-difficulty dungeon clears (2.0x+ difficulty)
+    if (success && dungeonDifficulty >= 2.0) {
+      const essenceAmount = dungeonDifficulty >= 3.0 ? 20
+        : dungeonDifficulty >= 2.5 ? 15
+        : 10;
+      get().addEssence(essenceAmount);
+    }
 
     // Immediate save on dungeon completion
     throttledStorage.flush();
@@ -583,6 +592,7 @@ export const createDungeonSlice = (set, get) => ({
     if (!raid) return;
 
     // Record completion
+    const raidDifficulty = raidState.difficulty || 'normal';
     const completionKey = `${raidState.raidId}:complete`;
 
     // Collect loot info from combat log
@@ -625,6 +635,12 @@ export const createDungeonSlice = (set, get) => ({
       roomCombat: null,
       isRunning: false,
     }));
+
+    // Award essence for raid completion
+    const essenceReward = raidDifficulty === 'mythic' ? 200
+      : raidDifficulty === 'heroic' ? 100
+      : 50;
+    get().addEssence(essenceReward);
 
     // Immediate save on raid completion
     throttledStorage.flush();

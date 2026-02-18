@@ -16,6 +16,7 @@ const getRefreshCost = (highestDungeonCleared) =>
 export const createEconomySlice = (set, get) => ({
   // State
   gold: 100,
+  essence: 0,
   homestead: {
     barracks: 0,
     armory: 0,
@@ -69,6 +70,16 @@ export const createEconomySlice = (set, get) => ({
         },
       };
     });
+  },
+
+  addEssence: (amount) => {
+    set(state => ({
+      essence: (state.essence || 0) + amount,
+      stats: {
+        ...state.stats,
+        totalEssenceEarned: (state.stats.totalEssenceEarned || 0) + amount,
+      },
+    }));
   },
 
   spendGold: (amount) => {
