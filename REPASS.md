@@ -207,6 +207,15 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Affix interaction with raid difficulty tiers — Mythic raids already roll 2 affixes. If a Mythic raid has bountiful, verify gold calculations don't double-dip
 - [ ] No affix display in RunSummary or DeathRecap — player won't see what affixes were active after the run ends
 
+## Raid Mastery (v0.5.0)
+
+- [ ] Mastery stat buffs applied in setupDungeon — scales attack, defense, maxHp, speed. Are all four stats the right choice? Should speed be excluded to keep a ceiling on dodge/double attack?
+- [ ] Mastery progress bar in RaidSelectorModal — only visible after first clear. Is this discoverable enough?
+- [ ] Master tier unique drop bonus (+25%) stacks with difficulty tier bonus — verify the combined boost doesn't make mythic master raids drop uniques too reliably
+- [ ] Mastery labels (Novice/Apprentice/Veteran/Master) — are these clear enough? "Novice" shown for 0 clears but not in the mastery badge area
+- [ ] No mastery reset on ascension — mastery carries over. Is this intended? Should it reset to provide replay incentive?
+- [ ] Combat log "Raid Mastery" message — shown once at setup. Is it visible enough given other setup messages (affixes, mechanics)?
+
 ## Essence & Unique Awakening (v0.5.0)
 
 - [ ] Essence earn rates — 50/100/200 for Normal/Heroic/Mythic raids and 10-20 for 2.0x+ dungeons. Are these balanced? 500 cost means ~5 Normal raids to awaken one unique

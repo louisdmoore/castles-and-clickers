@@ -14,6 +14,7 @@ export const CHANGELOG = [
       { type: 'feature', text: 'Dungeon affixes — at 2.0x+ difficulty, dungeons roll random modifiers (Fortified, Vampiric, Bolstering, Bountiful, etc.) shown in the zone header' },
       { type: 'feature', text: 'Achievement system — 30 achievements across Combat, Progression, Collection, Challenge, and Economy categories with gold rewards and progress tracking' },
       { type: 'feature', text: 'Essence currency — earned from raids and high-difficulty dungeons, used to awaken max-level unique items for enhanced powers' },
+      { type: 'feature', text: 'Raid mastery — track clears per raid to earn permanent stat buffs (+5/10/15%) and unique drop rate bonuses at Apprentice/Veteran/Master tiers' },
     ],
   },
   {
