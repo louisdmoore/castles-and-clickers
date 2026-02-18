@@ -195,7 +195,7 @@ const PrepScreen = ({ onOpenAscension }) => {
                     </span>
                   </div>
                 )}
-                {dungeonPreview.favoredAffixes.length > 0 && (
+                {highestDungeonCleared >= 20 && dungeonPreview.favoredAffixes.length > 0 && (
                   <div className="mt-2 pt-2 border-t border-[var(--color-border)]">
                     <div className="flex items-center gap-1 mb-1">
                       <ChestIcon size={10} />
@@ -251,8 +251,8 @@ const PrepScreen = ({ onOpenAscension }) => {
           )}
         </div>
 
-        {/* Difficulty slider */}
-        {!atMaxLevel && (
+        {/* Difficulty slider (unlocks at D10) */}
+        {!atMaxLevel && highestDungeonCleared >= 10 && (
           <DifficultySlider
             value={dungeonSettings?.difficultyMultiplier || 1.0}
             onChange={(val) => setDungeonSettings({ difficultyMultiplier: val })}

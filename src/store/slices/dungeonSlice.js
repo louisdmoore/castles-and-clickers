@@ -286,6 +286,9 @@ export const createDungeonSlice = (set, get) => ({
     // Check if dungeon clear unlocks auto-advance (D5)
     get().checkAutoAdvanceUnlock();
 
+    // Check for newly unlocked features (progressive disclosure)
+    get().checkFeatureUnlocks();
+
     // Award essence for high-difficulty dungeon clears (2.0x+ difficulty)
     if (success && dungeonDifficulty >= 2.0) {
       const essenceAmount = dungeonDifficulty >= 3.0 ? 20
@@ -477,6 +480,41 @@ export const createDungeonSlice = (set, get) => ({
           autoAdvance: true,
         },
       }));
+    }
+  },
+
+  // Progressive disclosure: check for newly unlocked features and show celebrations
+  checkFeatureUnlocks: () => {
+    const { highestDungeonCleared, featureUnlocks } = get();
+    const unlocks = { ...featureUnlocks };
+    const celebrations = [];
+
+    // Milestone-based unlocks
+    const MILESTONES = [
+      { key: 'tutorialComplete', check: () => highestDungeonCleared >= 1, message: 'Welcome to Castles & Clickers!' },
+      { key: 'deathRecap', check: () => (get().stats?.totalDeaths || 0) > 0, message: 'Contribution Meter & Death Recap unlocked!' },
+      { key: 'skillsUnlocked', check: () => highestDungeonCleared >= 2, message: 'Skill Trees unlocked — customize your heroes!' },
+      { key: 'bestiaryUnlocked', check: () => highestDungeonCleared >= 3, message: 'Bestiary unlocked — track your enemies!' },
+      { key: 'shopUnlocked', check: () => highestDungeonCleared >= 5, message: 'The Shop is open — buy gear and consumables!' },
+      { key: 'difficultyUnlocked', check: () => highestDungeonCleared >= 10, message: 'Difficulty Slider unlocked — risk vs. reward!' },
+      { key: 'raidsUnlocked', check: () => highestDungeonCleared >= 12, message: 'Raids unlocked — face the greatest challenges!' },
+      { key: 'reforgeUnlocked', check: () => highestDungeonCleared >= 15, message: 'The Forge is open — reforge your gear!' },
+      { key: 'lootTargetingUnlocked', check: () => highestDungeonCleared >= 20, message: 'Dungeon Intel — each zone favors different loot!' },
+      { key: 'ascensionPrompt', check: () => highestDungeonCleared >= 30, message: 'You have mastered the dungeon. A new path awaits...' },
+    ];
+
+    for (const milestone of MILESTONES) {
+      if (!unlocks[milestone.key] && milestone.check()) {
+        unlocks[milestone.key] = true;
+        celebrations.push(milestone.message);
+      }
+    }
+
+    if (celebrations.length > 0) {
+      set({ featureUnlocks: unlocks });
+      for (const msg of celebrations) {
+        get().addToast({ type: 'success', message: msg });
+      }
     }
   },
 

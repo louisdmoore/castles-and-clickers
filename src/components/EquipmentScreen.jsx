@@ -281,6 +281,7 @@ const EquipmentScreen = () => {
     updateEquipmentSettings,
     setClassPriority,
     compareToEquipped,
+    highestDungeonCleared,
   } = useGameStore();
 
   const [selectedHeroId, setSelectedHeroId] = useState(heroes[0]?.id || null);
@@ -411,8 +412,8 @@ const EquipmentScreen = () => {
           </button>
         )}
 
-        {/* Reforge Panel - rare+ non-unique equipped items */}
-        {selectedSlot && selectedHero?.equipment[selectedSlot] &&
+        {/* Reforge Panel - rare+ non-unique equipped items (unlocks at D15) */}
+        {highestDungeonCleared >= 15 && selectedSlot && selectedHero?.equipment[selectedSlot] &&
           !selectedHero.equipment[selectedSlot].isUnique &&
           ['rare', 'epic', 'legendary'].includes(selectedHero.equipment[selectedSlot].rarity) && (
           <ReforgePanel item={selectedHero.equipment[selectedSlot]} />

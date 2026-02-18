@@ -98,6 +98,7 @@ const NavBar = ({ activeModal, onOpenModal }) => {
       Icon: TreeIcon,
       label: 'Skills',
       badge: totalAvailableSkillPoints > 0 ? totalAvailableSkillPoints : null,
+      unlockAt: 2,
     },
     {
       id: 'equipment',
@@ -139,18 +140,21 @@ const NavBar = ({ activeModal, onOpenModal }) => {
       Icon: SkullIcon,
       label: 'Bestiary',
       badge: null,
+      unlockAt: 3,
     },
     {
       id: 'achievements',
       Icon: TrophyIcon,
       label: 'Achieve',
       badge: null,
+      unlockAt: 5,
     },
     {
       id: 'stats',
       Icon: ChartIcon,
       label: 'Stats',
       badge: null,
+      unlockAt: 5,
     },
     {
       id: 'encyclopedia',
