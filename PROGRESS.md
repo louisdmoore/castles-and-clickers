@@ -106,7 +106,7 @@
 - [x] Raid-specific mechanics — Tier 1 data-only first (Section 10.1)
 - [x] 8th party slot (Ascension 3) (Section 6.3) — already implemented in Phase 4
 - [x] Dungeon affixes (per-run modifiers) (Section 7.3)
-- [ ] Achievement system with constraint challenges
+- [x] Achievement system with constraint challenges
 - [ ] Essence currency + unique awakening (Section 13.2, 11.2)
 - [ ] Raid mastery tracking (Section 10.2)
 - [ ] Progressive disclosure / gated feature unlocks (Section 15)
@@ -144,8 +144,9 @@
 - Conditional XP triggers not wired into combat carried forward.
 - Pre-existing lint errors at ~82. No new errors introduced.
 - Only 2 raids have mechanics so far (sunken_temple, cursed_manor). sky_fortress, the_abyss, void_throne need mechanics added as Tier 2 later.
+- Achievement system: `checkAchievements()` called after `endDungeon` and `completeRaid`. 30 achievements across 5 categories. Stat tracking: flawlessRuns, speedClears (<30s), difficultyClearsAt, soloRoomClears, worldBossKills, rareItemsFound, epicItemsFound, peakGold. Custom conditions: flawless_dungeon, all_classes_recruited, all_uniques_collected, speed_clear, solo_room_clear, difficulty_clear.
 
-**Next up:** 8th party slot (Ascension 3), dungeon affixes, achievements, essence/awakening, raid mastery, progressive disclosure.
+**Next up:** Essence currency + unique awakening, raid mastery tracking, progressive disclosure.
 
 ### Session 8 (2026-02-17) — Phase 7 Complete (v0.4.0)
 

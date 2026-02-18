@@ -207,6 +207,17 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Affix interaction with raid difficulty tiers — Mythic raids already roll 2 affixes. If a Mythic raid has bountiful, verify gold calculations don't double-dip
 - [ ] No affix display in RunSummary or DeathRecap — player won't see what affixes were active after the run ends
 
+## Achievement System (v0.5.0)
+
+- [ ] Achievement check timing — only runs after dungeon/raid completion. Should it also run after recruiting heroes, buying items, or leveling up?
+- [ ] Speed clear threshold (30 seconds) — is this achievable? May need tuning based on actual run durations
+- [ ] Flawless run tracking — only counts zero deaths. Should "flawless" also require no healing used?
+- [ ] Solo room clear condition — tracks alive heroes === 1. Does this count correctly if heroes die mid-room?
+- [ ] Achievement gold rewards — flat amounts defined per achievement. Are the amounts balanced with the current economy?
+- [ ] Hidden achievements show "???" — is it clear enough to the player that hidden achievements exist and can be discovered?
+- [ ] Achievement progress bars — only show for stat-based achievements. Custom conditions show no progress (0 or 1). Could show partial progress for multi-step customs
+- [ ] `useGameStore.getState()` called outside selector in AchievementScreen — progress calculation uses full state snapshot. May not react to real-time stat changes while the modal is open
+
 ## General
 
 - [ ] Lint count crept from ~78 to ~84 — audit whether any are from Phase 1-2 changes
