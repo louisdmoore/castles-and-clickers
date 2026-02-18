@@ -228,6 +228,7 @@ export const useCombat = ({ addEffect }) => {
       completeRaid: () => useGameStore.getState().completeRaid(),
       pauseCombat: (ms) => useGameStore.getState().pauseCombat(ms),
       getOwnedUniques: () => useGameStore.getState().ownedUniques || [],
+      gainUniqueXp: (templateId, amount) => useGameStore.getState().gainUniqueXp(templateId, amount),
       // Read-only game state
       heroes, dungeon, dungeonProgress, roomCombat, heroHp, homesteadBonuses, mazeDungeon,
       // Derived constants

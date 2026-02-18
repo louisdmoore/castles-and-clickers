@@ -38,6 +38,19 @@ import { ELITE_CONFIG } from '../data/monsters';
 import { generateEquipment, generateConsumableDrop } from '../data/equipment';
 import { rollRaidDrop, getWingBoss } from '../data/raids';
 import { handleUnitDeath, handleMonsterDamageTriggers } from './combatHelpers';
+import { getUniqueItem } from '../data/uniqueItems';
+
+// Award conditional XP to unique items equipped by a hero that match a trigger
+const awardConditionalUniqueXp = (ctx, heroData, trigger, xpAmount = 25) => {
+  if (!heroData || !ctx.gainUniqueXp) return;
+  const uniques = getHeroUniqueItems(heroData);
+  for (const item of uniques) {
+    const template = getUniqueItem(item.templateId);
+    if (template?.conditionalXp?.trigger === trigger) {
+      ctx.gainUniqueXp(item.templateId, xpAmount);
+    }
+  }
+};
 import {
   DEFENSE_REDUCTION_MULTIPLIER, DAMAGE_VARIANCE_MIN, DAMAGE_VARIANCE_RANGE,
   BASE_CRIT_MULTIPLIER, BASE_CRIT_CHANCE_DPS, BASE_CRIT_CHANCE_OTHER, DPS_CLASSES,
@@ -214,6 +227,8 @@ export const calculateBasicAttackDamage = (ctx, actor, target) => {
     isCrit = true;
     if (actor.isHero) {
       incrementStat('totalCriticalHits', 1, { heroId: actor.id });
+      // Unique conditional XP: on_crit
+      if (heroData) awardConditionalUniqueXp(ctx, heroData, 'on_crit');
     }
   }
 
@@ -1236,6 +1251,11 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
     });
     incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: target.templateId, isBoss: target.isBoss, isWorldBoss: target.isWorldBoss });
 
+    // Unique conditional XP: on_kill
+    if (actor.isHero && heroData) {
+      awardConditionalUniqueXp(ctx, heroData, 'on_kill');
+    }
+
     if (target.wingBossId) {
       defeatWingBoss(target.wingBossId);
       addCombatLog({ type: 'system', message: `Wing Boss defeated: ${target.name}!` });
@@ -1300,7 +1320,7 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
       } else {
         addCombatLog({ type: 'system', message: `${item.name} (inventory full!)` });
       }
-    } else if (Math.random() < (target.isBoss ? BOSS_LOOT_DROP_CHANCE : NORMAL_LOOT_DROP_CHANCE) * (dungeon.difficultyMultiplier || 1.0) * (1 + (ctx.roomEventLootBonus || 0))) {
+    } else if (Math.random() < Math.min(1.0, (target.isBoss ? BOSS_LOOT_DROP_CHANCE : NORMAL_LOOT_DROP_CHANCE) * (dungeon.difficultyMultiplier || 1.0) * (1 + (ctx.roomEventLootBonus || 0)))) {
       const item = generateEquipment(dungeon.level, { lootMultiplier: dungeon.difficultyMultiplier || 1.0, favoredAffixes: dungeon.favoredAffixes });
       const result = processLootDrop(item);
       addEffect({ type: 'lootDrop', position: target.position, slot: item.slot, rarityColor: item.rarityColor || '#9ca3af' });

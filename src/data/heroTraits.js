@@ -39,13 +39,6 @@ export const HERO_TRAITS = {
     effect: { critChanceBonus: 0.05, dodgeChance: 0.05 },
     weight: 8,
   },
-  steady_hand: {
-    id: 'steady_hand',
-    name: 'Steady Hand',
-    description: '+10% accuracy',
-    effect: { accuracyBonus: 0.10 },
-    weight: 10,
-  },
   resilient: {
     id: 'resilient',
     name: 'Resilient',

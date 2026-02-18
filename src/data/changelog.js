@@ -1,9 +1,29 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.5.0';
+export const CURRENT_VERSION = '0.5.1';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.5.1',
+    title: 'Polish',
+    date: '2026-02-17',
+    changes: [
+      { type: 'feature', text: 'Unique items now gain XP from combat — crits, kills, and heals trigger conditional XP bonuses on equipped uniques' },
+      { type: 'feature', text: 'Enduring trait now regenerates 1% max HP per turn in combat' },
+      { type: 'feature', text: 'Iron Will trait now gives 10% chance to resist stun, freeze, and other control effects' },
+      { type: 'feature', text: 'Devoted trait now boosts healing done by 15% and healing received by 15%' },
+      { type: 'feature', text: 'Difficulty badge now visible in the zone header during combat — never forget what you signed up for' },
+      { type: 'improvement', text: 'Reforge toast now shows old vs new affixes so you can see exactly what changed' },
+      { type: 'improvement', text: 'Equipment tooltips now show [Infused] or [Ascended] quality labels alongside rarity' },
+      { type: 'improvement', text: 'Wandering Merchant now charges gold (scales with dungeon level) instead of giving free items' },
+      { type: 'improvement', text: 'Time between dungeon runs reduced from 10s to 6s for smoother idle play' },
+      { type: 'balance', text: 'Prestige capped at 10 stars (30% max stat bonus) to prevent unbounded scaling' },
+      { type: 'fix', text: 'Fixed boss loot drop chance exceeding 100% at high difficulty multipliers' },
+      { type: 'fix', text: 'Fixed MilestoneWidget progress bar losing its gold gradient color' },
+      { type: 'fix', text: 'Removed Steady Hand trait that promised accuracy bonuses from a non-existent system' },
+    ],
+  },
   {
     version: '0.5.0',
     title: 'Depth',

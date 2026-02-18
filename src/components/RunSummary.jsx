@@ -35,7 +35,7 @@ const RunSummary = () => {
   // Auto-dismiss after 5s when auto-advance is on
   useEffect(() => {
     if (!lastRunSummary || !autoAdvance) return;
-    const timer = setTimeout(dismissRunSummary, 5000);
+    const timer = setTimeout(dismissRunSummary, 3000);
     return () => clearTimeout(timer);
   }, [lastRunSummary, autoAdvance, dismissRunSummary]);
 

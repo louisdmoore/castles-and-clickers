@@ -107,19 +107,41 @@ const EVENT_HANDLERS = {
   },
 
   wandering_merchant: (event, ctx) => {
-    const { dungeon, addCombatLog, processLootDrop, addEffect, partyPosition } = ctx;
-    // Generate a guaranteed rare+ item — free find (no gold cost for simplicity in auto-play)
-    const item = generateEquipment(dungeon?.level || 1, {
-      guaranteedRarity: event.effect.itemMinRarity || 'rare',
-      favoredAffixes: dungeon?.favoredAffixes,
-    });
-    const result = processLootDrop(item);
-    if (addEffect && partyPosition) {
-      addEffect({ type: 'lootDrop', position: partyPosition, slot: item.slot, rarityColor: item.rarityColor || '#9ca3af' });
-    }
-    addCombatLog({ type: 'system', message: `Wandering Merchant! Found: ${item.name}` });
-    if (result.action === 'sold') {
-      addCombatLog({ type: 'system', message: `Auto-sold for +${result.gold}g` });
+    const { dungeon, addCombatLog, addGold, processLootDrop, addEffect, partyPosition } = ctx;
+    const cost = 50 * (dungeon?.level || 1);
+
+    // Check if player can afford the merchant's wares
+    const state = ctx.getState();
+    const currentGold = state.gold || 0;
+
+    if (currentGold >= cost) {
+      // Buy rare+ item
+      addGold(-cost);
+      const item = generateEquipment(dungeon?.level || 1, {
+        guaranteedRarity: event.effect.itemMinRarity || 'rare',
+        favoredAffixes: dungeon?.favoredAffixes,
+      });
+      const result = processLootDrop(item);
+      if (addEffect && partyPosition) {
+        addEffect({ type: 'lootDrop', position: partyPosition, slot: item.slot, rarityColor: item.rarityColor || '#9ca3af' });
+      }
+      addCombatLog({ type: 'system', message: `Wandering Merchant! Bought: ${item.name} (-${cost}g)` });
+      if (result.action === 'sold') {
+        addCombatLog({ type: 'system', message: `Auto-sold for +${result.gold}g` });
+      }
+    } else {
+      // Can't afford rare — get a common/uncommon item instead
+      const item = generateEquipment(dungeon?.level || 1, {
+        favoredAffixes: dungeon?.favoredAffixes,
+      });
+      const result = processLootDrop(item);
+      if (addEffect && partyPosition) {
+        addEffect({ type: 'lootDrop', position: partyPosition, slot: item.slot, rarityColor: item.rarityColor || '#9ca3af' });
+      }
+      addCombatLog({ type: 'system', message: `Wandering Merchant! Can't afford rare wares (${cost}g), found: ${item.name}` });
+      if (result.action === 'sold') {
+        addCombatLog({ type: 'system', message: `Auto-sold for +${result.gold}g` });
+      }
     }
     return null;
   },

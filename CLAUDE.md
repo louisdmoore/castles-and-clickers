@@ -353,14 +353,14 @@ merge: (persistedState, currentState) => ({
 
 `getClassesByRole(null)` returns all classes (for flex slots). Role checks must handle null: `if (slot.role && heroRole !== slot.role)`.
 
-## Unwired Combat Traits (deferred)
+## Wired Combat Traits (v0.5.1)
 
-These hero traits from `src/data/heroTraits.js` are defined and roll on heroes but have **no combat effect yet**:
-- `regenPercent` (Enduring: 1% HP/turn) — needs handler in `combatStatusEffects.js`
-- `controlResist` (Iron Will: +10% stun resist) — needs handler in status effect application
-- `healingMultiplier`/`healingReceivedMultiplier` (Devoted) — needs handler in skill execution healing path
-
-Wire these when touching the relevant combat files, or defer to a polish pass.
+All combat-affecting traits from `src/data/heroTraits.js` are now wired:
+- `regenPercent` (Enduring: 1% HP/turn) — handler in `combatStatusEffects.js:processHeroTurnStartAffixes`
+- `controlResist` (Iron Will: +10% stun resist) — resist check in `statusEngine.js:applyStatusEffect`
+- `healingMultiplier` (Devoted: +15% healing done) — wired in `skillEngine.js:getHealingBonuses`
+- `healingReceivedMultiplier` (Devoted: +15% healing received) — wired in `combatSkillExecution.js` heal result block
+- `accuracyBonus` (Steady Hand) — **removed** in v0.5.1, no accuracy system exists
 
 ## Phase 0 Data Files (pre-built)
 

@@ -117,6 +117,39 @@
 
 *Space for sessions to leave notes for the next session. Most recent first.*
 
+### Session 11 (2026-02-17) — Polish Pass (v0.5.1)
+
+**Completed:** Polish pass addressing bugs, dead code, unwired traits, balance issues, and UX rough edges across ~15 REPASS.md items.
+
+**Phase 1 — Bug Fixes & Dead Code:**
+- Capped boss loot drop rate at 100% (`Math.min(1.0, ...)` in combatDamageResolution.js)
+- Fixed MilestoneWidget duplicate `style` prop — merged into one object
+- Removed Steady Hand trait (no accuracy system exists) from heroTraits.js; existing heroes with trait gracefully skip display
+- Deleted HeroRecruitment.jsx (206 lines dead code)
+- Removed `recruitFromTavern` action from heroSlice.js (~130 lines, never called from UI)
+
+**Phase 2 — Wire Unwired Traits:**
+- Enduring trait: 1% max HP regen per turn in combatStatusEffects.js (mirrors monster regen pattern)
+- Iron Will trait: 10% control resist check before applying skipTurn effects in statusEngine.js
+- Devoted trait: healingMultiplier wired into skillEngine.js getHealingBonuses; healingReceivedMultiplier wired into combatSkillExecution.js heal result block
+- Unique conditional XP: wired on_kill, on_crit, on_heal triggers. Added `gainUniqueXp` to combat ctx in useCombat.js. Helper `awardConditionalUniqueXp` in combatDamageResolution.js. on_kill at both basic attack and skill kill sites. on_crit at crit stat tracking site. on_heal after successful heal in skill execution.
+
+**Phase 3 — Balance & Timing:**
+- Reduced RunSummary + PrepScreen auto-dismiss from 5s+5s to 3s+3s (6s total)
+- Capped prestige at 10 stars (MAX_PRESTIGE_STARS = 10, 30% max bonus)
+- Added gold cost to Wandering Merchant (50 * dungeonLevel). Falls back to lower-tier item if can't afford
+- Added difficulty badge in DungeonHeader (green 1.5x, amber 2.0x, red 3.0x)
+
+**Phase 4 — UX Improvements:**
+- Reforge toast now shows old vs new affix names: "[old] → [new]"
+- EquipmentTooltip now shows [Infused]/[Ascended] quality labels alongside rarity name
+
+**Carried forward:**
+- Remaining unique XP triggers (on_dodge, on_hit, on_burn_kill, etc.) — only on_kill/on_crit/on_heal wired
+- Awakened powers still data-only (no combat effects)
+- Only 2 raids have mechanics (sunken_temple, cursed_manor)
+- Lint baseline at 81
+
 ### Session 10 (2026-02-17) — Phase 8 Complete (v0.5.0)
 
 **Completed:** Remaining Phase 8 tasks — achievement system, essence + awakening, raid mastery, progressive disclosure.

@@ -10,6 +10,7 @@ import { xpForLevel } from '../helpers/statCalculator';
 export const PRESTIGE_MIN_LEVEL = 25;  // Must be level 25+ to prestige
 export const PRESTIGE_RESET_LEVEL = 10; // Reset to level 10 after prestige
 export const PRESTIGE_STAT_BONUS = 0.03; // +3% all stats per star
+export const MAX_PRESTIGE_STARS = 10;  // Cap at 10 stars (30% max bonus)
 
 export const createHeroSlice = (set, get) => ({
   // State
@@ -310,134 +311,6 @@ export const createHeroSlice = (set, get) => ({
     return true;
   },
 
-  recruitFromTavern: (tavernHeroId, slotIndex) => {
-    const { tavern, heroes, bench, gold, maxPartySize, maxBenchSize, usedSlotDiscounts, dungeon, pendingRecruits } = get();
-
-    // Find the tavern hero
-    const tavernHero = tavern.heroes.find(h => h.id === tavernHeroId);
-    if (!tavernHero) return false;
-
-    // Check if can afford
-    if (gold < tavernHero.recruitCost) {
-      get().addToast({ type: 'error', message: `Not enough gold to recruit (need ${tavernHero.recruitCost})` });
-      return false;
-    }
-
-    // Determine where to place the hero
-    const targetSlot = slotIndex !== undefined ? slotIndex : null;
-    let placingInParty = false;
-    let actualSlotIndex = targetSlot;
-
-    // Check pending recruits for slot availability
-    const pendingSlots = pendingRecruits.filter(p => !p.toBench).map(p => p.slotIndex);
-    const pendingBenchCount = pendingRecruits.filter(p => p.toBench).length;
-
-    if (targetSlot !== null) {
-      // Trying to place in party
-      if (targetSlot >= maxPartySize) return false;
-
-      // Check role matches slot (flex slots accept any role)
-      const slotDef = PARTY_SLOTS[targetSlot];
-      if (slotDef?.role && slotDef.role !== tavernHero.role) return false;
-
-      // Check slot is empty (including pending)
-      if (heroes[targetSlot] || pendingSlots.includes(targetSlot)) return false;
-
-      placingInParty = true;
-      actualSlotIndex = targetSlot;
-    } else {
-      // Try to find an empty party slot for this role (role-restricted first, then flex)
-      for (let i = 0; i < maxPartySize; i++) {
-        const slotDef = PARTY_SLOTS[i];
-        if (!slotDef) continue;
-        const roleMatch = !slotDef.role || slotDef.role === tavernHero.role;
-        if (roleMatch && !heroes[i] && !pendingSlots.includes(i)) {
-          placingInParty = true;
-          actualSlotIndex = i;
-          break;
-        }
-      }
-
-      // If no party slot, go to bench
-      if (!placingInParty && (bench.length + pendingBenchCount) >= maxBenchSize) {
-        get().addToast({ type: 'warning', message: 'No empty hero slot available' });
-        return false; // No room
-      }
-    }
-
-    // Create the actual hero from tavern hero data
-    const newHero = {
-      id: `hero_${Date.now()}_${Math.random().toString(36).substr(2, 9)}`,
-      name: tavernHero.name,
-      classId: tavernHero.classId,
-      level: tavernHero.level,
-      xp: 0,
-      equipment: tavernHero.equipment,
-      skills: tavernHero.skills,
-      traits: tavernHero.traits || [],
-    };
-
-    // If in dungeon, add to pending recruits
-    if (dungeon) {
-      const newUsedDiscounts = placingInParty && !usedSlotDiscounts.includes(actualSlotIndex)
-        ? [...usedSlotDiscounts, actualSlotIndex]
-        : usedSlotDiscounts;
-
-      set(state => ({
-        pendingRecruits: [...pendingRecruits, {
-          hero: newHero,
-          slotIndex: placingInParty ? actualSlotIndex : null,
-          toBench: !placingInParty,
-        }],
-        usedSlotDiscounts: newUsedDiscounts,
-        gold: state.gold - tavernHero.recruitCost,
-        tavern: {
-          ...state.tavern,
-          heroes: state.tavern.heroes.filter(h => h.id !== tavernHeroId),
-        },
-      }));
-      return 'pending';
-    }
-
-    clearStatCache();
-
-    if (placingInParty) {
-      // Place in party
-      const newHeroes = [...heroes];
-      while (newHeroes.length <= actualSlotIndex) {
-        newHeroes.push(undefined);
-      }
-      newHeroes[actualSlotIndex] = newHero;
-
-      // Mark slot discount as used
-      const newUsedDiscounts = usedSlotDiscounts.includes(actualSlotIndex)
-        ? usedSlotDiscounts
-        : [...usedSlotDiscounts, actualSlotIndex];
-
-      set(state => ({
-        heroes: newHeroes,
-        usedSlotDiscounts: newUsedDiscounts,
-        gold: state.gold - tavernHero.recruitCost,
-        tavern: {
-          ...state.tavern,
-          heroes: state.tavern.heroes.filter(h => h.id !== tavernHeroId),
-        },
-      }));
-    } else {
-      // Place on bench
-      set(state => ({
-        bench: [...state.bench, newHero],
-        gold: state.gold - tavernHero.recruitCost,
-        tavern: {
-          ...state.tavern,
-          heroes: state.tavern.heroes.filter(h => h.id !== tavernHeroId),
-        },
-      }));
-    }
-
-    return true;
-  },
-
   checkTavernRefresh: () => {
     const { tavern } = get();
     const timeSinceRefresh = Date.now() - tavern.lastRefresh;
@@ -715,6 +588,12 @@ export const createHeroSlice = (set, get) => ({
     // Check level requirement
     if (hero.level < PRESTIGE_MIN_LEVEL) {
       get().addToast({ type: 'error', message: `Hero must be level ${PRESTIGE_MIN_LEVEL}+ to prestige` });
+      return false;
+    }
+
+    // Check prestige cap
+    if ((hero.prestige?.count || 0) >= MAX_PRESTIGE_STARS) {
+      get().addToast({ type: 'warning', message: `${hero.name} has reached maximum prestige (${MAX_PRESTIGE_STARS} stars)` });
       return false;
     }
 

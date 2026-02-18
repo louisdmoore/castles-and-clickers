@@ -84,7 +84,7 @@ const PrepScreen = ({ onOpenAscension }) => {
     // Don't auto-advance past max dungeon level
     if (prepPhase.nextLevel > maxDungeonLevel) return;
 
-    const timer = setTimeout(startFromPrepPhase, 5000);
+    const timer = setTimeout(startFromPrepPhase, 3000);
     return () => clearTimeout(timer);
   }, [prepPhase, autoAdvance, lastRunSummary, startFromPrepPhase, maxDungeonLevel, dungeonSettings]);
 

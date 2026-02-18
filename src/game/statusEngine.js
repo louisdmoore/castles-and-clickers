@@ -1,5 +1,6 @@
 // Status effect processing engine
 import { STATUS_EFFECTS, STATUS_TYPE, isHarmfulStatus } from '../data/statusEffects';
+import { getHeroTrait } from '../data/heroTraits';
 
 /**
  * Apply a status effect to a target
@@ -14,6 +15,27 @@ export const applyStatusEffect = (target, statusId, source, options = {}) => {
   if (!template) {
     console.warn(`Unknown status effect: ${statusId}`);
     return { effects: target.statusEffects || [], applied: false };
+  }
+
+  // Iron Will trait: chance to resist control effects (stun/freeze/etc.)
+  if (template.skipTurn && target.traits) {
+    let controlResist = 0;
+    for (const traitId of target.traits) {
+      const trait = getHeroTrait(traitId);
+      if (trait?.effect?.controlResist) controlResist += trait.effect.controlResist;
+    }
+    if (controlResist > 0 && Math.random() < controlResist) {
+      return {
+        effects: target.statusEffects || [],
+        applied: false,
+        resisted: true,
+        log: {
+          type: 'status_resisted',
+          target: { name: target.name, emoji: target.emoji },
+          status: template,
+        },
+      };
+    }
   }
 
   const currentEffects = [...(target.statusEffects || [])];

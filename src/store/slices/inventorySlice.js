@@ -839,6 +839,9 @@ export const createInventorySlice = (set, get) => ({
     const currentAffixCount = item.affixes?.length || 0;
     const targetAffixCount = Math.max(currentAffixCount, item.rarity === 'rare' ? 1 : 2);
 
+    // Capture old affix names for toast comparison
+    const oldAffixNames = (item.affixes || []).map(id => ITEM_AFFIXES[id]?.name || id);
+
     // Keep locked affix
     const lockedAffixId = hasLock ? item.affixes[lockedAffixIndex] : null;
 
@@ -919,7 +922,9 @@ export const createInventorySlice = (set, get) => ({
       invalidateStatCache(equippedHeroId);
     }
 
-    get().addToast({ type: 'success', message: `Reforged! ${newName}` });
+    const newAffixNames = newAffixes.map(id => ITEM_AFFIXES[id]?.name || id);
+    const affixChange = `[${oldAffixNames.join(', ')}] → [${newAffixNames.join(', ')}]`;
+    get().addToast({ type: 'success', message: `Reforged! ${affixChange}` });
     return true;
   },
 });

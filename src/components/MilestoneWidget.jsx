@@ -142,8 +142,7 @@ const MilestoneWidget = () => {
             <div className="pixel-bar h-1.5">
               <div
                 className="pixel-bar-fill"
-                style={{ background: 'linear-gradient(180deg, #ffd700 0%, #cc9900 50%, #886600 100%)' }}
-                style={{ width: `${Math.min(100, milestone.progress)}%` }}
+                style={{ background: 'linear-gradient(180deg, #ffd700 0%, #cc9900 50%, #886600 100%)', width: `${Math.min(100, milestone.progress)}%` }}
               />
             </div>
           </div>

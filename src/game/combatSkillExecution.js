@@ -9,7 +9,9 @@ import {
   getHealShieldBonus, getBeaconHealInfo, getLivingSeedInfo,
   hasCCImmunity,
 } from './skillEngine';
-import { getHeroHealingReduction, isHeroImmuneToStatus } from './uniqueEngine';
+import { getHeroHealingReduction, isHeroImmuneToStatus, getHeroUniqueItems } from './uniqueEngine';
+import { getHeroTrait } from '../data/heroTraits';
+import { getUniqueItem } from '../data/uniqueItems';
 import { applyStatusEffect } from './statusEngine';
 import { STATUS_EFFECTS } from '../data/statusEffects';
 import { getPassiveAffixBonuses, checkPhoenixRevive } from './affixEngine';
@@ -151,6 +153,20 @@ export const executeHeroSkillAction = (ctx, actor) => {
           });
           incrementStat('totalMonstersKilled', 1, { heroId: actor.ownerId || actor.id, monsterId: m.templateId, isBoss: m.isBoss, isWorldBoss: m.isWorldBoss });
 
+          // Unique conditional XP: on_kill
+          if (actor.isHero && ctx.gainUniqueXp) {
+            const killerData = heroes.find(hr => hr.id === (actor.ownerId || actor.id));
+            if (killerData) {
+              const killerUniques = getHeroUniqueItems(killerData);
+              for (const item of killerUniques) {
+                const template = getUniqueItem(item.templateId);
+                if (template?.conditionalXp?.trigger === 'on_kill') {
+                  ctx.gainUniqueXp(item.templateId, 25);
+                }
+              }
+            }
+          }
+
           if (gold > 0) {
             addEffect({ type: 'goldDrop', position: m.position, amount: gold });
           }
@@ -289,11 +305,19 @@ export const executeHeroSkillAction = (ctx, actor) => {
         const targetHealReduction = getHeroHealingReduction(heroes.find(hr => hr.id === result.targetId) || {});
         const buffHealReduction = (newBuffs[result.targetId] || {}).healingReduction || 0;
         const totalHealReduction = Math.min(1, targetHealReduction + buffHealReduction);
-        // Lifebond synergy: bonus healing received
+        // Lifebond synergy + Devoted trait: bonus healing received
         const targetHeroForSynergy = heroes.find(hr => hr.id === result.targetId);
         const synergyHealBonus = targetHeroForSynergy ? (getPassiveAffixBonuses(targetHeroForSynergy).synergyHealingReceived || 0) : 0;
+        let traitHealReceivedMult = 1.0;
+        if (targetHeroForSynergy) {
+          for (const traitId of (targetHeroForSynergy.traits || [])) {
+            const trait = getHeroTrait(traitId);
+            if (trait?.effect?.healingReceivedMultiplier) traitHealReceivedMult *= trait.effect.healingReceivedMultiplier;
+          }
+        }
         const baseHealAmount = totalHealReduction > 0 ? Math.floor(result.amount * (1 - totalHealReduction)) : result.amount;
-        const reducedHealAmount = synergyHealBonus > 0 ? Math.floor(baseHealAmount * (1 + synergyHealBonus)) : baseHealAmount;
+        const afterSynergyHeal = synergyHealBonus > 0 ? Math.floor(baseHealAmount * (1 + synergyHealBonus)) : baseHealAmount;
+        const reducedHealAmount = Math.floor(afterSynergyHeal * traitHealReceivedMult);
         const actualHealAmount = Math.min(reducedHealAmount, h.stats.maxHp - h.stats.hp);
         h.stats.hp = Math.min(h.stats.maxHp, h.stats.hp + reducedHealAmount);
         if (targetHealReduction > 0) {
@@ -305,6 +329,20 @@ export const executeHeroSkillAction = (ctx, actor) => {
         if (actualHealAmount > 0) {
           ctx.healingReceivedByHero[result.targetId] = (ctx.healingReceivedByHero[result.targetId] || 0) + actualHealAmount;
           ctx.healingDoneByHero[actor.id] = (ctx.healingDoneByHero[actor.id] || 0) + actualHealAmount;
+
+          // Unique conditional XP: on_heal (for the healer)
+          if (actor.isHero && ctx.gainUniqueXp) {
+            const healerData = heroes.find(hr => hr.id === actor.id);
+            if (healerData) {
+              const healerUniques = getHeroUniqueItems(healerData);
+              for (const item of healerUniques) {
+                const template = getUniqueItem(item.templateId);
+                if (template?.conditionalXp?.trigger === 'on_heal') {
+                  ctx.gainUniqueXp(item.templateId, 25);
+                }
+              }
+            }
+          }
         }
 
         // Check for heal_shield (Cleric Radiance)

@@ -36,7 +36,7 @@ Things that shipped but need a second look. Add items as you go, check them off 
 
 ## Run Summary & Prep Screen
 
-- [ ] RunSummary auto-dismiss 5s + PrepScreen auto-dismiss 5s — total 10s between runs feels long with auto-advance
+- [x] ~~RunSummary auto-dismiss 5s + PrepScreen auto-dismiss 5s — total 10s between runs feels long with auto-advance~~ (v0.5.1: reduced both to 3s, total 6s)
 - [ ] MilestoneWidget goal priorities — are the "nearest goals" actually the most useful ones to show?
 - [ ] PrepScreen "favored drops" display — does it make sense to players who haven't seen the affix system yet?
 - [ ] PrepScreen dungeon preview — should it show monster types / difficulty info?
@@ -50,19 +50,19 @@ Things that shipped but need a second look. Add items as you go, check them off 
 ## Difficulty Slider
 
 - [ ] Balance tuning — does 3.0x difficulty feel fair with +200% enemy stats? May need playtesting
-- [ ] Drop rate cap — at 3.0x the normal mob drop chance is 75% (0.25 * 3.0), boss is 270% (capped at 100% but uncapped in code). Should cap the multiplied chance at 1.0
-- [ ] Difficulty setting persists across sessions — is that the right UX? Player might forget they set it to 3.0x and get wiped
+- [x] ~~Drop rate cap — at 3.0x the normal mob drop chance is 75% (0.25 * 3.0), boss is 270% (capped at 100% but uncapped in code). Should cap the multiplied chance at 1.0~~ (v0.5.1: wrapped with Math.min(1.0, ...))
+- [x] ~~Difficulty setting persists across sessions — is that the right UX? Player might forget they set it to 3.0x and get wiped~~ (v0.5.1: difficulty badge now shows in DungeonHeader during combat)
 - [ ] Auto-advance + high difficulty — should auto-advance reset difficulty to 1.0x to protect idle players?
 
 ## Hero Traits
 
-- [ ] HeroRecruitment.jsx is dead code — never imported by any component. Should be removed or integrated
-- [ ] `recruitFromTavern` in heroSlice is also never called from UI — tavern recruitment has no frontend. Traits on tavern heroes are invisible to the player until a tavern UI exists
+- [x] ~~HeroRecruitment.jsx is dead code — never imported by any component. Should be removed or integrated~~ (v0.5.1: deleted)
+- [x] ~~`recruitFromTavern` in heroSlice is also never called from UI — tavern recruitment has no frontend~~ (v0.5.1: removed action)
 - [ ] Trait display only on HeroCard — traits should also be visible on the tavern recruitment UI (once it exists) and the sidebar hero list
-- [ ] `regenPercent` trait (Enduring) not wired into combat — needs per-turn HP regen in combatStatusEffects.js
-- [ ] `controlResist` trait (Iron Will) not wired into status effect application — needs resist check in statusEngine.js
-- [ ] `healingMultiplier` / `healingReceivedMultiplier` traits (Devoted) not applied in healing code paths
-- [ ] `accuracyBonus` trait (Steady Hand) not applied — no accuracy system exists yet
+- [x] ~~`regenPercent` trait (Enduring) not wired into combat — needs per-turn HP regen in combatStatusEffects.js~~ (v0.5.1: wired)
+- [x] ~~`controlResist` trait (Iron Will) not wired into status effect application — needs resist check in statusEngine.js~~ (v0.5.1: wired)
+- [x] ~~`healingMultiplier` / `healingReceivedMultiplier` traits (Devoted) not applied in healing code paths~~ (v0.5.1: wired in skillEngine + combatSkillExecution)
+- [x] ~~`accuracyBonus` trait (Steady Hand) not applied — no accuracy system exists yet~~ (v0.5.1: trait removed, no accuracy system)
 - [ ] Glass Cannon `damageMultiplier` is applied as attack boost in statCalculator — should this be a true damage multiplier in combat resolution instead?
 - [ ] Existing heroes get empty traits array on migration — intentional (no retroactive random traits), but may feel bad for players
 
@@ -73,8 +73,8 @@ Things that shipped but need a second look. Add items as you go, check them off 
 
 ## Infused / Ascended Gear
 
-- [ ] Infused/Ascended items override rarity color — player can't tell rarity (rare vs epic) at a glance anymore. Show both?
-- [ ] `quality` field not displayed anywhere in equipment tooltips or inventory — only the name prefix and color signal quality
+- [x] ~~Infused/Ascended items override rarity color — player can't tell rarity (rare vs epic) at a glance anymore. Show both?~~ (v0.5.1: tooltip now shows rarity + [Infused]/[Ascended] label)
+- [x] ~~`quality` field not displayed anywhere in equipment tooltips or inventory — only the name prefix and color signal quality~~ (v0.5.1: quality label added to EquipmentTooltip)
 - [ ] Ascended 1.3x stat boost stacks with rarity multiplier — verify the resulting stat values aren't too high for game balance
 - [ ] Equipment comparison tooltips don't account for quality tier — should "Infused" be treated as an upgrade signal?
 
@@ -83,7 +83,7 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Event balance — Healing Spring full heal may be too strong in early dungeons; Cursed Altar 20% HP cost may be too harsh
 - [ ] Shrine of Fortune gold cost scaling — cost is `50 * dungeonLevel`, may need tuning for late-game gold levels
 - [ ] Trapped Chest loot — generates a single item via `generateEquipment`, no difficulty/rarity boost. Should trapped chests guarantee better rarity?
-- [ ] Wandering Merchant — always gives rare+ item for free. May need a gold cost or trade mechanic to feel more like a "merchant"
+- [x] ~~Wandering Merchant — always gives rare+ item for free. May need a gold cost or trade mechanic to feel more like a "merchant"~~ (v0.5.1: costs 50*dungeonLevel gold, lower-tier fallback if can't afford)
 - [ ] Imprisoned NPC +10% attack buff — permanent for the run, no visual indicator on hero stats. Should show as a buff icon
 - [ ] Monster Ambush 2x XP — only applies to that room's combat. Is 2x enough to feel rewarding?
 - [ ] Crumbling Floor skip combat — kills all non-boss monsters. If the room has a boss, the skip doesn't apply. Is this clear to the player?
@@ -107,7 +107,7 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Reforge cost curve tuning — is 2000g base too cheap or too expensive for the stage of the game where rare+ items appear?
 - [ ] Lock-one 2x multiplier — is this enough of a premium? Consider 3x for high-ascension players
 - [ ] Reforging on inventory items — currently only works on equipped items. Should inventory items be reforgeable too?
-- [ ] Reforge result feedback — toast shows "Reforged!" but doesn't show what changed. Should show old vs new affixes
+- [x] ~~Reforge result feedback — toast shows "Reforged!" but doesn't show what changed. Should show old vs new affixes~~ (v0.5.1: toast now shows [old] → [new] affix names)
 - [ ] ReforgePanel visibility — only appears when a slot with rare+ gear is selected. May not be discoverable for new players
 
 ## Affix Synergies
@@ -148,7 +148,7 @@ Things that shipped but need a second look. Add items as you go, check them off 
 
 - [ ] XP table tuning — `[0, 500, 2000, 5000, 12000]` — is the curve too steep or too flat? How many dungeons to max a unique?
 - [ ] Stat scale `[1.0, 1.15, 1.35, 1.60, 2.0]` — 2x stats at level 5 is a huge power spike. Verify it doesn't break game balance
-- [ ] Conditional XP triggers not wired into combat — `on_crit`, `on_kill`, `on_heal` etc. defined but `gainUniqueXp` never called from combat code. This is the core engagement loop and is currently non-functional
+- [x] ~~Conditional XP triggers not wired into combat — `on_crit`, `on_kill`, `on_heal` etc. defined but `gainUniqueXp` never called from combat code~~ (v0.5.1: on_kill, on_crit, on_heal wired into combatDamageResolution + combatSkillExecution)
 - [ ] Level display on UniqueCollectionScreen — star icon at max level, number for levels 1-4. Clear enough?
 - [ ] XP bar visibility — is the XP progress bar on the detail panel noticeable? Players need to know their unique is gaining XP
 - [ ] Unique level scaling in stat display — does the equipped item tooltip show the leveled-up stats or base stats?
@@ -170,7 +170,7 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Prestige disabled during dungeon — verified, but toast message could be more helpful (explain why)
 - [ ] Prestige confirmation modal — does it clearly communicate what's lost vs gained?
 - [ ] Prestige star display in sidebar/HeroCard/PrepScreen — ★ symbols. Do they scale well with 5 stars? Any alignment issues?
-- [ ] Prestige count has no cap — can prestige infinitely for +3% each time. Is there a practical limit (level 25 takes a while after reset to 10)?
+- [x] ~~Prestige count has no cap — can prestige infinitely for +3% each time~~ (v0.5.1: capped at 10 stars, 30% max bonus)
 - [ ] Stars survive ascension — verified via spread operator. But test an actual ascension with prestiged heroes to confirm
 
 ## Raid Difficulty Tiers (v0.5.0)
@@ -250,7 +250,7 @@ Things that shipped but need a second look. Add items as you go, check them off 
 
 ## General
 
-- [ ] Lint count crept from ~78 to ~84 — audit whether any are from Phase 1-2 changes
+- [x] ~~Lint count crept from ~78 to ~84 — audit whether any are from Phase 1-2 changes~~ (v0.5.1: lint at 81, no new errors from polish pass)
 - [ ] No tests for any Phase 1-3 features — acceptable for now but increasing risk surface
 - [ ] Save migration — new state fields (prepPhase, deathLog, runStats, lastDeathRecap) use partialize exclusion, not migration. Will this cause issues for existing saves?
 - [ ] Versioned migration system built but `merge` function in gameStore still does its own hero sanitization — should that logic move into migrations too?
