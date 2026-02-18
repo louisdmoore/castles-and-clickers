@@ -207,6 +207,17 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Affix interaction with raid difficulty tiers — Mythic raids already roll 2 affixes. If a Mythic raid has bountiful, verify gold calculations don't double-dip
 - [ ] No affix display in RunSummary or DeathRecap — player won't see what affixes were active after the run ends
 
+## Essence & Unique Awakening (v0.5.0)
+
+- [ ] Essence earn rates — 50/100/200 for Normal/Heroic/Mythic raids and 10-20 for 2.0x+ dungeons. Are these balanced? 500 cost means ~5 Normal raids to awaken one unique
+- [ ] Awakened power descriptions are data-only — none of the enhanced effects are wired into combat yet. Need to implement when unique powers are wired in general
+- [ ] Essence display in HUD — only appears when > 0. Should there be a tooltip or info about how to earn it?
+- [ ] Awakening is one-way and irreversible — no confirmation dialog. Should there be one for spending 500 essence?
+- [ ] Awakened power preview shown in UniqueCollectionScreen — is it clear enough that this is a preview vs the current power?
+- [ ] No essence display in stats screen — should totalEssenceEarned appear in the Stats tab?
+- [ ] Essence earned on dungeon completion — awarded after set() clears dungeon state. Uses `dungeonDifficulty` captured before the set. Verify this works
+- [ ] No essence spent tracking in stats — only totalEssenceEarned is tracked, not totalEssenceSpent
+
 ## Achievement System (v0.5.0)
 
 - [ ] Achievement check timing — only runs after dungeon/raid completion. Should it also run after recruiting heroes, buying items, or leveling up?
