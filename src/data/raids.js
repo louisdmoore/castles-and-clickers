@@ -60,6 +60,38 @@ export const RAID_MECHANICS = {
 
 export const getRaidMechanic = (raidId) => RAID_MECHANICS[raidId] || null;
 
+// Raid mastery system (Section 10.2)
+// Track clears per raid, unlock raid-specific permanent stat buffs at milestones
+export const RAID_MASTERY_TIERS = [
+  { clears: 5, statBonus: 0.05, label: 'Apprentice', reward: '+5% stats in this raid' },
+  { clears: 10, statBonus: 0.10, label: 'Veteran', reward: '+10% stats in this raid' },
+  { clears: 25, statBonus: 0.15, label: 'Master', reward: '+15% stats, unique drop rate boost' },
+];
+
+// Get mastery info for a raid based on clear count
+export const getRaidMastery = (clears) => {
+  let tier = null;
+  let nextTier = RAID_MASTERY_TIERS[0];
+  for (const t of RAID_MASTERY_TIERS) {
+    if (clears >= t.clears) {
+      tier = t;
+    } else {
+      nextTier = t;
+      break;
+    }
+  }
+  if (tier === RAID_MASTERY_TIERS[RAID_MASTERY_TIERS.length - 1]) {
+    nextTier = null; // Max mastery reached
+  }
+  return {
+    tier,
+    nextTier,
+    statBonus: tier?.statBonus || 0,
+    label: tier?.label || null,
+    uniqueDropBonus: tier?.clears >= 25 ? 0.25 : 0, // +25% unique drop rate at Master
+  };
+};
+
 const AI = {
   BOSS: 'boss',
   AGGRESSIVE: 'aggressive',

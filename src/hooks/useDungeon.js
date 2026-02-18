@@ -26,7 +26,7 @@ import { resetUniqueStates, processOnCombatStartUniques, processOnRoomStartUniqu
 import { applyStatusEffect } from '../game/statusEngine';
 import { resetBossStates } from '../game/bossEngine';
 import { processRoomEvent } from '../game/roomEventHandlers';
-import { getRaidMechanic } from '../data/raids';
+import { getRaidMechanic, getRaidMastery } from '../data/raids';
 import { getDungeonAffix } from '../data/dungeonAffixes';
 
 /**
@@ -125,6 +125,18 @@ export const useDungeon = ({ addEffect }) => {
         }
       }
 
+      // Apply raid mastery stat buffs
+      if (isRaid) {
+        const raidClears = state.stats?.raidRuns?.[dungeon.raidId] || 0;
+        const mastery = getRaidMastery(raidClears);
+        if (mastery.statBonus > 0) {
+          stats.attack = Math.floor(stats.attack * (1 + mastery.statBonus));
+          stats.defense = Math.floor(stats.defense * (1 + mastery.statBonus));
+          stats.maxHp = Math.floor(stats.maxHp * (1 + mastery.statBonus));
+          stats.speed = Math.floor(stats.speed * (1 + mastery.statBonus));
+        }
+      }
+
       // Apply unique item maxHpMultiplier (Leviathan's Heart - 2x HP)
       const uniqueBonuses = getUniquePassiveBonuses({ ...hero, stats });
       if (uniqueBonuses.maxHpMultiplier && uniqueBonuses.maxHpMultiplier !== 1) {
@@ -172,6 +184,11 @@ export const useDungeon = ({ addEffect }) => {
       addCombatLog({ type: 'system', message: `${mazeDungeon.wingBossIds?.length || 0} wing bosses + final boss` });
       if (raidMechanic) {
         addCombatLog({ type: 'system', message: `${raidMechanic.name}: ${raidMechanic.description}` });
+      }
+      const raidClears = state.stats?.raidRuns?.[dungeon.raidId] || 0;
+      const masteryInfo = getRaidMastery(raidClears);
+      if (masteryInfo.label) {
+        addCombatLog({ type: 'system', message: `Raid Mastery: ${masteryInfo.label} (+${Math.round(masteryInfo.statBonus * 100)}% stats)` });
       }
     } else {
       addCombatLog({ type: 'system', message: `Dungeon Level ${dungeon.level}` });

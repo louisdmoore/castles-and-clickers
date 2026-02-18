@@ -1,4 +1,4 @@
-import { RAIDS, isRaidUnlocked, getRaidDifficultyTier } from '../../data/raids';
+import { RAIDS, isRaidUnlocked, getRaidDifficultyTier, getRaidMastery } from '../../data/raids';
 import { getMaxPartySize, getDungeonTier } from '../../data/milestones';
 import { DUNGEON_THEMES } from '../../data/dungeonThemes';
 import { getAscensionDungeonCap, hasAscensionUnlock } from '../../data/ascensionMilestones';
@@ -543,7 +543,7 @@ export const createDungeonSlice = (set, get) => ({
         raidId,
         difficultyMultiplier: tier.statMultiplier,
         raidDifficulty: difficulty,
-        raidUniqueDropBonus: tier.uniqueDropBonus,
+        raidUniqueDropBonus: tier.uniqueDropBonus + getRaidMastery(get().stats?.raidRuns?.[raidId] || 0).uniqueDropBonus,
         activeBuffs: pendingDungeonBuffs.length > 0 ? [...pendingDungeonBuffs] : [],
         affixes: raidAffixes.map(a => a.id),
       },
