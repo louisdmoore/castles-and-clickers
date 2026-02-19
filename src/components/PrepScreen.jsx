@@ -111,6 +111,29 @@ const PrepScreen = ({ onOpenAscension }) => {
     return { level, tier, theme, totalRooms, worldBoss, favoredAffixes };
   }, [prepPhase]);
 
+  // Compute party power vs dungeon difficulty
+  const partyPower = useMemo(() => {
+    if (!prepPhase || !dungeonPreview) return null;
+    const active = heroes.filter(Boolean);
+    if (active.length === 0) return null;
+
+    const totalAttack = active.reduce((sum, hero) => {
+      const cls = CLASSES[hero.classId];
+      if (!cls) return sum;
+      const estimatedAttack = cls.baseStats.attack + cls.growthPerLevel.attack * (hero.level - 1);
+      return sum + estimatedAttack;
+    }, 0);
+
+    const difficultyMultiplier = dungeonSettings?.difficultyMultiplier || 1.0;
+    const estimatedDifficulty = dungeonPreview.level * 15 * difficultyMultiplier;
+
+    const ratio = totalAttack / Math.max(1, estimatedDifficulty);
+    if (ratio >= 1.5) return { color: '#22c55e', label: 'Strong' };
+    if (ratio >= 1.0) return { color: '#fbbf24', label: 'Fair' };
+    if (ratio >= 0.7) return { color: '#f97316', label: 'Tough' };
+    return { color: '#ef4444', label: 'Dangerous' };
+  }, [heroes, prepPhase, dungeonPreview, dungeonSettings?.difficultyMultiplier]);
+
   // Don't render if no prep phase or run summary is still showing
   if (!prepPhase || lastRunSummary) return null;
 
@@ -160,6 +183,16 @@ const PrepScreen = ({ onOpenAscension }) => {
             })}
             {activeHeroes.length === 0 && (
               <div className="text-xs text-[var(--color-text-dim)]">No heroes recruited</div>
+            )}
+            {!atMaxLevel && partyPower && (
+              <div className="mt-2 pt-2 border-t border-[var(--color-border)]">
+                <div className="flex items-center justify-between">
+                  <span className="pixel-label text-[10px]">Party Power</span>
+                  <span className="text-xs font-bold" style={{ color: partyPower.color }}>
+                    {partyPower.label}
+                  </span>
+                </div>
+              </div>
             )}
           </div>
 
@@ -262,7 +295,7 @@ const PrepScreen = ({ onOpenAscension }) => {
         {autoAdvance && canEnter && (
           <div className="text-center mb-3">
             <span className="pixel-label text-xs" style={{ color: 'var(--color-text-dim)' }}>
-              Auto-advancing in 5s...
+              Auto-advancing in 3s...
             </span>
           </div>
         )}

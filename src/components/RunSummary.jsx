@@ -49,6 +49,77 @@ const RunSummary = () => {
     return messages[lastRunSummary.timestamp % messages.length];
   }, [lastRunSummary]);
 
+  const insight = useMemo(() => {
+    if (!lastRunSummary) return { text: '', color: '' };
+    const { success, heroStats } = lastRunSummary;
+    const entries = Object.entries(heroStats);
+
+    // 1. Damage concentration
+    const totalDmg = entries.reduce((s, [, st]) => s + (st.damageDealt || 0), 0);
+    if (totalDmg > 0) {
+      let maxDmgHero = null;
+      let maxDmg = 0;
+      for (const [, stats] of entries) {
+        if ((stats.damageDealt || 0) > maxDmg) {
+          maxDmg = stats.damageDealt || 0;
+          maxDmgHero = stats;
+        }
+      }
+      if (maxDmgHero && maxDmg > totalDmg * 0.6) {
+        return {
+          text: `Damage is concentrated on ${maxDmgHero.name}. If they fall, the run collapses. Consider spreading damage across more DPS.`,
+          color: '#fbbf24',
+        };
+      }
+    }
+
+    // 2. Healer taking too much damage
+    const healers = entries.filter(([, st]) => CLASSES[st.classId]?.role === 'healer');
+    const dpsHeroes = entries.filter(([, st]) => CLASSES[st.classId]?.role === 'dps');
+    if (healers.length > 0 && dpsHeroes.length > 0) {
+      const avgDpsDmgTaken = dpsHeroes.reduce((s, [, st]) => s + (st.damageTaken || 0), 0) / dpsHeroes.length;
+      const overexposedHealer = healers.find(([, st]) => (st.damageTaken || 0) > avgDpsDmgTaken);
+      if (overexposedHealer) {
+        return {
+          text: `Your healer ${overexposedHealer[1].name} took more damage than your DPS. A tank with taunt could protect them.`,
+          color: '#fbbf24',
+        };
+      }
+    }
+
+    // 3. Healing deficit
+    const totalHealingDone = entries.reduce((s, [, st]) => s + (st.healingDone || 0), 0);
+    const totalDamageTaken = entries.reduce((s, [, st]) => s + (st.damageTaken || 0), 0);
+    if (!success && totalDamageTaken > 0 && totalHealingDone < totalDamageTaken * 0.2) {
+      return {
+        text: "Healing couldn't keep up with incoming damage. Consider adding a healer or leveling your current one.",
+        color: '#ef4444',
+      };
+    }
+
+    // 4. Flawless success
+    if (success && entries.every(([, st]) => (st.damageTaken || 0) === 0)) {
+      return {
+        text: 'Flawless! Your party took zero damage. Try a harder dungeon for better rewards.',
+        color: '#22c55e',
+      };
+    }
+
+    // 5. Clean success
+    if (success) {
+      return {
+        text: 'Solid run. If it felt easy, bump up the difficulty for better loot.',
+        color: '#22c55e',
+      };
+    }
+
+    // 6. Default defeat
+    return {
+      text: 'Tough fight. Check your party composition and gear before retrying.',
+      color: 'var(--color-text-dim)',
+    };
+  }, [lastRunSummary]);
+
   if (!lastRunSummary) return null;
 
   const { success, dungeonLevel, heroStats, totalDamage, mvpId, biggestHit, biggestHitHero } = lastRunSummary;
@@ -140,10 +211,17 @@ const RunSummary = () => {
         })}
       </div>
 
+      <div className="pixel-panel-dark p-3 mt-3">
+        <div className="pixel-label text-xs mb-1">Key Insight</div>
+        <p className="text-xs" style={{ color: insight.color }}>
+          {insight.text}
+        </p>
+      </div>
+
       {autoAdvance && (
         <div className="text-center mt-3">
           <span className="pixel-label text-xs" style={{ color: 'var(--color-text-dim)' }}>
-            Auto-advancing in 5s...
+            Auto-advancing in 3s...
           </span>
         </div>
       )}

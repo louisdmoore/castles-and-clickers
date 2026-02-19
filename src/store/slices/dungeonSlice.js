@@ -157,6 +157,8 @@ export const createDungeonSlice = (set, get) => ({
         dungeonLevel,
         timestamp: Date.now(),
         deaths: deathLog,
+        roomNumber: get().dungeon?.currentRoom,
+        totalRooms: get().dungeon?.totalRooms,
         heroStats: {},
       };
       for (const hero of heroes.filter(Boolean)) {

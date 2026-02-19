@@ -1,4 +1,4 @@
-import { memo, useEffect, useCallback } from 'react';
+import { memo, useEffect, useCallback, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { CLASSES } from '../data/classes';
 import ClassIcon from './icons/ClassIcon';
@@ -27,9 +27,50 @@ const DeathRecap = () => {
     dismissDeathRecap();
   }, [dismissDeathRecap]);
 
+  const analysis = useMemo(() => {
+    if (!lastDeathRecap) return { title: '', suggestion: '' };
+    const { deaths, heroStats } = lastDeathRecap;
+
+    // 1. Tank died first
+    if (deaths.length > 0 && CLASSES[deaths[0].classId]?.role === 'tank') {
+      return {
+        title: 'Your tank fell first',
+        suggestion: 'Try leveling your tank or adding a second healer to keep them alive. Better defensive gear helps too.',
+      };
+    }
+
+    // 2. Healer died first
+    if (deaths.length > 0 && CLASSES[deaths[0].classId]?.role === 'healer') {
+      return {
+        title: 'Your healer fell first',
+        suggestion: 'Without healing, the party collapses fast. A tank with taunt can draw fire away from your healer.',
+      };
+    }
+
+    // 3. DPS died and healing was low
+    let totalDmgTaken = 0;
+    let totalHealRecv = 0;
+    for (const stats of Object.values(heroStats)) {
+      totalDmgTaken += stats.damageTaken || 0;
+      totalHealRecv += stats.healingReceived || 0;
+    }
+    if (totalDmgTaken > 0 && totalHealRecv < totalDmgTaken * 0.3) {
+      return {
+        title: 'Not enough healing',
+        suggestion: 'Your party took far more damage than it healed. Consider a second healer or better healing gear.',
+      };
+    }
+
+    // 4. Default
+    return {
+      title: 'Overwhelmed',
+      suggestion: 'Try leveling your heroes, upgrading gear, or lowering the difficulty.',
+    };
+  }, [lastDeathRecap]);
+
   if (!lastDeathRecap) return null;
 
-  const { dungeonLevel, deaths, heroStats } = lastDeathRecap;
+  const { dungeonLevel, deaths, heroStats, roomNumber, totalRooms } = lastDeathRecap;
 
   // Calculate total damage taken and healing received across all heroes
   let totalDamageTaken = 0;
@@ -114,6 +155,20 @@ const DeathRecap = () => {
             Incoming damage outpaced healing by {formatStat(totalDamageTaken - totalHealingReceived)}
           </div>
         )}
+      </div>
+
+      {/* Why You Lost */}
+      <div className="pixel-panel-dark p-3 mb-3">
+        <div className="pixel-label text-xs mb-1" style={{ color: '#fbbf24' }}>Why You Lost</div>
+        {roomNumber && totalRooms && (
+          <div className="text-[10px] text-[var(--color-text-dim)] mb-2">
+            Wiped in room {roomNumber} of {totalRooms}
+          </div>
+        )}
+        <div className="text-xs text-white mb-1">{analysis.title}</div>
+        <div className="text-xs" style={{ color: 'var(--color-text-dim)' }}>
+          Try this: {analysis.suggestion}
+        </div>
       </div>
 
       {/* Hero breakdown */}
