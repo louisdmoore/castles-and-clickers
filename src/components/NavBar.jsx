@@ -11,13 +11,13 @@ const NavButton = ({ id, Icon, label, badge, isActive, isLocked, unlockAt, onCli
       disabled={isLocked}
       aria-disabled={isLocked || undefined}
       aria-current={isActive ? 'page' : undefined}
-      className={`pixel-btn relative flex items-center gap-1 sm:gap-1.5 px-2 sm:px-3 py-1.5 ${
+      className={`pixel-btn relative flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 md:px-3 py-1.5 ${
         isActive ? 'pixel-btn-primary' : ''
       } ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
       title={isLocked ? `Unlocks at Dungeon ${unlockAt}` : undefined}
     >
       <Icon size={16} />
-      <span className="text-xs sm:text-sm">{label}</span>
+      <span className="text-[10px] md:text-xs lg:text-sm">{label}</span>
       {badge && (
         <span className={`pixel-badge absolute -top-1.5 -right-1.5 text-[10px] ${
           badge === 'NEW' ? 'animate-pixel-blink' : ''
@@ -113,14 +113,13 @@ const NavBar = ({ activeModal, onOpenModal }) => {
       badge: null,
       unlockAt: 5,
     },
-    // Homestead hidden for now
-    // {
-    //   id: 'homestead',
-    //   Icon: HomeIcon,
-    //   label: 'Home',
-    //   badge: homesteadNewlyAvailable ? 'NEW' : null,
-    //   unlockAt: 3,
-    // },
+    {
+      id: 'homestead',
+      Icon: HomeIcon,
+      label: 'Home',
+      badge: homesteadNewlyAvailable ? 'NEW' : null,
+      unlockAt: 3,
+    },
     {
       id: 'raids',
       Icon: CrownIcon,

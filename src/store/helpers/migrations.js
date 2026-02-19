@@ -11,7 +11,7 @@
  *   3. The migration receives the full persisted state and returns the updated state
  */
 
-export const SAVE_VERSION = 7;
+export const SAVE_VERSION = 8;
 
 // Sequential migration functions: fromVersion -> transform
 const MIGRATIONS = {
@@ -118,6 +118,19 @@ const MIGRATIONS = {
   6: (state) => {
     if (state.essence === undefined) {
       state.essence = 0;
+    }
+    return state;
+  },
+
+  // v7 → v8: Phase 5 — Homestead rework (academy/tavern → library)
+  7: (state) => {
+    if (state.homestead) {
+      // Remove old building keys, add library
+      delete state.homestead.academy;
+      delete state.homestead.tavern;
+      if (state.homestead.library === undefined) {
+        state.homestead.library = 0;
+      }
     }
     return state;
   },

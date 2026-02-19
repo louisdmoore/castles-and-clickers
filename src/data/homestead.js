@@ -4,93 +4,96 @@ export const BUILDINGS = {
   barracks: {
     id: 'barracks',
     name: 'Barracks',
-    emoji: '🛡️',
-    description: 'Strengthens your heroes\' constitution',
+    description: 'Trains and houses more warriors',
     maxLevel: 10,
-    effect: {
-      type: 'hp',
-      valuePerLevel: 0.05, // +5% HP per level
+    effect: { type: 'attack', valuePerLevel: 0.05 }, // +5% ATK per level
+    baseCost: 500,
+    costMultiplier: 2.8,
+    unlocks: {
+      3: { type: 'partySlot', slot: 5, label: '5th party slot' },
+      7: { type: 'partySlot', slot: 6, label: '6th party slot' },
+      10: { type: 'partySlot', slot: 7, label: '7th party slot' },
     },
-    baseCost: 100,
-    costMultiplier: 2.5,
   },
   armory: {
     id: 'armory',
     name: 'Armory',
-    emoji: '⚔️',
-    description: 'Improves weapon quality and training',
+    description: 'Improves gear knowledge and management',
     maxLevel: 10,
-    effect: {
-      type: 'attack',
-      valuePerLevel: 0.05, // +5% Attack per level
+    effect: { type: 'defense', valuePerLevel: 0.05 }, // +5% DEF per level
+    baseCost: 500,
+    costMultiplier: 2.8,
+    unlocks: {
+      3: { type: 'feature', key: 'equipComparison', label: 'Equipment comparison tooltips' },
+      7: { type: 'feature', key: 'autoEquip', label: 'Auto-equip feature' },
     },
-    baseCost: 100,
-    costMultiplier: 2.5,
-  },
-  trainingGrounds: {
-    id: 'trainingGrounds',
-    name: 'Training Grounds',
-    emoji: '🎯',
-    description: 'Heroes learn faster from combat',
-    maxLevel: 10,
-    effect: {
-      type: 'xpGain',
-      valuePerLevel: 0.10, // +10% XP per level
-    },
-    baseCost: 150,
-    costMultiplier: 2.5,
-  },
-  treasury: {
-    id: 'treasury',
-    name: 'Treasury',
-    emoji: '💰',
-    description: 'Better at finding and appraising loot',
-    maxLevel: 10,
-    effect: {
-      type: 'goldFind',
-      valuePerLevel: 0.10, // +10% Gold per level
-    },
-    baseCost: 150,
-    costMultiplier: 2.5,
-  },
-  infirmary: {
-    id: 'infirmary',
-    name: 'Infirmary',
-    emoji: '🏥',
-    description: 'Heals heroes while exploring',
-    maxLevel: 5,
-    effect: {
-      type: 'healBetweenDungeons',
-      valuePerLevel: 0.02, // +2% HP per exploration tick per level
-    },
-    baseCost: 250,
-    costMultiplier: 2.5,
   },
   fortress: {
     id: 'fortress',
     name: 'Fortress',
-    emoji: '🏰',
-    description: 'Reinforces armor and shields',
+    description: 'Reinforces defenses and unlocks harder challenges',
     maxLevel: 10,
-    effect: {
-      type: 'defense',
-      valuePerLevel: 0.05, // +5% Defense per level
+    effect: { type: 'hp', valuePerLevel: 0.05 }, // +5% HP per level
+    baseCost: 500,
+    costMultiplier: 2.8,
+    unlocks: {
+      3: { type: 'difficultyMax', value: 1.5, label: 'Hard difficulty (1.5x)' },
+      5: { type: 'difficultyMax', value: 2.0, label: 'Brutal difficulty (2.0x)' },
+      7: { type: 'difficultyMax', value: 2.5, label: 'Nightmare difficulty (2.5x)' },
+      10: { type: 'difficultyMax', value: 3.0, label: 'Infernal difficulty (3.0x)' },
     },
-    baseCost: 100,
-    costMultiplier: 2.5,
   },
-  academy: {
-    id: 'academy',
-    name: 'Academy',
-    emoji: '📚',
-    description: 'Reduces skill cooldowns',
-    maxLevel: 5,
-    effect: {
-      type: 'cooldownReduction',
-      valuePerLevel: 1, // -1 turn cooldown per level
+  infirmary: {
+    id: 'infirmary',
+    name: 'Infirmary',
+    description: 'Heals heroes between rooms',
+    maxLevel: 7,
+    effect: { type: 'healBetweenRooms', valuePerLevel: 0.002 }, // +0.2% between-room heal per level
+    baseCost: 800,
+    costMultiplier: 2.8,
+    unlocks: {
+      3: { type: 'feature', key: 'consumables', label: 'Consumable slots' },
+      7: { type: 'feature', key: 'betterConsumables', label: 'Advanced consumables' },
     },
-    baseCost: 300,
-    costMultiplier: 3,
+  },
+  treasury: {
+    id: 'treasury',
+    name: 'Treasury',
+    description: 'Increases gold earnings and unlocks commerce',
+    maxLevel: 10,
+    effect: { type: 'goldFind', valuePerLevel: 0.05 }, // +5% gold find per level
+    baseCost: 500,
+    costMultiplier: 2.8,
+    unlocks: {
+      3: { type: 'feature', key: 'shop', label: 'Shop unlocks' },
+      7: { type: 'feature', key: 'shopFastRefresh', label: 'Shop auto-refresh rate halved' },
+    },
+  },
+  trainingGrounds: {
+    id: 'trainingGrounds',
+    name: 'Training Grounds',
+    description: 'Accelerates hero growth',
+    maxLevel: 10,
+    effect: { type: 'xpGain', valuePerLevel: 0.10 }, // +10% XP per level
+    baseCost: 600,
+    costMultiplier: 2.8,
+    unlocks: {
+      3: { type: 'feature', key: 'skillRespec', label: 'Skill respec available' },
+      7: { type: 'feature', key: 'dungeonXpBonus', label: '+50% XP from higher dungeons' },
+    },
+  },
+  library: {
+    id: 'library',
+    name: 'Library',
+    description: 'Reveals knowledge about enemies and dungeons',
+    maxLevel: 7,
+    effect: { type: 'bestiaryDepth', valuePerLevel: 1 }, // More bestiary info per level
+    baseCost: 400,
+    costMultiplier: 2.8,
+    unlocks: {
+      3: { type: 'feature', key: 'bestiary', label: 'Bestiary unlocks' },
+      7: { type: 'feature', key: 'dungeonPreview', label: 'Dungeon preview (show monster types)' },
+    },
   },
 };
 
@@ -104,6 +107,27 @@ export const getBuildingBonus = (building, level) => {
   return building.effect.valuePerLevel * level;
 };
 
+// Get the next unlock for a building at its current level
+export const getNextUnlock = (building, currentLevel) => {
+  if (!building.unlocks) return null;
+  const unlockLevels = Object.keys(building.unlocks).map(Number).sort((a, b) => a - b);
+  const next = unlockLevels.find(level => level > currentLevel);
+  return next ? { level: next, ...building.unlocks[next] } : null;
+};
+
+// Get all unlocks achieved at or below a given level
+export const getUnlocksAtLevel = (building, level) => {
+  if (!building.unlocks) return [];
+  return Object.entries(building.unlocks)
+    .filter(([lvl]) => Number(lvl) <= level)
+    .map(([lvl, data]) => ({ level: Number(lvl), ...data }));
+};
+
+// Check if a specific homestead feature is unlocked
+export const isHomesteadFeatureUnlocked = (buildingLevels, buildingId, featureLevel) => {
+  return (buildingLevels[buildingId] || 0) >= featureLevel;
+};
+
 // Get all homestead bonuses from current levels
 export const calculateHomesteadBonuses = (buildingLevels) => {
   const bonuses = {
@@ -112,15 +136,17 @@ export const calculateHomesteadBonuses = (buildingLevels) => {
     defense: 0,
     xpGain: 0,
     goldFind: 0,
-    healBetweenDungeons: 0,
-    cooldownReduction: 0,
+    healBetweenRooms: 0,
+    bestiaryDepth: 0,
   };
 
   for (const [buildingId, level] of Object.entries(buildingLevels)) {
     const building = BUILDINGS[buildingId];
     if (building && level > 0) {
       const effectType = building.effect.type;
-      bonuses[effectType] += getBuildingBonus(building, level);
+      if (effectType in bonuses) {
+        bonuses[effectType] += getBuildingBonus(building, level);
+      }
     }
   }
 
@@ -128,14 +154,12 @@ export const calculateHomesteadBonuses = (buildingLevels) => {
 };
 
 // Get building list in display order
-export const getBuildingList = () => {
-  return [
-    BUILDINGS.barracks,
-    BUILDINGS.armory,
-    BUILDINGS.fortress,
-    BUILDINGS.trainingGrounds,
-    BUILDINGS.treasury,
-    BUILDINGS.academy,
-    BUILDINGS.infirmary,
-  ];
-};
+export const getBuildingList = () => [
+  BUILDINGS.barracks,
+  BUILDINGS.armory,
+  BUILDINGS.fortress,
+  BUILDINGS.infirmary,
+  BUILDINGS.treasury,
+  BUILDINGS.trainingGrounds,
+  BUILDINGS.library,
+];

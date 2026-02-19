@@ -167,7 +167,7 @@ const GameHUD = ({
         </div>
 
         {/* Right: Resources and Stats */}
-        <div className="flex items-center flex-wrap gap-1 sm:gap-3 text-xs sm:text-sm">
+        <div className="flex items-center flex-wrap gap-1 sm:gap-2 md:gap-3 text-xs sm:text-sm">
           <span className="pixel-stat pixel-stat-gold">
             <GoldIcon size={16} /> {Math.floor(headerStats.gold).toLocaleString()}
           </span>

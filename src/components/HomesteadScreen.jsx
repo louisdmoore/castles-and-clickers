@@ -1,9 +1,9 @@
 import { useGameStore } from '../store/gameStore';
-import { BUILDINGS, getUpgradeCost, getBuildingBonus, getBuildingList } from '../data/homestead';
+import { BUILDINGS, getUpgradeCost, getBuildingBonus, getBuildingList, getNextUnlock, getUnlocksAtLevel } from '../data/homestead';
 import {
   CastleIcon, GoldIcon, HeartIcon, SwordIcon, ShieldIcon, ChartIcon,
-  ClockIcon, RegenIcon, BarracksIcon, ArmoryIcon, FortressIcon,
-  TrainingIcon, TreasuryIcon, AcademyIcon, InfirmaryIcon, StarIcon
+  BookIcon, RegenIcon, BarracksIcon, ArmoryIcon, FortressIcon,
+  TrainingIcon, TreasuryIcon, AcademyIcon, InfirmaryIcon, StarIcon, CheckIcon
 } from './icons/ui';
 import HelpTooltip from './ui/HelpTooltip';
 
@@ -14,23 +14,25 @@ const BUILDING_ICONS = {
   fortress: FortressIcon,
   trainingGrounds: TrainingIcon,
   treasury: TreasuryIcon,
-  academy: AcademyIcon,
+  library: AcademyIcon,
   infirmary: InfirmaryIcon,
 };
 
 // Map stat types to icon components
 const STAT_ICONS = {
-  barracks: HeartIcon,
-  armory: SwordIcon,
-  fortress: ShieldIcon,
+  barracks: SwordIcon,
+  armory: ShieldIcon,
+  fortress: HeartIcon,
   trainingGrounds: ChartIcon,
   treasury: GoldIcon,
-  academy: ClockIcon,
+  library: BookIcon,
   infirmary: RegenIcon,
 };
 
 const HomesteadScreen = () => {
-  const { gold, homestead, upgradeBuilding } = useGameStore();
+  const gold = useGameStore(state => state.gold);
+  const homestead = useGameStore(state => state.homestead);
+  const upgradeBuilding = useGameStore(state => state.upgradeBuilding);
   const buildings = getBuildingList();
 
   const handleUpgrade = (buildingId) => {
@@ -52,10 +54,10 @@ const HomesteadScreen = () => {
         return `+${Math.round(bonus * 100)}% XP`;
       case 'goldFind':
         return `+${Math.round(bonus * 100)}% Gold`;
-      case 'healBetweenDungeons':
-        return `+${Math.round(bonus * 100)}% Regen`;
-      case 'cooldownReduction':
-        return `-${Math.round(bonus)} Cooldown`;
+      case 'healBetweenRooms':
+        return `+${(bonus * 100).toFixed(1)}% Regen`;
+      case 'bestiaryDepth':
+        return `+${Math.round(bonus)} depth`;
       default:
         return `+${Math.round(bonus * 100)}%`;
     }
@@ -64,8 +66,10 @@ const HomesteadScreen = () => {
   const formatNextBonus = (building) => {
     const perLevel = building.effect.valuePerLevel;
     switch (building.effect.type) {
-      case 'cooldownReduction':
-        return `-${perLevel} turn`;
+      case 'bestiaryDepth':
+        return `+${perLevel} depth`;
+      case 'healBetweenRooms':
+        return `+${(perLevel * 100).toFixed(1)}%`;
       default:
         return `+${Math.round(perLevel * 100)}%`;
     }
@@ -79,7 +83,7 @@ const HomesteadScreen = () => {
           <HelpTooltip content={
             <div className="space-y-1">
               <div>Buildings provide permanent bonuses to all heroes.</div>
-              <div>Each level costs ~2.5x the previous level.</div>
+              <div>Level up buildings to unlock new features and party slots.</div>
               <div>Unlocks at Dungeon 3.</div>
             </div>
           } />
@@ -90,7 +94,7 @@ const HomesteadScreen = () => {
       </div>
 
       <p className="text-gray-400 text-sm">
-        Upgrade buildings to gain permanent bonuses for your party.
+        Upgrade buildings to gain permanent bonuses and unlock new features.
       </p>
 
       <div className="grid grid-cols-2 gap-4">
@@ -99,11 +103,13 @@ const HomesteadScreen = () => {
           const isMaxed = currentLevel >= building.maxLevel;
           const cost = isMaxed ? 0 : getUpgradeCost(building, currentLevel);
           const canAfford = gold >= cost;
+          const nextUnlock = getNextUnlock(building, currentLevel);
+          const achievedUnlocks = getUnlocksAtLevel(building, currentLevel);
 
           return (
             <div
               key={building.id}
-              className={`bg-gray-800 rounded-lg p-4 border-2 transition-all ${
+              className={`pixel-panel-dark p-4 border-2 transition-all ${
                 isMaxed
                   ? 'border-yellow-500/50'
                   : canAfford
@@ -130,7 +136,7 @@ const HomesteadScreen = () => {
 
               {/* Current Bonus */}
               {currentLevel > 0 && (
-                <div className="bg-gray-900 rounded px-3 py-2 mb-3">
+                <div className="pixel-panel px-3 py-2 mb-3">
                   <span className="text-gray-500 text-xs">Current: </span>
                   <span className="text-green-400 font-bold">
                     {formatBonus(building, currentLevel)}
@@ -146,6 +152,29 @@ const HomesteadScreen = () => {
                 />
               </div>
 
+              {/* Next Unlock Preview */}
+              {nextUnlock && (
+                <div className="pixel-panel p-2 mb-3">
+                  <div className="text-[10px] text-[var(--color-text-dim)]">
+                    Next at Lv{nextUnlock.level}:
+                  </div>
+                  <div className="text-xs" style={{ color: '#fbbf24' }}>
+                    {nextUnlock.label}
+                  </div>
+                </div>
+              )}
+
+              {/* Achieved Unlocks */}
+              {achievedUnlocks.length > 0 && (
+                <div className="mb-2">
+                  {achievedUnlocks.map(u => (
+                    <div key={u.level} className="flex items-center gap-1 text-[10px] text-green-400">
+                      <CheckIcon size={8} /> {u.label}
+                    </div>
+                  ))}
+                </div>
+              )}
+
               {/* Upgrade Button */}
               {isMaxed ? (
                 <div className="text-center text-yellow-400 font-bold py-2 flex items-center justify-center gap-1">
@@ -155,10 +184,10 @@ const HomesteadScreen = () => {
                 <button
                   onClick={() => handleUpgrade(building.id)}
                   disabled={!canAfford}
-                  className={`w-full py-2 px-4 rounded-lg font-bold transition-all ${
+                  className={`pixel-btn w-full py-2 px-4 font-bold transition-all ${
                     canAfford
-                      ? 'bg-green-600 hover:bg-green-500 text-white'
-                      : 'bg-gray-700 text-gray-500 cursor-not-allowed'
+                      ? 'pixel-btn-primary'
+                      : ''
                   }`}
                 >
                   <div className="flex items-center justify-center gap-2">
@@ -178,18 +207,18 @@ const HomesteadScreen = () => {
       </div>
 
       {/* Total Bonuses Summary */}
-      <div className="bg-gray-800 rounded-lg p-4 mt-6">
+      <div className="pixel-panel-dark p-4 mt-6">
         <h3 className="text-white font-bold mb-3 flex items-center gap-2">
           <ChartIcon size={20} /> Total Bonuses
         </h3>
         <div className="grid grid-cols-4 gap-4 text-center">
           {[
-            { id: 'barracks', label: 'HP' },
-            { id: 'armory', label: 'Attack' },
-            { id: 'fortress', label: 'Defense' },
+            { id: 'barracks', label: 'Attack' },
+            { id: 'armory', label: 'Defense' },
+            { id: 'fortress', label: 'HP' },
             { id: 'trainingGrounds', label: 'XP' },
             { id: 'treasury', label: 'Gold' },
-            { id: 'academy', label: 'Cooldown' },
+            { id: 'library', label: 'Bestiary' },
             { id: 'infirmary', label: 'Heal' },
           ].map(({ id, label }) => {
             const building = BUILDINGS[id];
@@ -199,16 +228,16 @@ const HomesteadScreen = () => {
             const StatIcon = STAT_ICONS[id] || StarIcon;
 
             let displayValue;
-            if (effectType === 'cooldownReduction') {
-              displayValue = bonus > 0 ? `-${bonus}` : '0';
-            } else if (effectType === 'recruitBonus') {
-              displayValue = bonus > 0 ? `+${bonus}` : '0';
+            if (effectType === 'bestiaryDepth') {
+              displayValue = bonus > 0 ? `+${Math.round(bonus)}` : '0';
+            } else if (effectType === 'healBetweenRooms') {
+              displayValue = bonus > 0 ? `+${(bonus * 100).toFixed(1)}%` : '0';
             } else {
               displayValue = `+${Math.round(bonus * 100)}%`;
             }
 
             return (
-              <div key={id} className="bg-gray-900 rounded p-2">
+              <div key={id} className="pixel-panel p-2">
                 <div className="flex justify-center">
                   <StatIcon size={24} />
                 </div>

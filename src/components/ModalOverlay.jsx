@@ -63,9 +63,9 @@ const ModalOverlay = ({ isOpen, onClose, title, children, size = 'md' }) => {
 
   const sizeClasses = {
     sm: 'max-w-[95vw] sm:max-w-md',
-    md: 'max-w-[95vw] sm:max-w-2xl',
-    lg: 'max-w-[95vw] sm:max-w-4xl',
-    xl: 'max-w-[95vw] sm:max-w-6xl',
+    md: 'max-w-[95vw] sm:max-w-xl md:max-w-2xl',
+    lg: 'max-w-[95vw] sm:max-w-2xl md:max-w-4xl',
+    xl: 'max-w-[95vw] sm:max-w-4xl md:max-w-6xl',
     full: 'max-w-[95vw]',
   };
 
@@ -84,7 +84,7 @@ const ModalOverlay = ({ isOpen, onClose, title, children, size = 'md' }) => {
         role="dialog"
         aria-modal="true"
         aria-labelledby="modal-title"
-        className={`relative ${sizeClasses[size]} w-full mx-4 max-h-[85vh] flex flex-col pixel-panel`}
+        className={`relative ${sizeClasses[size]} w-full mx-4 max-h-[calc(100vh-4rem)] flex flex-col pixel-panel`}
       >
         {/* Header with pixel styling */}
         <div className="flex items-center justify-between px-4 py-3 border-b-3 border-[var(--color-border)]"

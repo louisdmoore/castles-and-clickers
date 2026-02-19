@@ -22,9 +22,8 @@ export const createEconomySlice = (set, get) => ({
     fortress: 0,
     trainingGrounds: 0,
     treasury: 0,
-    academy: 0,
     infirmary: 0,
-    tavern: 0,
+    library: 0,
   },
   shop: {
     items: [],
@@ -501,7 +500,7 @@ export const createEconomySlice = (set, get) => ({
   addToast: ({ type, message }) => {
     const id = `toast_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     set(state => ({
-      toasts: [...state.toasts.slice(-4), { id, type, message, createdAt: Date.now() }],
+      toasts: [...state.toasts.slice(-2), { id, type, message, createdAt: Date.now() }],
     }));
   },
 

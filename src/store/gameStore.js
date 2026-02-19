@@ -97,8 +97,8 @@ export const useGameStore = create(
               fortress: 0,
               trainingGrounds: 0,
               treasury: 0,
-              academy: 0,
               infirmary: 0,
+              library: 0,
             },
             ownedUniques: [],
             uniqueLevels: {},
@@ -221,6 +221,16 @@ export const useGameStore = create(
             shopConsumables: persistedState?.shopConsumables || [],
             pendingDungeonBuffs: persistedState?.pendingDungeonBuffs || [],
             earnedAchievements: persistedState?.earnedAchievements || [],
+            homestead: (() => {
+              const h = persistedState?.homestead || {};
+              // Strip old building keys from persisted saves
+              const { academy: _A, tavern: _T, ...rest } = h;
+              return {
+                barracks: 0, armory: 0, fortress: 0, trainingGrounds: 0,
+                treasury: 0, infirmary: 0, library: 0,
+                ...rest,
+              };
+            })(),
             stats: {
               totalGoldEarned: 0,
               totalGoldSpent: 0,

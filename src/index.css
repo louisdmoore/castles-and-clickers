@@ -907,3 +907,14 @@ select:focus-visible {
     font-size: 0.85rem;
   }
 }
+
+/* ========================================
+   Tablet breakpoint (768-1023px)
+   ======================================== */
+
+@media (min-width: 768px) and (max-width: 1023px) {
+  .pixel-stat {
+    padding: 2px 6px;
+    font-size: 0.75rem;
+  }
+}
