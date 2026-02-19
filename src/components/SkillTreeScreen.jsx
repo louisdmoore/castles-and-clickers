@@ -2,11 +2,13 @@ import { useState, useMemo } from 'react';
 import { useGameStore, calculateHeroStats } from '../store/gameStore';
 import { CLASSES } from '../data/classes';
 import { SKILL_TREES, arePrerequisitesMet, calculateRespecCost, TIER_REQUIREMENTS, countSkillsByTier } from '../data/skillTrees';
+import { getSpecsForClass, SPECIALIZATION_LEVEL, getSpecialization } from '../data/specializations';
 import SkillNode from './SkillNode';
 import HeroIcon from './icons/HeroIcon';
 import { TreeIcon } from './icons/ui';
 import ClassIcon from './icons/ClassIcon';
 import HelpTooltip from './ui/HelpTooltip';
+import ModalOverlay from './ModalOverlay';
 
 const SkillTreeScreen = () => {
   const {
@@ -15,10 +17,12 @@ const SkillTreeScreen = () => {
     getSkillPoints,
     unlockSkill,
     respecHero,
+    specializeHero,
   } = useGameStore();
 
   const [selectedHeroId, setSelectedHeroId] = useState(heroes[0]?.id || null);
   const [showRespecConfirm, setShowRespecConfirm] = useState(false);
+  const [specConfirm, setSpecConfirm] = useState(null);
 
   const selectedHero = heroes.find(h => h.id === selectedHeroId);
   const skillTree = selectedHero ? SKILL_TREES[selectedHero.classId] : null;
@@ -274,11 +278,101 @@ const SkillTreeScreen = () => {
                     );
                   })}
                 </div>
+
+                {/* Specialization section — show for level 30+ heroes without a spec */}
+                {selectedHero && selectedHero.level >= SPECIALIZATION_LEVEL && !selectedHero.specialization && (
+                  <div className="pixel-panel-dark p-4 mt-6">
+                    <h3 className="pixel-title text-base mb-3">Choose Specialization</h3>
+                    <p className="text-xs text-[var(--color-text-dim)] mb-4">
+                      Your hero has reached mastery. Choose a path — this cannot be undone.
+                    </p>
+                    <div className="grid grid-cols-2 gap-4">
+                      {getSpecsForClass(selectedHero.classId).map(spec => (
+                        <button
+                          key={spec.id}
+                          className="pixel-panel p-4 text-left hover:border-[var(--color-gold)] transition-colors cursor-pointer"
+                          onClick={() => setSpecConfirm(spec.id)}
+                        >
+                          <div className="pixel-title text-sm mb-1">{spec.name}</div>
+                          <div className="text-xs text-[var(--color-text-dim)] mb-2">{spec.description}</div>
+                          <div className="space-y-1 text-xs">
+                            {Object.entries(spec.statAdjustments).map(([stat, val]) => (
+                              <div key={stat} className={val > 0 ? 'text-green-400' : 'text-red-400'}>
+                                {val > 0 ? '+' : ''}{Math.round(val * 100)}% {stat === 'maxHp' ? 'HP' : stat.charAt(0).toUpperCase() + stat.slice(1)}
+                              </div>
+                            ))}
+                          </div>
+                          <div className="mt-2 pt-2 border-t border-[var(--color-border)]">
+                            <div className="text-xs text-[var(--color-gold)]">{spec.activeAbility.name}</div>
+                            <div className="text-[10px] text-[var(--color-text-dim)]">{spec.activeAbility.description}</div>
+                          </div>
+                        </button>
+                      ))}
+                    </div>
+                  </div>
+                )}
+
+                {/* Show current specialization for specialized heroes */}
+                {selectedHero?.specialization && (() => {
+                  const spec = getSpecialization(selectedHero.specialization);
+                  return spec ? (
+                    <div className="pixel-panel-dark p-4 mt-6">
+                      <div className="flex items-center gap-2 mb-2">
+                        <span className="pixel-title text-sm">{spec.name}</span>
+                        <span className="text-xs text-[var(--color-text-dim)]">Specialization</span>
+                      </div>
+                      <div className="text-xs text-[var(--color-text-dim)]">{spec.description}</div>
+                      <div className="mt-2 text-xs text-[var(--color-gold)]">
+                        Active: {spec.activeAbility.name} — {spec.activeAbility.description}
+                      </div>
+                    </div>
+                  ) : null;
+                })()}
               </>
             )}
           </div>
         </div>
       )}
+
+      {/* Specialization Confirmation Modal */}
+      {specConfirm && (() => {
+        const spec = getSpecialization(specConfirm);
+        return spec ? (
+          <ModalOverlay isOpen={true} onClose={() => setSpecConfirm(null)} title="Confirm Specialization" size="sm">
+            <div className="text-center mb-4">
+              <div className="pixel-title text-lg mb-2">{spec.name}</div>
+              <p className="text-xs text-[var(--color-text-dim)]">{spec.description}</p>
+            </div>
+            <div className="pixel-panel-dark p-3 mb-4">
+              <div className="text-xs mb-2 font-bold">Stat Changes:</div>
+              {Object.entries(spec.statAdjustments).map(([stat, val]) => (
+                <div key={stat} className={`text-xs ${val > 0 ? 'text-green-400' : 'text-red-400'}`}>
+                  {val > 0 ? '+' : ''}{Math.round(val * 100)}% {stat === 'maxHp' ? 'HP' : stat.charAt(0).toUpperCase() + stat.slice(1)}
+                </div>
+              ))}
+              <div className="mt-2 pt-2 border-t border-[var(--color-border)]">
+                <div className="text-xs text-[var(--color-gold)]">New Ability: {spec.activeAbility.name}</div>
+                <div className="text-[10px] text-[var(--color-text-dim)]">{spec.activeAbility.description}</div>
+              </div>
+            </div>
+            <p className="text-xs text-red-400 text-center mb-4">This choice is permanent and cannot be undone.</p>
+            <div className="flex gap-3 justify-center">
+              <button
+                className="pixel-btn pixel-btn-primary"
+                onClick={() => {
+                  specializeHero(selectedHero.id, specConfirm);
+                  setSpecConfirm(null);
+                }}
+              >
+                Confirm
+              </button>
+              <button className="pixel-btn" onClick={() => setSpecConfirm(null)}>
+                Cancel
+              </button>
+            </div>
+          </ModalOverlay>
+        ) : null;
+      })()}
 
       {/* Respec Confirmation Modal */}
       {showRespecConfirm && (

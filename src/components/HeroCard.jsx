@@ -1,4 +1,5 @@
 import { CLASSES } from '../data/classes';
+import { getSpecialization } from '../data/specializations';
 import { useGameStore, calculateHeroStats, xpForLevel, calculateSkillPoints, calculateUsedSkillPoints } from '../store/gameStore';
 
 import ClassIcon from './icons/ClassIcon';
@@ -42,6 +43,12 @@ const HeroCard = ({ hero, onSelect, isSelected, showEquipment = true }) => {
             {hero.name}
           </h3>
           <p className="text-gray-400 text-sm">{classData.name} Lv.{hero.level}</p>
+          {hero.specialization && (() => {
+            const spec = getSpecialization(hero.specialization);
+            return spec ? (
+              <span className="text-[10px]" style={{ color: 'var(--color-gold)' }}>{spec.name}</span>
+            ) : null;
+          })()}
         </div>
       </div>
 

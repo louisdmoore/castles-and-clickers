@@ -40,7 +40,7 @@ export const executeHeroSkillAction = (ctx, actor) => {
     defeatWingBoss, completeRaid, getOwnedUniques,
   } = ctx;
 
-  if (!actor.isHero || !actor.skills || actor.skills.length === 0) return false;
+  if (!actor.isHero || (!actor.skills?.length && !actor.specialization)) return false;
 
   const heroCooldowns = newSkillCooldowns[actor.id] || {};
   const skill = chooseBestSkill(actor, activeCombatMonsters, aliveHeroes, heroCooldowns);
@@ -442,7 +442,7 @@ export const executeHeroSkillAction = (ctx, actor) => {
   }
 
   // Set cooldown for used skill (apply homestead reduction)
-  const baseCooldown = getEffectiveCooldown(skill, actor.skills);
+  const baseCooldown = getEffectiveCooldown(skill, actor.skills || []);
   const cooldownReduction = homesteadBonuses.cooldownReduction || 0;
   const effectiveCooldown = Math.max(1, baseCooldown - cooldownReduction);
   if (!newSkillCooldowns[actor.id]) newSkillCooldowns[actor.id] = {};

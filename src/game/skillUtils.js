@@ -5,6 +5,7 @@
  */
 
 import { getSkillById, SKILL_TYPE } from '../data/skillTrees';
+import { getSpecialization } from '../data/specializations';
 import {
   DEFENSE_REDUCTION_MULTIPLIER, DAMAGE_VARIANCE_MIN, DAMAGE_VARIANCE_RANGE,
   BASE_CRIT_MULTIPLIER,
@@ -52,6 +53,17 @@ export const getAvailableSkills = (hero, cooldowns = {}) => {
     const cooldownRemaining = cooldowns[skillId] || 0;
     if (cooldownRemaining <= 0) {
       availableSkills.push(skill);
+    }
+  }
+
+  // Add specialization active ability if hero is specialized
+  if (hero.specialization) {
+    const spec = getSpecialization(hero.specialization);
+    if (spec?.activeAbility) {
+      const specCooldownRemaining = cooldowns[spec.activeAbility.id] || 0;
+      if (specCooldownRemaining <= 0) {
+        availableSkills.push(spec.activeAbility);
+      }
     }
   }
 

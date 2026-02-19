@@ -1,5 +1,6 @@
 import { CLASSES, PARTY_SLOTS } from '../../data/classes';
 import { getSkillById, arePrerequisitesMet, calculateRespecCost } from '../../data/skillTrees';
+import { getSpecialization, SPECIALIZATION_LEVEL } from '../../data/specializations';
 
 import { createHero, generateTavernHero } from '../helpers/heroGenerator';
 import { calculateHeroStats, invalidateStatCache, clearStatCache, calculateSkillPoints, calculateUsedSkillPoints } from '../helpers/statCalculator';
@@ -557,6 +558,56 @@ export const createHeroSlice = (set, get) => ({
     const hero = heroes.find(h => h.id === heroId);
     if (!hero) return null;
     return calculateHeroStats(hero, heroes);
+  },
+
+  specializeHero: (heroId, specId) => {
+    const { heroes, bench, dungeon } = get();
+
+    // Can't specialize during dungeon
+    if (dungeon) {
+      get().addToast({ type: 'error', message: 'Cannot specialize during a dungeon run' });
+      return false;
+    }
+
+    // Find hero in party or bench
+    const hero = heroes.find(h => h?.id === heroId) || bench.find(h => h?.id === heroId);
+    if (!hero) return false;
+
+    // Check level requirement
+    if (hero.level < SPECIALIZATION_LEVEL) {
+      get().addToast({ type: 'error', message: `Hero must be level ${SPECIALIZATION_LEVEL} to specialize` });
+      return false;
+    }
+
+    // Check not already specialized
+    if (hero.specialization) {
+      get().addToast({ type: 'error', message: 'Hero is already specialized' });
+      return false;
+    }
+
+    // Validate spec belongs to hero's class
+    const spec = getSpecialization(specId);
+    if (!spec || spec.className !== hero.classId) {
+      get().addToast({ type: 'error', message: 'Invalid specialization for this class' });
+      return false;
+    }
+
+    // Clear stat cache since stats change
+    clearStatCache();
+
+    // Apply specialization
+    const updater = (h) => h?.id === heroId ? { ...h, specialization: specId } : h;
+
+    const inParty = heroes.some(h => h?.id === heroId);
+    if (inParty) {
+      set(state => ({ heroes: state.heroes.map(updater) }));
+    } else {
+      set(state => ({ bench: state.bench.map(updater) }));
+    }
+
+    get().addToast({ type: 'success', message: `${hero.name} specialized as ${spec.name}!` });
+    throttledStorage.flush();
+    return true;
   },
 
 });

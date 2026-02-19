@@ -11,7 +11,7 @@
  *   3. The migration receives the full persisted state and returns the updated state
  */
 
-export const SAVE_VERSION = 8;
+export const SAVE_VERSION = 9;
 
 // Sequential migration functions: fromVersion -> transform
 const MIGRATIONS = {
@@ -132,6 +132,12 @@ const MIGRATIONS = {
         state.homestead.library = 0;
       }
     }
+    return state;
+  },
+
+  // v8 → v9: Phase 4 — Specialization system
+  // hero.specialization defaults to undefined (not specialized), no field init needed
+  8: (state) => {
     return state;
   },
 };

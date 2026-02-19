@@ -645,8 +645,87 @@ export const executeSkillAbility = (actor, skill, enemies, allies, heroHp, addEf
       break;
     }
 
-    case EFFECT_TYPE.DEBUFF: {
+    // Specialization damage+heal combo (Smite, Holy Fire, Drain Life)
+    case 'damage_and_heal': {
       const target = aliveEnemies[0];
+      if (!target) break;
+
+      if (addEffect) {
+        addEffect({
+          type: 'skillActivation',
+          position: actor.position,
+          skill: { id: skill.id, name: skill.name, emoji: skill.emoji },
+        });
+      }
+
+      const { damage, isCrit } = calculateSkillDamage(actor, target, effect.multiplier, {
+        alwaysCrit: effect.alwaysCrit,
+      });
+
+      results.push({
+        type: 'damage',
+        targetId: target.id,
+        damage,
+        isHero: false,
+        isCrit,
+        skillId: skill.id,
+      });
+
+      logs.push({
+        type: 'skill',
+        actor: { name: actor.name, emoji: actor.emoji },
+        target: { name: target.name, emoji: target.emoji },
+        skill: { name: skill.name, emoji: skill.emoji },
+        damage,
+        isCrit,
+      });
+
+      if (addEffect) {
+        addEffect({ type: 'beam', from: actor.position, to: target.position, attackerClass: actor.classId, isSkill: true, skillEmoji: skill.emoji });
+        addEffect({ type: isCrit ? 'crit' : 'damage', position: target.position, damage });
+        addEffect({ type: 'impact', position: target.position, color: '#f59e0b' });
+      }
+
+      // Heal component based on damage dealt
+      const healAmount = Math.floor(damage * (effect.healPercent || 0));
+      if (healAmount > 0) {
+        const healTarget = effect.healTarget === 'lowest_ally'
+          ? aliveAllies.reduce((lowest, a) =>
+              a.stats.hp / a.stats.maxHp < lowest.stats.hp / lowest.stats.maxHp ? a : lowest
+            , aliveAllies[0])
+          : actor;
+
+        if (healTarget) {
+          results.push({
+            type: 'heal',
+            targetId: healTarget.id,
+            amount: healAmount,
+            isHero: true,
+          });
+
+          logs.push({
+            type: 'heal',
+            actor: { name: actor.name, emoji: actor.emoji },
+            target: { name: healTarget.name, emoji: healTarget.emoji },
+            skill: { name: skill.name, emoji: skill.emoji },
+            amount: healAmount,
+          });
+
+          if (addEffect) {
+            addEffect({ type: 'damage', position: healTarget.position, damage: healAmount, isHeal: true });
+            addEffect({ type: 'healBurst', position: healTarget.position, amount: healAmount });
+          }
+        }
+      }
+      break;
+    }
+
+    case EFFECT_TYPE.DEBUFF: {
+      // Support ALL_ENEMIES targeting for specialization debuffs (e.g. Dirge)
+      const debuffTargets = skill.targetType === TARGET_TYPE.ALL_ENEMIES
+        ? aliveEnemies
+        : aliveEnemies[0] ? [aliveEnemies[0]] : [];
+      const target = debuffTargets[0];
 
       // Add skill activation effect
       if (addEffect) {
@@ -709,32 +788,34 @@ export const executeSkillAbility = (actor, skill, enemies, allies, heroHp, addEf
         break;
       }
 
-      // Handle damage amplification debuff (Hunter's Mark)
-      if (effect.damageAmp && target) {
-        results.push({
-          type: 'debuff',
-          targetId: target.id,
-          debuff: {
-            type: 'damageAmp',
-            percent: effect.damageAmp,
-            duration: effect.duration || 3,
-          },
-        });
-
-        logs.push({
-          type: 'debuff',
-          actor: { name: actor.name, emoji: actor.emoji },
-          target: { name: target.name, emoji: target.emoji },
-          skill: { name: skill.name, emoji: skill.emoji },
-          debuffType: 'marked',
-        });
-
-        if (addEffect) {
-          addEffect({
-            type: 'status',
-            position: target.position,
-            status: 'marked',
+      // Handle damage amplification debuff (Hunter's Mark, Dirge)
+      if (effect.damageAmp && debuffTargets.length > 0) {
+        for (const t of debuffTargets) {
+          results.push({
+            type: 'debuff',
+            targetId: t.id,
+            debuff: {
+              type: 'damageAmp',
+              percent: effect.damageAmp,
+              duration: effect.duration || 3,
+            },
           });
+
+          logs.push({
+            type: 'debuff',
+            actor: { name: actor.name, emoji: actor.emoji },
+            target: { name: t.name, emoji: t.emoji },
+            skill: { name: skill.name, emoji: skill.emoji },
+            debuffType: 'marked',
+          });
+
+          if (addEffect) {
+            addEffect({
+              type: 'status',
+              position: t.position,
+              status: 'marked',
+            });
+          }
         }
         break;
       }
@@ -795,6 +876,33 @@ export const executeSkillAbility = (actor, skill, enemies, allies, heroHp, addEf
         type: 'debuff',
         targetId: result.targetId,
         debuff: { type: 'slow', duration: effect.slow },
+      });
+    }
+  }
+
+  // Handle grantEvasion (Shadow Step — damage + dodge buff on self)
+  if (effect.grantEvasion && results.length > 0) {
+    results.push({
+      type: 'buff',
+      targetId: actor.id,
+      buff: {
+        evasion: effect.grantEvasion,
+        duration: effect.evasionDuration || 2,
+      },
+    });
+
+    logs.push({
+      type: 'buff',
+      actor: { name: actor.name, emoji: actor.emoji },
+      skill: { name: skill.name, emoji: skill.emoji },
+      buffType: 'evasion',
+    });
+
+    if (addEffect) {
+      addEffect({
+        type: 'buffAura',
+        position: actor.position,
+        color: '#22c55e',
       });
     }
   }

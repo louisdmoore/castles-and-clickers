@@ -4,6 +4,7 @@ import { scaleUniqueStats } from '../../data/uniqueItems';
 import { getSkillById, SKILL_TYPE } from '../../data/skillTrees';
 
 import { getAscensionStatMultiplier } from '../../data/ascensionMilestones';
+import { getSpecialization } from '../../data/specializations';
 
 // Helper to calculate XP needed for next level
 export const xpForLevel = (level) => Math.floor(100 * Math.pow(1.25, level - 1));
@@ -84,7 +85,7 @@ const getStatCacheKey = (hero, allHeroes = [], homesteadBonuses = null) => {
     ? Math.max(...allHeroes.map(h => h.level))
     : hero.level;
 
-  return `${hero.id}:${hero.level}:${equipmentHash}:${skillsHash}:${partySkillBonusCacheVersion}:${homesteadHash}:${highestPartyLevel}:a${currentAscensionCount}:u${uniqueLevelsVersion}`;
+  return `${hero.id}:${hero.level}:${equipmentHash}:${skillsHash}:${partySkillBonusCacheVersion}:${homesteadHash}:${highestPartyLevel}:a${currentAscensionCount}:u${uniqueLevelsVersion}:spec:${hero.specialization || 'none'}`;
 };
 
 // Helper to calculate hero stats including equipment, passive skills, and homestead bonuses
@@ -219,6 +220,18 @@ export const calculateHeroStats = (hero, allHeroes = [], homesteadBonuses = null
   }
   if (partyDefensePercent > 0) {
     stats.defense = Math.floor(stats.defense * (1 + partyDefensePercent));
+  }
+
+  // Apply specialization stat adjustments (after party buffs, before ascension)
+  if (hero.specialization) {
+    const spec = getSpecialization(hero.specialization);
+    if (spec?.statAdjustments) {
+      for (const [stat, percent] of Object.entries(spec.statAdjustments)) {
+        if (stats[stat] !== undefined) {
+          stats[stat] = Math.floor(stats[stat] * (1 + percent));
+        }
+      }
+    }
   }
 
   // Apply ascension stat multiplier (after all other bonuses, multiplicative)
