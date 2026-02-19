@@ -115,6 +115,20 @@ export const createEconomySlice = (set, get) => ({
       },
     });
 
+    // After upgrading barracks, recalculate max party size
+    if (buildingId === 'barracks') {
+      const newBarracksLevel = currentLevel + 1;
+      const newMaxPartySize = getMaxPartySize(
+        get().highestDungeonCleared,
+        get().ascension?.count || 0,
+        newBarracksLevel
+      );
+      if (newMaxPartySize > (get().maxPartySize || 4)) {
+        set({ maxPartySize: newMaxPartySize });
+        get().addToast({ type: 'success', message: `Party slot ${newMaxPartySize} unlocked!` });
+      }
+    }
+
     // Immediate save on homestead upgrade
     throttledStorage.flush();
 
@@ -457,7 +471,8 @@ export const createEconomySlice = (set, get) => ({
 
     // Expand party size if offline progress crossed a milestone
     const ascensionCount = get().ascension?.count || 0;
-    const newMaxPartySize = getMaxPartySize(newHighestCleared, ascensionCount);
+    const barracksLevel = get().homestead?.barracks || 0;
+    const newMaxPartySize = getMaxPartySize(newHighestCleared, ascensionCount, barracksLevel);
 
     // Apply state updates including dungeon progression
     set(state => ({

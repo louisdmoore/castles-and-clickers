@@ -252,7 +252,7 @@ const PrepScreen = ({ onOpenAscension }) => {
                       <span className="pixel-label text-xs" style={{ color: '#f59e0b' }}>Ready to Ascend!</span>
                     </div>
                     <div className="text-xs text-[var(--color-text-dim)] mb-2">
-                      Begin a new chapter with permanent bonuses
+                      Permanent +{((ascension?.count || 0) + 1) * 10}% all stats
                     </div>
                     <button
                       onClick={onOpenAscension}

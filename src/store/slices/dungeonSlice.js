@@ -1,7 +1,7 @@
 import { RAIDS, isRaidUnlocked, getRaidDifficultyTier } from '../../data/raids';
 import { getMaxPartySize, getDungeonTier } from '../../data/milestones';
 import { DUNGEON_THEMES } from '../../data/dungeonThemes';
-import { getAscensionDungeonCap } from '../../data/ascensionMilestones';
+import { getAscensionDungeonCap, getAscensionGoldCost } from '../../data/ascensionMilestones';
 import { clearStatCache, setAscensionCount } from '../helpers/statCalculator';
 import throttledStorage from '../helpers/throttledStorage';
 
@@ -215,7 +215,7 @@ export const createDungeonSlice = (set, get) => ({
         updates.highestDungeonCleared = newHighest;
 
         // Expand party size based on dungeon progress
-        const newMaxPartySize = getMaxPartySize(newHighest, state.ascension?.count || 0);
+        const newMaxPartySize = getMaxPartySize(newHighest, state.ascension?.count || 0, state.homestead?.barracks || 0);
         if (newMaxPartySize > (state.maxPartySize || 4)) {
           updates.maxPartySize = newMaxPartySize;
         }
@@ -322,87 +322,50 @@ export const createDungeonSlice = (set, get) => ({
     get().resetHeroHp();
   },
 
-  // Ascension: partial reset with persistent progress
+  // Ascension: no-reset celebration with gold cost
   canAscend: () => {
-    const { highestDungeonCleared, maxDungeonLevel, dungeon } = get();
-    // Can ascend when max dungeon level is cleared and not in a dungeon
-    return highestDungeonCleared >= maxDungeonLevel && !dungeon;
+    const { highestDungeonCleared, maxDungeonLevel, dungeon, gold, ascension } = get();
+    const nextCount = (ascension?.count || 0) + 1;
+    const cost = getAscensionGoldCost(nextCount);
+    // Can ascend when max dungeon level is cleared, not in dungeon, and can afford it
+    return highestDungeonCleared >= maxDungeonLevel && !dungeon && gold >= cost;
   },
 
   performAscension: () => {
-    const { heroes, bench, ascension, highestDungeonCleared, maxDungeonLevel } = get();
+    const { ascension, highestDungeonCleared, maxDungeonLevel, gold } = get();
 
     // Guard: must have cleared max dungeon level
     if (highestDungeonCleared < maxDungeonLevel) return false;
 
-    const newCount = ascension.count + 1;
+    const newCount = (ascension?.count || 0) + 1;
+    const cost = getAscensionGoldCost(newCount);
+
+    // Guard: must afford gold cost
+    if (gold < cost) {
+      get().addToast({ type: 'error', message: `Not enough gold! Need ${cost.toLocaleString()} gold` });
+      return false;
+    }
+
     const newDungeonCap = getAscensionDungeonCap(newCount);
-    const newMaxPartySize = getMaxPartySize(9, newCount); // D9 cleared + new ascension count
 
     // Update ascension count for stat multiplier and clear cache
     setAscensionCount(newCount);
     clearStatCache();
 
-    // Reset heroes: level to 10, XP to 0, clear skills (free respec), keep equipment/class
-    const resetHero = (hero) => {
-      if (!hero) return hero;
-      return {
-        ...hero,
-        level: 10,
-        xp: 0,
-        skills: [], // Full respec — all skill points available to reallocate
-      };
-    };
-
-    const resetHeroes = heroes.map(resetHero);
-    const resetBench = bench.map(resetHero);
-
     set(state => ({
+      // Deduct gold cost
+      gold: state.gold - cost,
+
       // Ascension state
       ascension: { count: newCount },
       maxDungeonLevel: newDungeonCap,
-      maxPartySize: newMaxPartySize,
 
-      // Dungeon progress resets to D10
-      highestDungeonCleared: 9, // Cleared through D9, D10 is next
-      dungeonUnlocked: 10,
-
-      // Gold resets to starter fund
-      gold: 10000,
-
-      // Heroes reset to level 10 with free respec
-      heroes: resetHeroes,
-      bench: resetBench,
-
-      // Clear inventory (equipped items on heroes are kept)
-      inventory: [],
-
-      // Clear dungeon state
-      dungeon: null,
-      combat: null,
-      roomCombat: null,
-      isRunning: false,
-      prepPhase: null,
-      lastRunSummary: null,
-      lastDeathRecap: null,
-      heroHp: {},
-
-      // Clear consumables and shop
-      consumables: [],
-      shopConsumables: [],
-      pendingDungeonBuffs: [],
-      shop: { items: [], lastRefresh: 0 },
-
-      // Reset tavern
-      tavern: { ...state.tavern, heroes: [], lastRefresh: 0 },
-
-      // Clear pending changes
-      pendingRecruits: [],
-      pendingPartyChanges: [],
-
-      // Preserve: homestead, ownedUniques, uniqueLevels, stats, featureUnlocks, equipmentSettings, dungeonSettings
-      // Preserve dungeonProgress raid completions
+      // Unlock new dungeon levels (set dungeonUnlocked to current highest + 1)
+      dungeonUnlocked: Math.min(state.highestDungeonCleared + 1, newDungeonCap),
     }));
+
+    // Celebration toast
+    get().addToast({ type: 'success', message: `Ascended to A${newCount}! +${newCount * 10}% all stats, dungeon cap D${newDungeonCap}` });
 
     // Immediate save after ascension
     throttledStorage.flush();

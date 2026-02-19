@@ -185,7 +185,8 @@ export const useGameStore = create(
           const ascensionDungeonCap = getAscensionDungeonCap(ascensionCount);
 
           // Derive maxPartySize from progress so existing saves get correct value
-          const derivedMaxPartySize = getMaxPartySize(persistedState?.highestDungeonCleared || 0, ascensionCount);
+          const barracksLevel = persistedState?.homestead?.barracks || 0;
+          const derivedMaxPartySize = getMaxPartySize(persistedState?.highestDungeonCleared || 0, ascensionCount, barracksLevel);
           // Sanitize heroes array - ensure it doesn't exceed maxPartySize
           const maxPartySize = Math.max(derivedMaxPartySize, persistedState?.maxPartySize || currentState.maxPartySize || 4);
           let heroes = persistedState?.heroes || [];

@@ -14,7 +14,6 @@ const HeroManagement = () => {
   const dungeon = useGameStore(state => state.dungeon);
   const maxPartySize = useGameStore(state => state.maxPartySize);
   const highestDungeonCleared = useGameStore(state => state.highestDungeonCleared);
-  const ascensionCount = useGameStore(state => state.ascension?.count || 0);
   const usedSlotDiscounts = useGameStore(state => state.usedSlotDiscounts);
   const addHero = useGameStore(state => state.addHero);
   const spendGold = useGameStore(state => state.spendGold);
@@ -35,7 +34,6 @@ const HeroManagement = () => {
   const isSlotUnlocked = (slotIndex) => {
     const slot = PARTY_SLOTS[slotIndex];
     if (!slot) return false;
-    if (slot.ascensionRequired && ascensionCount < slot.ascensionRequired) return false;
     return highestDungeonCleared >= slot.dungeonRequired;
   };
 
@@ -72,7 +70,7 @@ const HeroManagement = () => {
 
       {/* Party Slots Grid */}
       <div className="grid grid-cols-2 gap-3">
-        {visibleSlots.map(({ index, role, flex, ascensionRequired }) => {
+        {visibleSlots.map(({ index, role, flex }) => {
           const hero = heroes[index];
           const pendingHero = pendingRecruits.find(p => p.slotIndex === index);
           const roleInfo = role ? ROLE_INFO[role] : null;
@@ -92,7 +90,7 @@ const HeroManagement = () => {
                 </div>
                 {!slotUnlocked && (
                   <span className="text-xs text-gray-500 flex items-center gap-1">
-                    <LockIcon size={12} /> {ascensionRequired ? `A${ascensionRequired}` : `D${PARTY_SLOTS[index]?.dungeonRequired}`}
+                    <LockIcon size={12} /> D{PARTY_SLOTS[index]?.dungeonRequired}
                   </span>
                 )}
               </div>
@@ -106,9 +104,7 @@ const HeroManagement = () => {
                       <LockIcon size={40} />
                     </div>
                     <div className="text-gray-500 text-sm">
-                      {ascensionRequired
-                        ? `Ascension ${ascensionRequired} required`
-                        : `Clear Dungeon ${PARTY_SLOTS[index]?.dungeonRequired} to unlock`}
+                      Clear Dungeon {PARTY_SLOTS[index]?.dungeonRequired} to unlock
                     </div>
                   </div>
                 ) : pendingHero ? (

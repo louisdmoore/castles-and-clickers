@@ -53,8 +53,6 @@ const GameLayout = () => {
   const raidState = useGameStore(state => state.raidState);
   const prepPhase = useGameStore(state => state.prepPhase);
   const setLastSeenVersion = useGameStore(state => state.setLastSeenVersion);
-  const ascensionCount = useGameStore(state => state.ascension?.count || 0);
-
   // Game orchestration (hooks, combat, dungeon, display)
   const {
     combatEffects,
@@ -154,13 +152,13 @@ const GameLayout = () => {
     const maxSize = useGameStore.getState().maxPartySize;
     for (let i = 0; i < maxSize && i < PARTY_SLOTS.length; i++) {
       const slot = PARTY_SLOTS[i];
-      if (slot.ascensionRequired && ascensionCount < slot.ascensionRequired) continue;
+      // Slot is available if within maxPartySize (barracks/dungeon-based)
       const isUnlocked = highestDungeonCleared >= slot.dungeonRequired;
       const isEmpty = !heroes[i];
       if (isUnlocked && isEmpty) return true;
     }
     return false;
-  }, [heroes, highestDungeonCleared, ascensionCount]);
+  }, [heroes, highestDungeonCleared]);
 
   const upcomingUnlocks = useMemo(() => {
     const allUnlocks = [

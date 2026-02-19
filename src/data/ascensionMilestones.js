@@ -1,5 +1,5 @@
 // Ascension milestone reward table (Section 8)
-// Each ascension grants a permanent stat bonus + a structural unlock
+// No-reset ascension: costs gold, grants permanent stat bonus + dungeon cap increase
 // Power budget: ~3x total power at ascension 10 with full investment
 
 export const ASCENSION_MILESTONES = {
@@ -8,11 +8,6 @@ export const ASCENSION_MILESTONES = {
     statBonus: 0.10,
     label: '+10% all stats',
     unlock: {
-      id: 'party_slot_7',
-      name: '7th Party Slot',
-      description: 'Unlock a 7th hero slot with no role restriction',
-    },
-    bonusUnlock: {
       id: 'void_throne_access',
       name: 'Void Throne Access',
       description: 'The Void Throne raid becomes available',
@@ -24,19 +19,13 @@ export const ASCENSION_MILESTONES = {
     statBonus: 0.20,
     label: '+20% all stats',
     unlock: null,
-    bonusUnlock: null,
     dungeonCap: 40,
   },
   3: {
     level: 3,
     statBonus: 0.30,
     label: '+30% all stats',
-    unlock: {
-      id: 'party_slot_8',
-      name: '8th Party Slot',
-      description: 'Unlock an 8th hero slot with no role restriction',
-    },
-    bonusUnlock: null,
+    unlock: null,
     dungeonCap: 45,
   },
   5: {
@@ -86,9 +75,6 @@ export const getAscensionUnlocks = (ascensionCount) => {
   for (const [level, milestone] of Object.entries(ASCENSION_MILESTONES)) {
     if (ascensionCount >= Number(level)) {
       if (milestone.unlock) unlocks.push(milestone.unlock);
-      if (milestone.bonusUnlock) {
-        unlocks.push(milestone.bonusUnlock);
-      }
     }
   }
   return unlocks;
@@ -111,6 +97,11 @@ export const getNextMilestone = (ascensionCount) => {
     }
   }
   return null; // All milestones reached
+};
+
+// Gold cost to ascend: 50,000 × ascension level (scaling)
+export const getAscensionGoldCost = (nextAscensionLevel) => {
+  return 50000 * nextAscensionLevel;
 };
 
 // Cost scaling for gold sinks with ascension
