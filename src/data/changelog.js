@@ -1,9 +1,20 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.2.2';
+export const CURRENT_VERSION = '0.2.3';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.2.3',
+    title: 'Bug Fixes',
+    date: '2026-02-20',
+    changes: [
+      { type: 'fix', text: 'Fresh games now start with only 4 party slots — slots 5-8 unlock via Barracks and Ascension as intended' },
+      { type: 'fix', text: 'Recruitment now costs gold as designed — Slot 1: free, Slot 2: 75g, Slot 3: 1000g, Slot 4: 5000g' },
+      { type: 'fix', text: 'Skills screen now uses a grid layout that wraps at 5+ heroes — no more overlapping tabs!' },
+      { type: 'fix', text: 'Healers will now properly cast Resurrection when allies are dead — Cleric capstone is no longer dead code' },
+    ],
+  },
   {
     version: '0.2.2',
     title: 'UI Design Pass',

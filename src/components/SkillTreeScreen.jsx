@@ -100,15 +100,15 @@ const SkillTreeScreen = () => {
         <div className="flex gap-6">
           {/* Left Panel: Hero Selection & Info */}
           <div className="w-72 flex-shrink-0 space-y-4">
-            {/* Hero Tabs */}
-            <div className="flex gap-1">
+            {/* Hero Tabs - Grid layout that wraps at 4 heroes */}
+            <div className="grid grid-cols-4 gap-1">
               {heroes.filter(Boolean).map(hero => {
                 const heroPoints = getSkillPoints(hero.id);
                 return (
                   <button
                     key={hero.id}
                     onClick={() => setSelectedHeroId(hero.id)}
-                    className={`flex-1 p-2 rounded-lg border-2 transition-all relative ${
+                    className={`p-2 rounded-lg border-2 transition-all relative ${
                       hero.id === selectedHeroId
                         ? 'border-yellow-400 bg-yellow-400/10'
                         : 'border-gray-700 bg-gray-900 hover:border-gray-600'

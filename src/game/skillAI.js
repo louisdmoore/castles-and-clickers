@@ -10,13 +10,14 @@ import { HP_CRITICAL, HP_LOW, HP_HURT } from './balanceConstants';
 /**
  * Choose the best skill to use based on situation
  * Enhanced priority system:
- * 1. Emergency heal (ally < 25% HP)
- * 2. Defensive buffs (2+ allies hurt)
- * 3. Execute skills (enemy < 25% HP)
- * 4. AOE (3+ enemies)
- * 5. Standard heal (ally < 50% HP)
- * 6. Debuffs on bosses
- * 7. Highest damage skill
+ * 1. Revive dead allies
+ * 2. Emergency heal (ally < 25% HP)
+ * 3. Defensive buffs (2+ allies hurt)
+ * 4. Execute skills (enemy < 25% HP)
+ * 5. AOE (3+ enemies)
+ * 6. Standard heal (ally < 50% HP)
+ * 7. Debuffs on bosses
+ * 8. Highest damage skill
  */
 export const chooseBestSkill = (hero, enemies, allies, cooldowns = {}) => {
   const availableSkills = getAvailableSkills(hero, cooldowns);
@@ -27,6 +28,7 @@ export const chooseBestSkill = (hero, enemies, allies, cooldowns = {}) => {
   let criticalAllyCount = 0;
   let lowHpAllyCount = 0;
   let hurtAllyCount = 0;
+  let deadAllyCount = 0;
   let _aliveAllyCount = 0;
 
   for (let i = 0; i < allies.length; i++) {
@@ -37,6 +39,8 @@ export const chooseBestSkill = (hero, enemies, allies, cooldowns = {}) => {
       if (hpRatio < HP_CRITICAL) criticalAllyCount++;
       if (hpRatio < HP_LOW) lowHpAllyCount++;
       if (hpRatio < HP_HURT) hurtAllyCount++;
+    } else {
+      deadAllyCount++;
     }
   }
 
@@ -63,8 +67,15 @@ export const chooseBestSkill = (hero, enemies, allies, cooldowns = {}) => {
     (s.effect?.damageReduction || s.effect?.evasion || s.targetType === TARGET_TYPE.ALL_ALLIES)
   );
   const findShieldSkill = () => findSkillByType(s => s.effect?.type === EFFECT_TYPE.SHIELD);
+  const findReviveSkill = () => findSkillByType(s => s.targetType === TARGET_TYPE.DEAD_ALLY);
 
-  // 1. EMERGENCY HEAL - Ally below 25% HP
+  // 1. REVIVE DEAD ALLIES - Highest priority
+  if (deadAllyCount > 0) {
+    const reviveSkill = findReviveSkill();
+    if (reviveSkill) return reviveSkill;
+  }
+
+  // 2. EMERGENCY HEAL - Ally below 25% HP
   if (criticalAllyCount > 0) {
     const healSkill = findHealingSkill();
     if (healSkill) return healSkill;
@@ -73,13 +84,13 @@ export const chooseBestSkill = (hero, enemies, allies, cooldowns = {}) => {
     if (shieldSkill) return shieldSkill;
   }
 
-  // 2. DEFENSIVE BUFFS - 2+ allies hurt
+  // 3. DEFENSIVE BUFFS - 2+ allies hurt
   if (hurtAllyCount >= 2) {
     const defSkill = findDefensiveSkill();
     if (defSkill) return defSkill;
   }
 
-  // 3. EXECUTE SKILLS - Enemy below 25% HP
+  // 4. EXECUTE SKILLS - Enemy below 25% HP
   if (lowHpEnemyCount > 0) {
     const executeSkill = findSkillByType(s =>
       s.effect?.type === EFFECT_TYPE.DAMAGE &&
@@ -88,7 +99,7 @@ export const chooseBestSkill = (hero, enemies, allies, cooldowns = {}) => {
     if (executeSkill) return executeSkill;
   }
 
-  // 4. AOE - 3+ enemies
+  // 5. AOE - 3+ enemies
   if (aliveEnemyCount >= 3) {
     const aoeSkill = findSkillByType(s =>
       s.targetType === TARGET_TYPE.ALL_ENEMIES &&
@@ -97,13 +108,13 @@ export const chooseBestSkill = (hero, enemies, allies, cooldowns = {}) => {
     if (aoeSkill) return aoeSkill;
   }
 
-  // 5. STANDARD HEAL - Ally below 50% HP
+  // 6. STANDARD HEAL - Ally below 50% HP
   if (lowHpAllyCount > 0) {
     const healSkill = findHealingSkill();
     if (healSkill) return healSkill;
   }
 
-  // 6. DEBUFFS ON BOSSES
+  // 7. DEBUFFS ON BOSSES
   if (bossCount > 0) {
     const debuffSkill = findSkillByType(s =>
       s.effect?.type === EFFECT_TYPE.DEBUFF &&
@@ -112,7 +123,7 @@ export const chooseBestSkill = (hero, enemies, allies, cooldowns = {}) => {
     if (debuffSkill) return debuffSkill;
   }
 
-  // 7. AOE for 2+ enemies
+  // 8. AOE for 2+ enemies
   if (aliveEnemyCount >= 2) {
     const aoeSkill = findSkillByType(s =>
       s.targetType === TARGET_TYPE.ALL_ENEMIES &&
@@ -121,7 +132,7 @@ export const chooseBestSkill = (hero, enemies, allies, cooldowns = {}) => {
     if (aoeSkill) return aoeSkill;
   }
 
-  // 8. HIGHEST DAMAGE SKILL
+  // 9. HIGHEST DAMAGE SKILL
   // Prefer single-target skills when only 1 enemy (don't waste AoE)
   const allDamageSkills = availableSkills.filter(s =>
     s.effect?.type === EFFECT_TYPE.DAMAGE
@@ -151,7 +162,7 @@ export const chooseBestSkill = (hero, enemies, allies, cooldowns = {}) => {
     return allDamageSkills[0];
   }
 
-  // 9. DOT skills if nothing else
+  // 10. DOT skills if nothing else
   const dotSkill = findSkillByType(s => s.effect?.type === EFFECT_TYPE.DOT);
   if (dotSkill) return dotSkill;
 

@@ -45,8 +45,13 @@ const HeroManagement = () => {
     const slot = PARTY_SLOTS[slotIndex];
     const isFirstRecruit = isFirstRecruitAvailable(slotIndex);
 
-    if (!isFirstRecruit) {
-      const cost = slot?.role ? (BASE_RECRUIT_COSTS[slot.role] || 150) : 200;
+    // First recruit uses slot.cost (waived by discount)
+    // Re-recruitment uses BASE_RECRUIT_COSTS
+    const cost = isFirstRecruit
+      ? (slot?.cost || 0)
+      : (slot?.role ? (BASE_RECRUIT_COSTS[slot.role] || 150) : 200);
+
+    if (cost > 0) {
       if (gold < cost) return false;
       if (!spendGold(cost)) return false;
     }
@@ -69,7 +74,8 @@ const HeroManagement = () => {
           const isExpanded = expandedSlot === index;
           const firstRecruitAvailable = isFirstRecruitAvailable(index);
           const availableClasses = getClassesForSlot(index);
-          const recruitCost = flex ? 0 : (BASE_RECRUIT_COSTS[role] || 150);
+          const slot = PARTY_SLOTS[index];
+          const recruitCost = firstRecruitAvailable ? (slot?.cost || 0) : (BASE_RECRUIT_COSTS[role] || 150);
 
           return (
             <div key={index} className="pixel-panel overflow-hidden">
@@ -148,7 +154,8 @@ const HeroManagement = () => {
                       <div className="text-2xl mb-1">+</div>
                       <div className="text-sm">
                         Recruit {flex ? 'Any Class' : roleInfo?.name}
-                        {(firstRecruitAvailable || flex) && <span className="text-green-400 ml-1">(FREE)</span>}
+                        {recruitCost === 0 && <span className="text-green-400 ml-1">(FREE)</span>}
+                        {recruitCost > 0 && <span className="text-yellow-400 ml-1">({recruitCost}g)</span>}
                         {dungeon && <span className="text-yellow-400 block text-xs mt-1">Joins after dungeon</span>}
                       </div>
                     </button>
@@ -157,7 +164,7 @@ const HeroManagement = () => {
                     {isExpanded && (
                       <div className="mt-3 text-left">
                         <div className="text-sm text-gray-400 mb-2">
-                          {firstRecruitAvailable ? 'Choose a class (FREE):' : `Choose a class (${recruitCost}g):`}
+                          {recruitCost === 0 ? 'Choose a class (FREE):' : `Choose a class (${recruitCost}g):`}
                           {dungeon && <span className="text-yellow-400 ml-1">(after dungeon)</span>}
                         </div>
                         <div className={`grid gap-2 ${availableClasses.length > 3 ? 'grid-cols-4' : 'grid-cols-3'}`}>
@@ -165,9 +172,9 @@ const HeroManagement = () => {
                             <button
                               key={classData.id}
                               onClick={() => handleDirectRecruit(classData.id, index)}
-                              disabled={!firstRecruitAvailable && gold < recruitCost}
+                              disabled={gold < recruitCost}
                               className={`flex flex-col items-center gap-1 p-2 rounded ${
-                                firstRecruitAvailable
+                                recruitCost === 0
                                   ? 'bg-green-900/50 hover:bg-green-800 border border-green-600'
                                   : 'bg-gray-900 hover:bg-gray-700 disabled:opacity-50'
                               }`}

@@ -48,6 +48,7 @@ export const useGameStore = create(
             gold: 100,
             heroes: [],
             bench: [],
+            maxPartySize: 4,
             usedSlotDiscounts: [],
             pendingRecruits: [],
             pendingPartyChanges: [],
