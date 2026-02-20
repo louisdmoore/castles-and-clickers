@@ -96,7 +96,7 @@ const RightPanel = ({ dungeon, onClose }) => {
       className="right-panel-container flex-col h-full pixel-panel-dark overflow-hidden"
       style={{ borderRadius: 0 }}
     >
-      <div className="flex items-center justify-between p-3 border-b-3 border-[var(--color-border)]">
+      <div className="flex items-center justify-between p-3 border-b-2 border-[var(--color-border)]">
         <div className="flex items-center gap-1">
           <ChartIcon size={14} />
           <span className="pixel-subtitle text-sm">

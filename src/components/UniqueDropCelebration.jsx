@@ -94,23 +94,25 @@ const UniqueDropCelebration = () => {
         ))}
       </div>
 
-      {/* Main celebration card */}
-      <div
-        className={`relative pixel-panel p-8 max-w-md mx-4 text-center transform transition-transform duration-300 unique-showcase ${
-          isClosing ? 'scale-90 opacity-0' : 'scale-100'
-        }`}
-        style={{
-          animation: isClosing ? 'none' : 'celebrationPop 0.5s ease-out',
-          boxShadow: '0 0 60px rgba(6, 182, 212, 0.5), inset 0 0 20px rgba(6, 182, 212, 0.1)',
-          borderColor: '#06b6d4',
-        }}
-      >
+      {/* Main celebration card wrapper — stars live outside card to avoid overflow:hidden clipping */}
+      <div className="relative max-w-md mx-4">
         {/* Stars decoration */}
-        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 flex gap-2">
+        <div className="absolute -top-4 left-1/2 transform -translate-x-1/2 flex gap-2 z-10">
           <StarIcon size={24} className="text-cyan-400 animate-pulse" />
           <StarIcon size={32} className="text-cyan-300" />
           <StarIcon size={24} className="text-cyan-400 animate-pulse" />
         </div>
+
+        <div
+          className={`relative pixel-panel p-8 text-center transform transition-transform duration-300 unique-showcase ${
+            isClosing ? 'scale-90 opacity-0' : 'scale-100'
+          }`}
+          style={{
+            animation: isClosing ? 'none' : 'celebrationPop 0.5s ease-out',
+            boxShadow: '0 0 60px rgba(6, 182, 212, 0.5), inset 0 0 20px rgba(6, 182, 212, 0.1)',
+            borderColor: '#06b6d4',
+          }}
+        >
 
         {/* Header */}
         <h2 className="pixel-title text-2xl mb-6 uppercase tracking-wider unique-text-shimmer">
@@ -193,6 +195,7 @@ const UniqueDropCelebration = () => {
         <div className="text-gray-500 text-sm animate-pulse">
           Click anywhere to continue
         </div>
+      </div>
       </div>
 
       {/* CSS Animations */}

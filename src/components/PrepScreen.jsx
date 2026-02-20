@@ -81,7 +81,7 @@ const PrepScreen = ({ onOpenAscension }) => {
     // Don't auto-advance past max dungeon level
     if (prepPhase.nextLevel > maxDungeonLevel) return;
 
-    const timer = setTimeout(startFromPrepPhase, 3000);
+    const timer = setTimeout(startFromPrepPhase, 5000);
     return () => clearTimeout(timer);
   }, [prepPhase, autoAdvance, lastRunSummary, startFromPrepPhase, maxDungeonLevel, dungeonSettings]);
 
@@ -142,10 +142,10 @@ const PrepScreen = ({ onOpenAscension }) => {
   const atMaxLevel = prepPhase.nextLevel > maxDungeonLevel;
 
   return (
-    <div className="flex-1 flex items-center justify-center">
-      <div className="pixel-panel p-6 max-w-lg w-full mx-4">
+    <div className="flex-1 overflow-y-auto min-h-0 py-2">
+      <div className="pixel-panel p-4 max-w-lg w-full mx-auto">
         {/* Header */}
-        <div className="text-center mb-4">
+        <div className="text-center mb-3">
           <h2 className="pixel-title text-xl mb-1">
             {atMaxLevel
               ? 'All Dungeons Cleared!'
@@ -160,7 +160,7 @@ const PrepScreen = ({ onOpenAscension }) => {
           )}
         </div>
 
-        <div className="grid grid-cols-2 gap-3 mb-4">
+        <div className="grid grid-cols-2 gap-3 mb-3">
           {/* Party Overview */}
           <div className="pixel-panel-dark p-3">
             <div className="pixel-label text-xs mb-2">Party</div>
@@ -287,7 +287,7 @@ const PrepScreen = ({ onOpenAscension }) => {
         )}
 
         {/* Milestone widget */}
-        <div className="mb-4">
+        <div className="mb-3">
           <MilestoneWidget />
         </div>
 
@@ -295,7 +295,7 @@ const PrepScreen = ({ onOpenAscension }) => {
         {autoAdvance && canEnter && (
           <div className="text-center mb-3">
             <span className="pixel-label text-xs" style={{ color: 'var(--color-text-dim)' }}>
-              Auto-advancing in 3s...
+              Auto-advancing in 5s...
             </span>
           </div>
         )}

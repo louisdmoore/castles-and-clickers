@@ -53,11 +53,11 @@ const CombatLog = () => {
   const combatLog = useGameStore(state => state.combatLog);
 
   // OPTIMIZATION: Memoize the slice to avoid creating new array on every render
-  const recentLogs = useMemo(() => combatLog.slice(expanded ? -12 : -6), [combatLog, combatLogLength, expanded]);
+  const recentLogs = useMemo(() => combatLog.slice(expanded ? -10 : -5), [combatLog, combatLogLength, expanded]);
 
   return (
     <div
-      className={`pixel-panel-dark p-3 ${expanded ? 'max-h-48' : 'max-h-28'} overflow-y-auto text-sm cursor-pointer transition-all`}
+      className={`pixel-panel-dark p-1.5 ${expanded ? 'max-h-40' : 'max-h-24'} overflow-y-auto text-xs cursor-pointer transition-all`}
       role="log"
       aria-label="Combat log"
       aria-live="polite"

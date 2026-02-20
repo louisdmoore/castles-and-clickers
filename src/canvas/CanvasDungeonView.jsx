@@ -447,10 +447,10 @@ const CanvasDungeonView = ({ effects = [], onEffectComplete }) => {
   if (!dungeon) return null;
 
   return (
-    <div className="flex flex-col items-center">
-      <div className="flex gap-4">
-        {/* Main canvas viewport */}
-        <div className="relative">
+    <div className="flex flex-col items-center h-full min-h-0">
+      <div className="flex gap-4 min-h-0 max-h-full">
+        {/* Main canvas viewport — scales down to fit available space */}
+        <div className="relative min-h-0 flex-shrink">
           <canvas
             ref={canvasRef}
             className={`rounded-lg border-2 ${
@@ -459,6 +459,8 @@ const CanvasDungeonView = ({ effects = [], onEffectComplete }) => {
             style={{
               width: VIEWPORT_WIDTH * TILE_SIZE,
               height: VIEWPORT_HEIGHT * TILE_SIZE,
+              maxHeight: '100%',
+              maxWidth: '100%',
               imageRendering: 'pixelated',
             }}
           />

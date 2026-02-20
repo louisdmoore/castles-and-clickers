@@ -4,7 +4,7 @@ const DungeonTransition = ({ transition, lastDungeonSuccess, raidState }) => {
   if (!transition) return null;
 
   return (
-    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[60]">
+    <div className="fixed inset-0 bg-black/90 flex items-center justify-center z-[45]">
       <div className="text-center">
         <div className="relative mb-6">
           <div className="w-24 h-24 mx-auto relative">

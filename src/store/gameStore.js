@@ -266,6 +266,11 @@ throttledStorage.onSave((status) => {
   }
 });
 
+// Expose store for e2e tests (dev only, zero production impact)
+if (import.meta.env.DEV) {
+  window.__gameStore = useGameStore;
+}
+
 // Re-export helpers (preserves identical import API for all consumers)
 export { calculateHeroStats, xpForLevel, calculateSkillPoints, calculateUsedSkillPoints, invalidateStatCache, clearStatCache, setAscensionCount, setUniqueLevels } from './helpers/statCalculator';
 export { calculateItemScore, calculateSellValue, STAT_PRIORITIES, RARITY_ORDER } from './helpers/itemScoring';

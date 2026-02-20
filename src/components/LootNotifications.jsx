@@ -29,7 +29,7 @@ const LootNotifications = () => {
   if (lootNotifications.length === 0) return null;
 
   return (
-    <div className="fixed bottom-28 right-4 z-40 flex flex-col gap-2 pointer-events-none" role="status" aria-live="polite">
+    <div className="fixed bottom-20 right-4 z-40 flex flex-col gap-2 pointer-events-none" role="status" aria-live="polite">
       {lootNotifications.slice(-3).map((notif) => (
         <Notification
           key={notif.id}
@@ -302,7 +302,7 @@ const Notification = ({ notification, onDismiss }) => {
 
   return (
     <div
-      className={`bg-gray-900/95 backdrop-blur-sm rounded-lg p-3 min-w-64 max-w-80
+      className={`bg-gray-900/95 backdrop-blur-sm rounded-lg p-3 min-w-56 max-w-80
                  border-l-4 shadow-lg animate-slide-in pointer-events-auto cursor-pointer
                  transition-all ${isClickable ? 'hover:bg-gray-800/95 hover:scale-105' : 'hover:bg-gray-800/95'}
                  ${equipped ? 'scale-95' : ''}`}

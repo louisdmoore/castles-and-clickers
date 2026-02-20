@@ -32,7 +32,29 @@
       "Bash(git commit -m \"$\\(cat <<''EOF''\nFix first dungeon screen showing retry before any run\n\n- Use == null to handle both null and undefined \\(old persisted state\\)\n- Add lastDungeonSuccess to resetGame function\n- \"Start Your First Adventure\" only shows before any dungeon run\n- \"Retry Level X\" only shows after actually failing\n\nCo-Authored-By: Claude Opus 4.5 <noreply@anthropic.com>\nEOF\n\\)\")",
       "Bash(git commit:*)",
       "Bash(git log:*)",
-      "Bash(npm install:*)"
+      "Bash(npm install:*)",
+      "Bash(git -C \"C:\\\\Users\\\\elgin\\\\CascadeProjects\\\\castles-and-clickers\" status)",
+      "Bash(git -C \"C:\\\\Users\\\\elgin\\\\CascadeProjects\\\\castles-and-clickers\" diff --stat)",
+      "Bash(git -C \"C:\\\\Users\\\\elgin\\\\CascadeProjects\\\\castles-and-clickers\" log --oneline -5)",
+      "Bash(git -C \"C:\\\\Users\\\\elgin\\\\CascadeProjects\\\\castles-and-clickers\" add src/components/CombatLog.jsx src/components/LootNotifications.jsx src/components/ModalOverlay.jsx src/components/RaidSelectorModal.jsx src/components/SkillNode.jsx src/index.css src/components/GameHUD.jsx src/components/NavBar.jsx)",
+      "Bash(git -C \"C:\\\\Users\\\\elgin\\\\CascadeProjects\\\\castles-and-clickers\" reset HEAD)",
+      "Bash(git -C \"C:\\\\Users\\\\elgin\\\\CascadeProjects\\\\castles-and-clickers\" add CLAUDE.md DEVELOPER_GUIDE.md REMEDIATION_PLAN.md WEAK_POINTS.md src/components/CombatLog.jsx src/components/DungeonMap.jsx src/components/EquipmentScreen.jsx src/components/GameHUD.jsx src/components/GameLayout.jsx src/components/HomesteadScreen.jsx src/components/LootNotifications.jsx src/components/ModalOverlay.jsx src/components/NavBar.jsx src/components/RaidSelectorModal.jsx src/components/ShopScreen.jsx src/components/SkillNode.jsx src/components/SkillTreeScreen.jsx src/components/icons/ui.jsx src/components/ui/index.js src/components/EncyclopediaScreen.jsx src/components/ui/HelpTooltip.jsx src/components/ui/Toast.jsx src/data/changelog.js src/index.css src/store/gameStore.js src/store/helpers/throttledStorage.js src/store/slices/economySlice.js src/store/slices/heroSlice.js src/store/slices/inventorySlice.js)",
+      "Bash(git -C \"C:\\\\Users\\\\elgin\\\\CascadeProjects\\\\castles-and-clickers\" commit -m \"$\\(cat <<''EOF''\nAdd accessibility \\(Phase 4\\) and player experience \\(Phase 5\\) \\(v0.1.27\\)\n\nPhase 4 — WCAG AA: reduced-motion support, color contrast fixes, ARIA labels/roles\non all interactive elements, modal focus trap with auto-focus/restore, keyboard\nnavigation with visible focus indicators.\n\nPhase 5 — Player experience: save indicator with flash animation, toast notifications\nfor action failures \\(gold, inventory, skills, shop\\), searchable encyclopedia with 6\ntabs, contextual help tooltips on 5 key screens.\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(git -C \"C:\\\\Users\\\\elgin\\\\CascadeProjects\\\\castles-and-clickers\" push origin master)",
+      "Bash(git -C \"C:\\\\Users\\\\elgin\\\\CascadeProjects\\\\castles-and-clickers\" add src/components/EncyclopediaScreen.jsx)",
+      "Bash(git -C \"C:\\\\Users\\\\elgin\\\\CascadeProjects\\\\castles-and-clickers\" commit -m \"$\\(cat <<''EOF''\nRemove homestead tab from encyclopedia — feature is currently disabled\n\nCo-Authored-By: Claude Opus 4.6 <noreply@anthropic.com>\nEOF\n\\)\")",
+      "Bash(node:*)",
+      "Bash(git status:*)",
+      "Bash(gh pr list:*)",
+      "Bash(git fetch:*)",
+      "Bash(gh pr checkout:*)",
+      "Bash(gh pr view:*)",
+      "Bash(findstr:*)",
+      "Bash(Select-String \"problems\")",
+      "Bash(npx playwright install chromium)",
+      "Bash(npx playwright test)",
+      "Bash(npx playwright test --update-snapshots)",
+      "Bash(npx playwright test:*)"
     ]
   }
 }

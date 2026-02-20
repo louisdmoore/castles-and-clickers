@@ -31,3 +31,8 @@ UI_AUDIT.md
 UI_FIX_PROMPT.md
 WEAK_POINTS.md
 REMEDIATION_PLAN.md
+
+# Playwright
+test-results/
+playwright-report/
+playwright/.cache/

@@ -87,7 +87,7 @@ const ModalOverlay = ({ isOpen, onClose, title, children, size = 'md' }) => {
         className={`relative ${sizeClasses[size]} w-full mx-4 max-h-[calc(100vh-4rem)] flex flex-col pixel-panel`}
       >
         {/* Header with pixel styling */}
-        <div className="flex items-center justify-between px-4 py-3 border-b-3 border-[var(--color-border)]"
+        <div className="flex items-center justify-between px-4 py-3 border-b-2 border-[var(--color-border)]"
              style={{ background: 'linear-gradient(180deg, #3a3a5a 0%, #2a2a4a 100%)' }}>
           <h2 id="modal-title" className="pixel-title">{title}</h2>
           <button

@@ -8,7 +8,7 @@ export const BUILDINGS = {
     maxLevel: 10,
     effect: { type: 'attack', valuePerLevel: 0.05 }, // +5% ATK per level
     baseCost: 500,
-    costMultiplier: 2.8,
+    costMultiplier: 2.2,
     unlocks: {
       3: { type: 'partySlot', slot: 5, label: '5th party slot' },
       7: { type: 'partySlot', slot: 6, label: '6th party slot' },
@@ -22,7 +22,7 @@ export const BUILDINGS = {
     maxLevel: 10,
     effect: { type: 'defense', valuePerLevel: 0.05 }, // +5% DEF per level
     baseCost: 500,
-    costMultiplier: 2.8,
+    costMultiplier: 2.2,
     unlocks: {
       3: { type: 'feature', key: 'equipComparison', label: 'Equipment comparison tooltips' },
       7: { type: 'feature', key: 'autoEquip', label: 'Auto-equip feature' },
@@ -35,7 +35,7 @@ export const BUILDINGS = {
     maxLevel: 10,
     effect: { type: 'hp', valuePerLevel: 0.05 }, // +5% HP per level
     baseCost: 500,
-    costMultiplier: 2.8,
+    costMultiplier: 2.2,
     unlocks: {
       3: { type: 'difficultyMax', value: 1.5, label: 'Hard difficulty (1.5x)' },
       5: { type: 'difficultyMax', value: 2.0, label: 'Brutal difficulty (2.0x)' },
@@ -50,7 +50,7 @@ export const BUILDINGS = {
     maxLevel: 7,
     effect: { type: 'healBetweenRooms', valuePerLevel: 0.002 }, // +0.2% between-room heal per level
     baseCost: 800,
-    costMultiplier: 2.8,
+    costMultiplier: 2.2,
     unlocks: {
       3: { type: 'feature', key: 'consumables', label: 'Consumable slots' },
       7: { type: 'feature', key: 'betterConsumables', label: 'Advanced consumables' },
@@ -63,7 +63,7 @@ export const BUILDINGS = {
     maxLevel: 10,
     effect: { type: 'goldFind', valuePerLevel: 0.05 }, // +5% gold find per level
     baseCost: 500,
-    costMultiplier: 2.8,
+    costMultiplier: 2.2,
     unlocks: {
       3: { type: 'feature', key: 'shop', label: 'Shop unlocks' },
       7: { type: 'feature', key: 'shopFastRefresh', label: 'Shop auto-refresh rate halved' },
@@ -76,7 +76,7 @@ export const BUILDINGS = {
     maxLevel: 10,
     effect: { type: 'xpGain', valuePerLevel: 0.10 }, // +10% XP per level
     baseCost: 600,
-    costMultiplier: 2.8,
+    costMultiplier: 2.2,
     unlocks: {
       3: { type: 'feature', key: 'skillRespec', label: 'Skill respec available' },
       7: { type: 'feature', key: 'dungeonXpBonus', label: '+50% XP from higher dungeons' },
@@ -89,7 +89,7 @@ export const BUILDINGS = {
     maxLevel: 7,
     effect: { type: 'bestiaryDepth', valuePerLevel: 1 }, // More bestiary info per level
     baseCost: 400,
-    costMultiplier: 2.8,
+    costMultiplier: 2.2,
     unlocks: {
       3: { type: 'feature', key: 'bestiary', label: 'Bestiary unlocks' },
       7: { type: 'feature', key: 'dungeonPreview', label: 'Dungeon preview (show monster types)' },

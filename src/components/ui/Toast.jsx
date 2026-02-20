@@ -27,7 +27,7 @@ const Toast = ({ toast, onDismiss }) => {
 
   return (
     <div
-      className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-3 min-w-56 max-w-72
+      className="bg-gray-900/95 backdrop-blur-sm rounded-lg p-2.5 min-w-48 max-w-72
                  border-l-4 shadow-lg animate-slide-in pointer-events-auto cursor-pointer
                  hover:bg-gray-800/95 transition-colors"
       style={{ borderLeftColor: borderColor }}
@@ -53,7 +53,7 @@ const ToastContainer = () => {
 
   return (
     <div
-      className="fixed top-20 right-4 z-50 flex flex-col gap-2 pointer-events-none"
+      className="fixed top-12 right-4 z-50 flex flex-col gap-2 pointer-events-none"
       aria-live="polite"
     >
       {toasts.map((toast) => (

@@ -45,7 +45,7 @@ export const ACHIEVEMENTS = {
     description: 'Defeat 10,000 monsters',
     category: ACHIEVEMENT_CATEGORY.COMBAT,
     condition: { stat: 'totalKills', threshold: 10000 },
-    reward: { gold: 10000 },
+    reward: { gold: 50000 },
     hidden: false,
   },
   boss_hunter: {
@@ -54,7 +54,7 @@ export const ACHIEVEMENTS = {
     description: 'Defeat 10 dungeon bosses',
     category: ACHIEVEMENT_CATEGORY.COMBAT,
     condition: { stat: 'bossKills', threshold: 10 },
-    reward: { gold: 1000 },
+    reward: { gold: 3000 },
     hidden: false,
   },
   world_boss_slayer: {
@@ -63,7 +63,7 @@ export const ACHIEVEMENTS = {
     description: 'Defeat a world boss',
     category: ACHIEVEMENT_CATEGORY.COMBAT,
     condition: { stat: 'worldBossKills', threshold: 1 },
-    reward: { gold: 2000 },
+    reward: { gold: 5000 },
     hidden: false,
   },
   flawless_run: {
@@ -72,7 +72,7 @@ export const ACHIEVEMENTS = {
     description: 'Complete a dungeon without any hero falling',
     category: ACHIEVEMENT_CATEGORY.COMBAT,
     condition: { type: 'flawless_dungeon' },
-    reward: { gold: 1500 },
+    reward: { gold: 3000 },
     hidden: false,
   },
   critical_master: {
@@ -81,7 +81,7 @@ export const ACHIEVEMENTS = {
     description: 'Land 500 critical hits',
     category: ACHIEVEMENT_CATEGORY.COMBAT,
     condition: { stat: 'totalCrits', threshold: 500 },
-    reward: { gold: 1000 },
+    reward: { gold: 3000 },
     hidden: false,
   },
 
@@ -110,7 +110,7 @@ export const ACHIEVEMENTS = {
     description: 'Clear Dungeon 20',
     category: ACHIEVEMENT_CATEGORY.PROGRESSION,
     condition: { stat: 'highestDungeon', threshold: 20 },
-    reward: { gold: 2000 },
+    reward: { gold: 10000 },
     hidden: false,
   },
   dungeon_30: {
@@ -119,7 +119,7 @@ export const ACHIEVEMENTS = {
     description: 'Clear Dungeon 30',
     category: ACHIEVEMENT_CATEGORY.PROGRESSION,
     condition: { stat: 'highestDungeon', threshold: 30 },
-    reward: { gold: 5000 },
+    reward: { gold: 25000 },
     hidden: false,
   },
   first_ascension: {
@@ -128,7 +128,7 @@ export const ACHIEVEMENTS = {
     description: 'Complete your first ascension',
     category: ACHIEVEMENT_CATEGORY.PROGRESSION,
     condition: { stat: 'ascensionCount', threshold: 1 },
-    reward: { gold: 5000 },
+    reward: { gold: 10000 },
     hidden: false,
   },
   level_25_hero: {
@@ -137,7 +137,7 @@ export const ACHIEVEMENTS = {
     description: 'Reach level 25 with any hero',
     category: ACHIEVEMENT_CATEGORY.PROGRESSION,
     condition: { stat: 'highestHeroLevel', threshold: 25 },
-    reward: { gold: 1500 },
+    reward: { gold: 5000 },
     hidden: false,
   },
   full_party: {
@@ -175,7 +175,7 @@ export const ACHIEVEMENTS = {
     description: 'Obtain 10 unique items',
     category: ACHIEVEMENT_CATEGORY.COLLECTION,
     condition: { stat: 'uniqueItemsFound', threshold: 10 },
-    reward: { gold: 5000 },
+    reward: { gold: 15000 },
     hidden: false,
   },
   full_collection: {
@@ -184,7 +184,7 @@ export const ACHIEVEMENTS = {
     description: 'Obtain every unique item',
     category: ACHIEVEMENT_CATEGORY.COLLECTION,
     condition: { type: 'all_uniques_collected' },
-    reward: { gold: 25000 },
+    reward: { gold: 100000 },
     hidden: true,
   },
   first_rare: {
@@ -213,7 +213,7 @@ export const ACHIEVEMENTS = {
     description: 'Clear a dungeon in under 30 seconds',
     category: ACHIEVEMENT_CATEGORY.CHALLENGE,
     condition: { type: 'speed_clear', threshold: 30 },
-    reward: { gold: 2000 },
+    reward: { gold: 5000 },
     hidden: false,
   },
   survive_wipe: {
@@ -222,7 +222,7 @@ export const ACHIEVEMENTS = {
     description: 'Win a room with only 1 hero alive',
     category: ACHIEVEMENT_CATEGORY.CHALLENGE,
     condition: { type: 'solo_room_clear' },
-    reward: { gold: 1000 },
+    reward: { gold: 3000 },
     hidden: false,
   },
   difficulty_2x: {
@@ -231,7 +231,7 @@ export const ACHIEVEMENTS = {
     description: 'Complete a dungeon at 2.0x difficulty',
     category: ACHIEVEMENT_CATEGORY.CHALLENGE,
     condition: { type: 'difficulty_clear', threshold: 2.0 },
-    reward: { gold: 2000 },
+    reward: { gold: 5000 },
     hidden: false,
   },
   difficulty_3x: {
@@ -240,7 +240,7 @@ export const ACHIEVEMENTS = {
     description: 'Complete a dungeon at 3.0x difficulty',
     category: ACHIEVEMENT_CATEGORY.CHALLENGE,
     condition: { type: 'difficulty_clear', threshold: 3.0 },
-    reward: { gold: 5000 },
+    reward: { gold: 15000 },
     hidden: false,
   },
 
@@ -260,7 +260,7 @@ export const ACHIEVEMENTS = {
     description: 'Accumulate 50,000 gold at once',
     category: ACHIEVEMENT_CATEGORY.ECONOMY,
     condition: { stat: 'peakGold', threshold: 50000 },
-    reward: { gold: 5000 },
+    reward: { gold: 10000 },
     hidden: false,
   },
   big_spender: {
@@ -269,7 +269,7 @@ export const ACHIEVEMENTS = {
     description: 'Spend 100,000 gold total',
     category: ACHIEVEMENT_CATEGORY.ECONOMY,
     condition: { stat: 'totalGoldSpent', threshold: 100000 },
-    reward: { gold: 5000 },
+    reward: { gold: 10000 },
     hidden: false,
   },
   first_raid: {
@@ -278,7 +278,7 @@ export const ACHIEVEMENTS = {
     description: 'Complete your first raid',
     category: ACHIEVEMENT_CATEGORY.ECONOMY,
     condition: { stat: 'raidsCompleted', threshold: 1 },
-    reward: { gold: 2000 },
+    reward: { gold: 5000 },
     hidden: false,
   },
 };

@@ -16,14 +16,14 @@ const HeroBar = memo(({ hero, value, maxValue, roleConfig }) => {
   return (
     <div className="flex items-center gap-1.5 mb-1">
       <ClassIcon classId={hero.classId} size={16} />
-      <span className="pixel-label text-xs w-14 truncate" title={hero.name}>{hero.name}</span>
+      <span className="pixel-label text-xs w-12 truncate" title={hero.name}>{hero.name}</span>
       <div className="pixel-bar flex-1 h-2">
         <div
           className={`pixel-bar-fill ${roleConfig.color}`}
           style={{ width: `${Math.min(pct, 100)}%` }}
         />
       </div>
-      <span className="pixel-label text-xs w-10 text-right">{formatStat(value)}</span>
+      <span className="pixel-label text-xs w-8 text-right">{formatStat(value)}</span>
     </div>
   );
 });

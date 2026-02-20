@@ -1,6 +1,6 @@
 # Castles & Clickers — Weak Points Analysis
 
-**Version:** v0.1.15 | **Date:** February 2026
+**Version:** v0.1.28 | **Date:** February 2026
 
 This document catalogs every verified weakness in the game across code quality, game balance, player experience, and accessibility. Each finding includes exact file locations, code evidence, and severity ratings.
 
@@ -31,14 +31,18 @@ This document catalogs every verified weakness in the game across code quality, 
 
 ~~Neither `App.jsx` nor `main.jsx` wraps the component tree in an ErrorBoundary.~~ ErrorBoundary now wraps `<GameLayout />` in `App.jsx`.
 
-### 1.2 Only Two Try-Catch Blocks in the Entire Codebase
+### 1.2 ~~Only Two Try-Catch Blocks~~ — **Expanded (v0.1.17+)**
 
-| File | Lines | What It Protects |
-|------|-------|------------------|
-| `src/hooks/useGameLoop.js` | 257–261 | Game tick execution (try-finally, no catch — exceptions are silently swallowed, game loop stops) |
-| `src/canvas/SpriteManager.js` | 45–71 | SVG-to-bitmap rendering (promise rejection, but no application-level handler) |
+~~Only two try-catch blocks existed in the entire codebase.~~ Error handling has been expanded:
 
-Everything else — combat calculations, equipment generation, state persistence, canvas rendering — runs without protection.
+| File | What It Protects |
+|------|------------------|
+| `src/hooks/useGameLoop.js` | Game tick execution (try-finally — exceptions still not caught, but game loop continues) |
+| `src/canvas/SpriteManager.js` | SVG-to-bitmap rendering (promise rejection handler) |
+| `src/components/ErrorBoundary.jsx` | React error boundary with localStorage cleanup **(NEW v0.1.17)** |
+| `src/store/helpers/throttledStorage.js` | 4 try-catch blocks protecting getItem, setItem, removeItem, flush **(NEW v0.1.17)** |
+
+Combat calculations, equipment generation, and canvas rendering still run without protection.
 
 ### 1.3 ~~Unprotected localStorage~~ — **FIXED (v0.1.17)**
 
@@ -52,68 +56,51 @@ Everything else — combat calculations, equipment generation, state persistence
 
 ~~Multiple canvas context acquisitions happen without null checks.~~ Canvas `getContext('2d')` null guards added to 7 locations across canvas files.
 
-### 1.6 NaN Propagation Risks
+### 1.6 ~~NaN Propagation Risks~~ — **Mostly FIXED (v0.1.17+)**
 
-- `src/data/equipment.js` line 708: If `getEquipmentByTier(tier)` returns an empty array, `possibleItems[0]` is undefined → `Object.entries(template.baseStats)` throws.
-- `src/data/equipment.js` line 736: If `RARITY[rarity]` is undefined, `rarityData.multiplier` is undefined → NaN propagates into item stats.
-- `src/hooks/useCombat.js` line 92: If `dungeon.level` is undefined, `Math.floor(100 * dungeon.level * goldMultiplier)` produces NaN gold.
+- ~~`src/data/equipment.js`: If `getEquipmentByTier(tier)` returns an empty array, `possibleItems[0]` is undefined.~~ **FIXED** — defensive fallback to `EQUIPMENT_LIST` when array is empty.
+- ~~`src/data/equipment.js`: If `RARITY[rarity]` is undefined, `rarityData.multiplier` is undefined → NaN.~~ **FIXED** — fallback to `RARITY.common`.
+- `src/hooks/useGameLoop.js`: If `dungeon.level` is undefined, `Math.floor(100 * dungeon.level * goldMultiplier)` produces NaN gold. (Theoretical risk — `dungeon.level` should always exist when this code runs.)
 
-### 1.7 Grid Access Without Bounds Check
+### 1.7 ~~Grid Access Without Bounds Check~~ — **FIXED (v0.1.17+)**
 
-`src/canvas/CanvasDungeonView.jsx` line 120:
-
-```javascript
-const tile = grid[y][x];  // Direct access, no optional chaining
-```
-
-If `grid[y]` is undefined (malformed dungeon data), this crashes with "Cannot read property 'x' of undefined." Compare with `TerrainLayer.js` line 128 which correctly uses `this.grid[y]?.[x]`.
+~~`CanvasDungeonView.jsx` used `grid[y][x]` without optional chaining.~~ Both `CanvasDungeonView.jsx` and `TerrainLayer.js` now use `grid[y]?.[x]` with optional chaining.
 
 ---
 
 ## 2. Shop System
 
-**Severity: Major**
+**Severity: Major** → **Partially resolved (rarity scaling added)**
 
-The shop becomes irrelevant by mid-game and has no late-game purpose.
+~~The shop becomes irrelevant by mid-game and has no late-game purpose.~~ Rarity scaling was added in v0.1.20+, keeping the shop relevant longer.
 
-### 2.1 Forced Rarity Cap
+### 2.1 ~~Forced Rarity Cap~~ — **FIXED (v0.1.20+)**
 
-`src/store/gameStore.js` lines 1388–1399:
+~~Any item generated above Uncommon was forcibly downgraded.~~ Shop rarity now scales with dungeon progress via `src/data/milestones.js`:
 
-```javascript
-if (['rare', 'epic', 'legendary'].includes(item.rarity)) {
-  item.rarity = Math.random() < 0.6 ? 'common' : 'uncommon';
-  const rarityMult = item.rarity === 'common' ? 1.0 : 1.3;
-  // Recalculate stats for lower rarity...
-}
-```
+| Highest Dungeon Cleared | Max Shop Rarity |
+|--------------------------|-----------------|
+| D1–D9 | Uncommon |
+| D10–D19 | Rare |
+| D20–D24 | Epic |
+| D25+ | Legendary |
 
-Any item generated above Uncommon is forcibly downgraded. This means the shop **can never sell Rare, Epic, or Legendary items**, regardless of player progression.
+`economySlice.js` retries generation up to 5 times if an item exceeds the cap, with a final fallback to force-regenerate at the max allowed rarity.
 
-### 2.2 Pricing Doesn't Scale
+### 2.2 Pricing & Refresh — **Partially improved**
 
-- Shop price = 1.75× sell value (line 1403)
-- Only 4 items per refresh
-- 4-hour auto-refresh timer
-- Manual refresh costs a flat 50 gold (line 702) — trivial by dungeon 10
+- Shop price = 1.75× sell value (unchanged)
+- 4 items per refresh (unchanged)
+- ~~4-hour auto-refresh timer~~ **Reduced to 2 hours**
+- ~~Manual refresh costs a flat 50 gold~~ **Now scales**: `50 + floor(highestDungeon / 5) × 10`, capped at 200 gold
 
-### 2.3 Outpaced by Dungeon Loot
+### 2.3 Dungeon Loot Still Outpaces Shop
 
-By dungeon level 10, the rarity distribution for dungeon drops shifts dramatically:
+The rarity scaling helps, but dungeon drops still outpace shop offerings due to volume — each dungeon clear can drop many items while the shop offers only 4 per refresh. The gap narrows at higher levels where shop Epic/Legendary items become available.
 
-| Rarity | D1 Drop Rate | D10 Drop Rate | D20 Drop Rate |
-|--------|-------------|---------------|---------------|
-| Common | ~50% | ~20% | ~5% |
-| Uncommon | ~25% | ~35% | ~25% |
-| Rare | ~15% | ~25% | ~35% |
-| Epic | ~8% | ~15% | ~25% |
-| Legendary | ~2% | ~5% | ~10% |
+### 2.4 What's Still Missing
 
-The shop's Common/Uncommon-only inventory becomes useless once dungeon drops routinely produce Rare+ gear. Elite mobs (which start at dungeon 10) guarantee drops, accelerating this further.
-
-### 2.4 What's Missing
-
-- No rarity scaling with dungeon progress
+- ~~No rarity scaling with dungeon progress~~ **FIXED**
 - No rotating "featured item" slot with higher rarity
 - No consumables, scrolls, or non-equipment purchases
 - No bulk buy/sell interface
@@ -142,9 +129,9 @@ The economy is well-balanced through mid-game but has a significant late-game si
 |------|---------|---------|
 | Homestead upgrades | baseCost × 2.5^level (or 3.0^ for Academy) | Exponential |
 | Hero recruitment | 50 + (level × 30) + equipment + traits | Linear |
-| Skill respec | 50 × 2^(usedSkillPoints - 1) | Exponential |
+| Skill respec | 250 × usedSkillPoints | Linear (changed v0.1.20) |
 | Shop purchases | 1.75× sell value | Flat |
-| Shop refresh | 50 gold | Flat |
+| Shop refresh | 50 + floor(D/5) × 10, cap 200 | Scaling |
 
 ### 3.3 Total Homestead Cost to Max
 
@@ -172,7 +159,7 @@ The economy is well-balanced through mid-game but has a significant late-game si
 
 Once all 7 buildings are maxed (~30 dungeon clears at D30), gold has **no remaining sink**:
 
-- Shop purchases are worthless (Common/Uncommon only)
+- Shop purchases scale with rarity milestones but still offer only 4 items per refresh
 - Recruitment costs are trivial compared to income
 - Skill respecs are the only scaling cost, but players rarely respec repeatedly
 - No consumables, cosmetics, or prestige system to absorb excess
@@ -237,12 +224,12 @@ This represents a sharp difficulty jump that can wall players who haven't invest
 | Raid | Unlock Level | Gap from Previous |
 |------|-------------|-------------------|
 | Sunken Temple | D12 | — |
-| Shadowkeep | D18 | 6 levels |
-| Abyssal Citadel | D24 | 6 levels |
-| World's End | D30 | 6 levels |
-| Eternal Nexus | D35 | 5 levels (beyond dungeon cap?) |
+| Cursed Manor | D18 | 6 levels |
+| Sky Fortress | D24 | 6 levels |
+| The Abyss | D30 | 6 levels |
+| Void Throne | D35 | 5 levels (beyond dungeon cap?) |
 
-Raids are evenly spaced but each 6-level gap represents significant grind time at higher levels. The Eternal Nexus at D35 may be unreachable if dungeons cap at 30.
+Raids are evenly spaced but each 6-level gap represents significant grind time at higher levels. The Void Throne at D35 may be unreachable if dungeons cap at 30.
 
 ### 4.6 Respec Costs Lock In Builds
 
@@ -286,17 +273,17 @@ This creates a DPS hierarchy where fast classes significantly outperform slow on
 | Class | Base Speed | Role | Dodge at Base |
 |-------|-----------|------|---------------|
 | Knight | 3 | Tank | 0% |
-| Warrior | 5 | Tank | 6% |
 | Paladin | 4 | Tank | 0% |
-| Cleric | 5 | Healer | 6% |
-| Druid | 6 | Healer | 12% |
-| Shaman | 7 | Healer | 18% |
-| Necromancer | 4 | DPS | 0% |
+| Warrior | 5 | Tank | 6% |
+| Cleric | 4 | Healer | 0% |
+| Druid | 5 | Healer | 6% |
+| Shaman | 5 | Healer | 6% |
+| Necromancer | 5 | DPS | 6% |
 | Mage | 6 | DPS | 12% |
-| Ranger | 8 | DPS | 24% |
+| Ranger | 9 | DPS | 30% |
 | Rogue | 12 | DPS | 48% |
 
-Knights and Paladins can **never dodge** at base speed. Necromancers — a DPS class — also can't dodge, creating a glass cannon without any evasion safety net.
+Knights, Paladins, and Clerics can **never dodge** at base speed. The Rogue's 48% base dodge plus double-attack potential still dominates.
 
 ### 5.3 Mage Range Advantage
 
@@ -316,26 +303,26 @@ All tanks deal low damage by design, but the game's idle nature means combat res
 
 | File | Lines | Responsibility | Status |
 |------|-------|----------------|--------|
-| ~~`src/hooks/useCombat.js`~~ | ~~3,508~~ → 560 | ~~Combat tick, damage calc, loot, status effects, death handling, XP/gold, viewport — all in one function~~ | **FIXED in v0.1.18** — Split into 6 files (orchestrator + 5 game modules) |
-| ~~`src/store/gameStore.js`~~ | ~~2,929~~ → 218 | ~~46+ action methods, state init, validation, helpers, persistence — single Zustand store~~ | **FIXED in v0.1.19** — Split into 5 slices + 5 helpers |
+| ~~`src/hooks/useCombat.js`~~ | ~~3,508~~ → 568 | ~~Combat tick, damage calc, loot, status effects, death handling, XP/gold, viewport — all in one function~~ | **FIXED in v0.1.18** — Split into 6 files (orchestrator + 5 game modules) |
+| ~~`src/store/gameStore.js`~~ | ~~2,929~~ → 234 | ~~46+ action methods, state init, validation, helpers, persistence — single Zustand store~~ | **FIXED in v0.1.19** — Split into 5 slices + 5 helpers |
 | `src/components/icons/skills.jsx` | 2,697 | 143 SVG icon component exports |
-| `src/game/skillEngine.js` | 2,067 | Skill execution, passive effects (185-line switch), AI selection, effect handlers |
+| ~~`src/game/skillEngine.js`~~ | ~~2,067~~ → 906 | ~~Skill execution, passive effects (185-line switch), AI selection, effect handlers~~ Significantly reduced, likely refactored |
 | `src/data/skillTrees.js` | 1,930 | Skill tree definitions (data file — acceptable) |
-| `src/canvas/sprites/MonsterSprites.js` | 1,701 | Monster sprite data |
+| `src/canvas/sprites/MonsterSprites.js` | 1,718 | Monster sprite data |
 | `src/game/mazeGenerator.js` | 1,687 | Maze generation + A* pathfinding |
 | `src/game/combatSimulator.js` | 1,657 | Balance testing tool |
 
-The top 3 files (`useCombat.js`, `gameStore.js`, `skillEngine.js`) each contain multiple concerns that should be separate modules. `useCombat.js` in particular has a single function (`handleCombatTick`) spanning ~3,250 lines.
+~~The top 3 files each contain multiple concerns.~~ `useCombat.js` and `gameStore.js` have been split. `skillEngine.js` has been significantly reduced (2,067 → 906 lines).
 
 ### 6.2 Splitting Opportunities
 
 **useCombat.js** — **COMPLETED (v0.1.18)**. Split into:
-- `src/hooks/useCombat.js` — Thin orchestrator (~560 lines)
-- `src/game/combatHelpers.js` — Pure utilities, targeting, death handling (~210 lines)
-- `src/game/combatDamageResolution.js` — Basic attack damage + on-hit/kill/crit effects (~1100 lines)
-- `src/game/combatSkillExecution.js` — Hero skill and monster ability execution (~530 lines)
-- `src/game/combatStatusEffects.js` — DOT/stun/buff per-turn processing (~310 lines)
-- `src/game/combatMovement.js` — A* pathfinding and directional movement (~140 lines)
+- `src/hooks/useCombat.js` — Thin orchestrator (~568 lines)
+- `src/game/combatHelpers.js` — Pure utilities, targeting, death handling (~232 lines)
+- `src/game/combatDamageResolution.js` — Basic attack damage + on-hit/kill/crit effects (~1,426 lines)
+- `src/game/combatSkillExecution.js` — Hero skill and monster ability execution (~654 lines)
+- `src/game/combatStatusEffects.js` — DOT/stun/buff per-turn processing (~429 lines)
+- `src/game/combatMovement.js` — A* pathfinding and directional movement (~139 lines)
 
 All functions share a mutable `ctx` object passed from the orchestrator. Game files never import `useGameStore` directly — store actions are wrapped as callbacks on `ctx`.
 
@@ -354,29 +341,21 @@ All functions share a mutable `ctx` object passed from the orchestrator. Game fi
 
 All imports remain through `gameStore.js` — zero consumer changes required.
 
-**skillEngine.js** could split:
-- `skillExecution.js` — executeSkillAbility refactored
-- `passiveEffects.js` — 185-line switch → handler map
+**skillEngine.js** — reduced from 2,067 to 906 lines (likely partially split or refactored). Further splitting could still separate:
+- `passiveEffects.js` — passive effect handlers
 - `skillAI.js` — chooseBestSkill, selection logic
 
-### 6.3 Magic Numbers
+### 6.3 ~~Magic Numbers~~ — **FIXED (v0.1.20+)**
 
-Balance-critical values are hardcoded throughout the codebase rather than centralized:
+~~Balance-critical values were hardcoded throughout the codebase.~~ A centralized `src/game/balanceConstants.js` (~61 lines) now exports named constants:
 
-| Value | Appears | Purpose |
-|-------|---------|---------|
-| 0.25 | 20+ times | HP threshold (execute range, critical health) |
-| 0.50 | 15+ times | HP threshold (low health, heal triggers) |
-| 0.06 | 1 time | Dodge chance per speed point |
-| 0.05 | 1 time | Dodge bonus per speed advantage |
-| 0.03 | 1 time | Double attack per speed advantage |
-| 0.70 | 1 time | Dodge cap |
-| 0.30 | 1 time | Double attack cap |
-| 1.5 | 2 times | Crit damage multiplier |
-| 0.85/0.30 | 1 time | Damage variance range |
-| 100 | 70+ times | Percentage divisor |
+- `SPEED_THRESHOLD`, `BASE_DODGE_PER_SPEED` (0.06), `SPEED_BONUS_PER_DIFF` (0.05), `MAX_DODGE_CHANCE` (0.70)
+- `DOUBLE_ATTACK_PER_SPEED` (0.03), `MAX_DOUBLE_ATTACK` (0.30)
+- `DAMAGE_VARIANCE_MIN` (0.85), `DAMAGE_VARIANCE_RANGE` (0.30), `BASE_CRIT_MULTIPLIER` (1.5)
+- `HP_CRITICAL` (0.25), `HP_LOW` (0.50), `HP_HURT` (0.75)
+- `BOSS_LOOT_DROP_CHANCE`, `NORMAL_LOOT_DROP_CHANCE`, summon multipliers, movement, AoE, chain attack constants
 
-These should live in a centralized `balanceConstants.js` for easy tuning.
+These constants are imported across 8+ combat/game files.
 
 ### 6.4 Zero Test Coverage
 
@@ -386,17 +365,17 @@ No test files exist (`*.test.*`, `*.spec.*`, `__tests__/`). No jest or vitest co
 
 | File | Count | Type |
 |------|-------|------|
-| `src/game/combatSimulator.js` | 60+ | Intentional simulation output (ships to production) |
-| `src/store/gameStore.js` | 3 | Validation warnings |
+| `src/game/combatSimulator.js` | 85+ | Intentional simulation output (ships to production) |
+| `src/store/gameStore.js` | 2 | Validation warnings |
 | `src/hooks/useDungeon.js` | 1 | Error log |
 | `src/game/statusEngine.js` | 1 | Warning |
 | `src/components/icons/index.jsx` | 1 | Missing icon warning |
 
-The combat simulator's 60+ logs are intentional dev tooling but shouldn't ship in production builds.
+The combat simulator's 85+ logs are intentional dev tooling but shouldn't ship in production builds.
 
-### 6.6 Unused TypeScript Packages
+### 6.6 ~~Unused TypeScript Packages~~ — **FIXED**
 
-`@types/react` and `@types/react-dom` are installed in `package.json` but the project is pure JavaScript with zero `.ts`/`.tsx` files and no `tsconfig.json`.
+~~`@types/react` and `@types/react-dom` were installed in `package.json`.~~ Removed. The project is pure JavaScript with no TypeScript configuration.
 
 ### 6.7 No Circular Dependencies
 
@@ -512,9 +491,9 @@ For context, these systems are solid and should be preserved:
 |--------|-------------|
 | **Combat engine** | Initiative-based turns, A* pathfinding, status effects — complex and functional |
 | **Canvas renderer** | 4-layer architecture, adaptive FPS (60→30), terrain caching, excellent performance |
-| **Skill system** | 170 skills, 58 passive types, 26 handler functions, zero dead code |
-| **Unique items** | 37 dedicated icons, 6 CSS animations, celebration modal, collection screen |
-| **SVG icon library** | 143+ custom 16×16 pixel-art icons with consistent style |
+| **Skill system** | ~180 skills, 58 passive types, 26 handler functions, zero dead code |
+| **Unique items** | 53 dedicated icons, 6 CSS animations, celebration modal, collection screen |
+| **SVG icon library** | 360+ custom 16×16 pixel-art icons with consistent style |
 | **Mobile support** | Media queries, hamburger menu, touch handlers, responsive modals, 2-tap skill tree |
 | **State management** | Smart stat caching with O(1) invalidation, batched updates, imperative access |
 | **Architecture** | Clean one-way dependency flow, no circular imports, well-separated concerns at the module level |
@@ -530,14 +509,14 @@ For context, these systems are solid and should be preserved:
 | 1 | ~~No ErrorBoundary~~ | ~~Critical~~ | ~~White screen crashes~~ | **DONE (v0.1.17)** |
 | 2 | ~~Unprotected localStorage~~ | ~~Critical~~ | ~~Silent data loss~~ | **DONE (v0.1.17)** |
 | 3 | ~~No save flush on page unload~~ | ~~Critical~~ | ~~Lost progress~~ | **DONE (v0.1.17)** |
-| 4 | Shop rarity cap | Major | Entire system irrelevant | Medium |
+| 4 | ~~Shop rarity cap~~ | ~~Major~~ | ~~Entire system irrelevant~~ | **DONE (v0.1.20+)** — milestone-based rarity scaling |
 | 5 | Post-homestead gold void | Major | No late-game progression | Medium |
 | 6 | Slow early skill unlocks | Major | New player retention | Low |
 | 7 | Speed stat dominance | Major | Class balance | Medium |
 | 8 | No onboarding | Medium | New player confusion | High |
 | 9 | ~~Accessibility (ARIA, keyboard)~~ **MOSTLY DONE** | ~~Medium–Critical~~ | ~~Excludes disabled players~~ | **DONE (v0.1.26)** |
 | 10 | ~~File splitting (useCombat + gameStore)~~ **DONE** | ~~Major~~ | ~~Maintainability~~ | **DONE (v0.1.18 + v0.1.19)** |
-| 11 | Magic numbers | Medium | Balance tuning difficulty | Medium |
+| 11 | ~~Magic numbers~~ | ~~Medium~~ | ~~Balance tuning difficulty~~ | **DONE (v0.1.20+)** — `balanceConstants.js` |
 | 12 | ~~Unicode → SVG icons~~ | ~~Low~~ | ~~Art consistency~~ | **DONE (v0.1.28)** |
 | 13 | Zero test coverage | Major | Regression risk | Very High |
 | 14 | ~~Motion safety~~ | ~~Medium~~ | ~~Vestibular/seizure risk~~ | **DONE (v0.1.26)** |
