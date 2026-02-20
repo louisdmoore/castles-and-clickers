@@ -1,8 +1,10 @@
-import { useMemo } from 'react';
+import { useMemo, useState, useEffect, useRef } from 'react';
 import { useGameStore, calculateSkillPoints, calculateUsedSkillPoints } from '../store/gameStore';
 import { PartyIcon, TreeIcon, BagIcon, HomeIcon, ChestIcon, CrownIcon, SkullIcon, ChartIcon, StarIcon, BookIcon, TrophyIcon } from './icons/ui';
 import { PARTY_SLOTS } from '../data/classes';
 import { getAllRaids } from '../data/raids';
+
+const CORE_IDS = ['heroes', 'skills', 'equipment', 'shop', 'homestead', 'raids', 'collection'];
 
 const NavButton = ({ id, Icon, label, badge, isActive, isLocked, unlockAt, onClick }) => {
   return (
@@ -11,13 +13,13 @@ const NavButton = ({ id, Icon, label, badge, isActive, isLocked, unlockAt, onCli
       disabled={isLocked}
       aria-disabled={isLocked || undefined}
       aria-current={isActive ? 'page' : undefined}
-      className={`pixel-btn relative flex items-center gap-1 sm:gap-1.5 px-1.5 sm:px-2 md:px-3 py-1.5 ${
+      className={`pixel-btn relative flex items-center gap-1 px-1 sm:px-1.5 py-1 ${
         isActive ? 'pixel-btn-primary' : ''
       } ${isLocked ? 'opacity-50 cursor-not-allowed' : ''}`}
       title={isLocked ? `Unlocks at Dungeon ${unlockAt}` : undefined}
     >
       <Icon size={16} />
-      <span className="text-[10px] md:text-xs lg:text-sm">{label}</span>
+      <span className="text-[10px] md:text-xs">{label}</span>
       {badge && (
         <span className={`pixel-badge absolute -top-1.5 -right-1.5 text-[10px] ${
           badge === 'NEW' ? 'animate-pixel-blink' : ''
@@ -38,6 +40,21 @@ const NavBar = ({ activeModal, onOpenModal }) => {
   const maxPartySize = useGameStore(state => state.maxPartySize);
   const usedSlotDiscounts = useGameStore(state => state.usedSlotDiscounts);
   const raidState = useGameStore(state => state.raidState);
+
+  const [moreOpen, setMoreOpen] = useState(false);
+  const moreRef = useRef(null);
+
+  // Close overflow dropdown on outside click
+  useEffect(() => {
+    if (!moreOpen) return;
+    const handler = (e) => {
+      if (moreRef.current && !moreRef.current.contains(e.target)) {
+        setMoreOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [moreOpen]);
 
   // Calculate skill points badge
   const totalAvailableSkillPoints = useMemo(() => {
@@ -79,12 +96,10 @@ const NavBar = ({ activeModal, onOpenModal }) => {
   const lastSeenRaidsAt = featureUnlocks?.lastSeenRaidsAt || 0;
   const hasNewRaidUnlocked = useMemo(() => {
     const allRaids = getAllRaids();
-    // A raid is "new" if its required level is between lastSeenRaidsAt and current highest
     return allRaids.some(raid =>
       raid.requiredLevel > lastSeenRaidsAt && raid.requiredLevel <= highestDungeonCleared
     );
   }, [lastSeenRaidsAt, highestDungeonCleared]);
-  const raidInProgress = raidState?.active;
 
   const navButtons = [
     {
@@ -163,9 +178,20 @@ const NavBar = ({ activeModal, onOpenModal }) => {
     },
   ];
 
+  const coreButtons = navButtons.filter(b => CORE_IDS.includes(b.id));
+  const overflowButtons = navButtons.filter(b => !CORE_IDS.includes(b.id));
+
+  // Aggregate badge: show a dot on "More" if any overflow button has a badge
+  const overflowHasBadge = overflowButtons.some(b => b.badge);
+
+  const handleOverflowClick = (id) => {
+    onOpenModal(id);
+    setMoreOpen(false);
+  };
+
   return (
-    <nav className="flex items-center gap-1.5 flex-wrap" aria-label="Main navigation">
-      {navButtons.map(btn => {
+    <nav className="flex items-center gap-1 flex-wrap" aria-label="Main navigation">
+      {coreButtons.map(btn => {
         const isLocked = btn.unlockAt && highestDungeonCleared < btn.unlockAt;
         return (
           <NavButton
@@ -181,6 +207,46 @@ const NavBar = ({ activeModal, onOpenModal }) => {
           />
         );
       })}
+
+      {/* More dropdown */}
+      <div className="relative" ref={moreRef}>
+        <button
+          onClick={() => setMoreOpen(prev => !prev)}
+          className={`pixel-btn relative flex items-center gap-1 px-1 sm:px-1.5 py-1 ${
+            overflowButtons.some(b => activeModal === b.id) ? 'pixel-btn-primary' : ''
+          }`}
+          aria-expanded={moreOpen}
+          aria-label="More navigation options"
+        >
+          <span className="text-[10px] md:text-xs">More</span>
+          <span className="text-[8px]">{moreOpen ? '\u25B2' : '\u25BC'}</span>
+          {overflowHasBadge && (
+            <span className="pixel-badge absolute -top-1.5 -right-1.5 text-[10px] animate-pixel-blink">
+              !
+            </span>
+          )}
+        </button>
+        {moreOpen && (
+          <div className="absolute top-full right-0 mt-1 pixel-panel p-2 z-50 grid grid-cols-2 gap-1 min-w-[200px]">
+            {overflowButtons.map(btn => {
+              const isLocked = btn.unlockAt && highestDungeonCleared < btn.unlockAt;
+              return (
+                <NavButton
+                  key={btn.id}
+                  id={btn.id}
+                  Icon={btn.Icon}
+                  label={btn.label}
+                  badge={btn.badge}
+                  isActive={activeModal === btn.id}
+                  isLocked={isLocked}
+                  unlockAt={btn.unlockAt}
+                  onClick={handleOverflowClick}
+                />
+              );
+            })}
+          </div>
+        )}
+      </div>
     </nav>
   );
 };

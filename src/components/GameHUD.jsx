@@ -1,72 +1,17 @@
-import { useState, useEffect, useRef } from 'react';
+import { useState, useEffect, useRef, useCallback } from 'react';
 import { useGameStore } from '../store/gameStore';
 import NavBar from './NavBar';
-import { GoldIcon, TrophyIcon, SkullIcon, BagIcon, MenuIcon, WarningIcon } from './icons/ui';
+import { GoldIcon, BagIcon, MenuIcon, WarningIcon, SettingsIcon } from './icons/ui';
 import { CURRENT_VERSION } from '../data/changelog';
-
-// Relative time display
-function timeAgo(timestamp) {
-  const seconds = Math.floor((Date.now() - timestamp) / 1000);
-  if (seconds < 5) return 'just now';
-  if (seconds < 60) return `${seconds}s ago`;
-  const minutes = Math.floor(seconds / 60);
-  if (minutes < 60) return `${minutes}m ago`;
-  return `${Math.floor(minutes / 60)}h ago`;
-}
 
 const SaveIndicator = () => {
   const saveStatus = useGameStore(state => state.saveStatus);
-  const [displayText, setDisplayText] = useState('');
-  const flashRef = useRef(null);
-  const spanRef = useRef(null);
-  const lastTimestampRef = useRef(saveStatus?.timestamp);
 
-  // Update relative time display
-  useEffect(() => {
-    if (!saveStatus?.timestamp) return;
-
-    const update = () => setDisplayText(timeAgo(saveStatus.timestamp));
-    update();
-    const id = setInterval(update, 5000);
-    return () => clearInterval(id);
-  }, [saveStatus?.timestamp]);
-
-  // Flash on new save — use DOM class toggle to avoid setState in effect
-  useEffect(() => {
-    if (saveStatus?.timestamp && saveStatus.timestamp !== lastTimestampRef.current) {
-      lastTimestampRef.current = saveStatus.timestamp;
-      const el = spanRef.current;
-      if (el) {
-        el.classList.remove('save-flash');
-        // Force reflow to restart animation
-        void el.offsetWidth;
-        el.classList.add('save-flash');
-      }
-      clearTimeout(flashRef.current);
-      flashRef.current = setTimeout(() => {
-        if (spanRef.current) spanRef.current.classList.remove('save-flash');
-      }, 1500);
-    }
-    return () => clearTimeout(flashRef.current);
-  }, [saveStatus?.timestamp]);
-
-  if (!saveStatus) return null;
-
-  if (!saveStatus.success) {
-    return (
-      <span className="text-xs flex items-center gap-1 text-[var(--color-red)]" role="status">
-        <WarningIcon size={12} /> Save failed
-      </span>
-    );
-  }
+  if (!saveStatus || saveStatus.success) return null;
 
   return (
-    <span
-      ref={spanRef}
-      className="text-xs text-[var(--color-text-dark)]"
-      role="status"
-    >
-      Saved {displayText}
+    <span className="text-xs flex items-center gap-1 text-[var(--color-red)]" role="status">
+      <WarningIcon size={12} /> Save failed
     </span>
   );
 };
@@ -130,66 +75,73 @@ const GameHUD = ({
   onOpenChangelog,
 }) => {
   const headerStats = useThrottledHeaderStats();
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
+
+  // Close settings dropdown on outside click
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const handler = (e) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target)) {
+        setSettingsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [settingsOpen]);
+
+  const handleReset = useCallback(() => {
+    setSettingsOpen(false);
+    onReset();
+  }, [onReset]);
 
   return (
-    <header className="pixel-panel-dark" style={{ borderRadius: 0, boxShadow: '0 4px 0 rgba(0,0,0,0.5)' }}>
-      {/* Top row: Title, Resources */}
-      <div className="px-2 sm:px-4 py-2 flex items-center justify-between border-b border-gray-700/50">
-        {/* Left: Hamburger (mobile) + Title */}
-        <div className="flex items-center gap-2">
-          <button
-            onClick={onToggleSidebar}
-            className="md:hidden pixel-btn p-1.5 flex items-center justify-center"
-            title="Toggle Sidebar"
-            aria-label="Toggle navigation sidebar"
+    <header className="pixel-panel-dark" style={{ borderRadius: 0, boxShadow: '0 2px 0 rgba(0,0,0,0.5)' }}>
+      <div className="px-2 py-1 flex items-center gap-2 flex-wrap">
+        {/* Hamburger (mobile) */}
+        <button
+          onClick={onToggleSidebar}
+          className="md:hidden pixel-btn p-1 flex items-center justify-center"
+          title="Toggle Sidebar"
+          aria-label="Toggle navigation sidebar"
+        >
+          <MenuIcon size={18} />
+        </button>
+
+        {/* Title + Version */}
+        <div className="flex items-center gap-1.5">
+          <h1 className="pixel-title text-sm whitespace-nowrap">
+            Castles & Clickers
+          </h1>
+          <span
+            className="text-[10px] text-gray-500 hover:text-[var(--color-gold)] cursor-pointer transition-colors"
+            onClick={onOpenChangelog}
+            title="View changelog"
+            role="button"
+            aria-label="View changelog"
+            tabIndex={0}
+            onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenChangelog(); } }}
           >
-            <MenuIcon size={20} />
-          </button>
-          <div>
-            <h1 className="pixel-title text-base sm:text-lg">
-              Castles & Clickers
-            </h1>
-            <div className="flex items-center gap-2">
-              <span
-                className="text-xs text-gray-500 hover:text-[var(--color-gold)] cursor-pointer transition-colors"
-                onClick={onOpenChangelog}
-                title="View changelog"
-                role="button"
-                aria-label="View changelog"
-                tabIndex={0}
-                onKeyDown={(e) => { if (e.key === 'Enter' || e.key === ' ') { e.preventDefault(); onOpenChangelog(); } }}
-              >
-                v{CURRENT_VERSION}
-              </span>
-              <SaveIndicator />
-            </div>
-          </div>
+            v{CURRENT_VERSION}
+          </span>
+          <SaveIndicator />
         </div>
 
-        {/* Right: Resources and Stats */}
-        <div className="flex items-center flex-wrap gap-1 sm:gap-2 md:gap-3 text-xs sm:text-sm">
+        {/* Resources */}
+        <div className="flex items-center gap-1 text-xs">
           <span className="pixel-stat pixel-stat-gold">
-            <GoldIcon size={16} /> {Math.floor(headerStats.gold).toLocaleString()}
-          </span>
-          <span className="pixel-stat pixel-stat-green hidden sm:inline-flex">
-            <TrophyIcon size={16} /> {headerStats.totalDungeonsCleared}
-          </span>
-          <span className="pixel-stat pixel-stat-red hidden sm:inline-flex">
-            <SkullIcon size={16} /> {headerStats.totalMonstersKilled}
+            <GoldIcon size={14} /> {Math.floor(headerStats.gold).toLocaleString()}
           </span>
           <span className={`pixel-stat ${headerStats.inventoryCount >= headerStats.maxInventory ? 'pixel-stat-red' : 'pixel-stat-blue'}`}>
-            <BagIcon size={16} /> {headerStats.inventoryCount}/{headerStats.maxInventory}
+            <BagIcon size={14} /> {headerStats.inventoryCount}/{headerStats.maxInventory}
           </span>
         </div>
-      </div>
 
-      {/* Bottom row: Navigation and Controls */}
-      <div className="px-2 sm:px-4 py-2 flex items-center justify-between gap-2 flex-wrap">
         {/* Navigation */}
         <NavBar activeModal={activeModal} onOpenModal={onOpenModal} />
 
         {/* Game Controls */}
-        <div className="flex items-center gap-2">
+        <div className="flex items-center gap-1.5 ml-auto">
           {/* Auto-advance toggle */}
           {featureUnlocks?.autoAdvance && (
             <div className="relative">
@@ -238,14 +190,28 @@ const GameHUD = ({
             </button>
           )}
 
-          {/* Reset */}
-          <button
-            onClick={onReset}
-            className="pixel-btn text-[var(--color-text-dim)] hover:border-[var(--color-red)]"
-            title="Reset Game"
-          >
-            RESET
-          </button>
+          {/* Settings */}
+          <div className="relative" ref={settingsRef}>
+            <button
+              onClick={() => setSettingsOpen(prev => !prev)}
+              className="pixel-btn p-1 flex items-center justify-center"
+              title="Settings"
+              aria-label="Settings"
+              aria-expanded={settingsOpen}
+            >
+              <SettingsIcon size={16} />
+            </button>
+            {settingsOpen && (
+              <div className="absolute top-full right-0 mt-1 pixel-panel p-2 z-50 min-w-[120px]">
+                <button
+                  onClick={handleReset}
+                  className="pixel-btn text-xs text-[var(--color-red)] hover:border-[var(--color-red)] w-full"
+                >
+                  Reset Game
+                </button>
+              </div>
+            )}
+          </div>
         </div>
       </div>
     </header>

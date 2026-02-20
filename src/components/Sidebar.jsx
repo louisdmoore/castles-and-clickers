@@ -1,14 +1,14 @@
 import { memo, useEffect, useRef, useMemo, useState } from 'react';
-import { useGameStore, xpForLevel, calculateHeroStats } from '../store/gameStore';
+import { useGameStore, xpForLevel, calculateHeroStats, calculateSkillPoints, calculateUsedSkillPoints } from '../store/gameStore';
 import { getSkillById, SKILL_TYPE } from '../data/skillTrees';
 import { STATUS_EFFECTS, STATUS_TYPE } from '../data/statusEffects';
 import { CLASSES, ROLE_INFO } from '../data/classes';
 import HeroIcon from './icons/HeroIcon';
-import ContributionMeter from './ContributionMeter';
 import { RoleIcon } from './icons/ClassIcon';
 import { GhostIcon, FireIcon, ShieldBuffIcon, TauntIcon, EvasionIcon, HasteIcon, RegenIcon, MightIcon, SpeedIcon, SoulStackIcon, HungerStackIcon, VoidStorageIcon, TidalIcon, StealthIcon, SoulReapIcon, PhaseIcon } from './icons/ui';
 import { SkillIcon } from './icons/skills';
 import { StatusEffectIcon } from './icons/statusEffects';
+import ContributionMeter from './ContributionMeter';
 
 // OPTIMIZATION: Stable defaults to prevent re-renders
 const EMPTY_OBJECT = {};
@@ -37,6 +37,38 @@ const HeroCard = memo(({ hero, combatHero, cooldowns, effects, buffs, usedPhoeni
   const heroClass = CLASSES[hero.classId];
   const heroRole = heroClass?.role;
   const roleInfo = heroRole ? ROLE_INFO[heroRole] : null;
+
+  // Actionable badges (only computed when not in dungeon)
+  const inventory = useGameStore(state => state.inventory);
+  const compareToEquipped = useGameStore(state => state.compareToEquipped);
+  const badges = useMemo(() => {
+    if (inDungeon) return [];
+    const result = [];
+    // Unspent skill points
+    const totalSP = calculateSkillPoints(hero.level);
+    const usedSP = calculateUsedSkillPoints(hero);
+    const availSP = totalSP - usedSP;
+    if (availSP > 0) {
+      result.push({ type: 'skillPoints', label: `${availSP} skill pt${availSP > 1 ? 's' : ''}`, color: 'text-yellow-400', symbol: '\u2605' });
+    }
+    // Empty equipment slots
+    const emptySlots = ['weapon', 'armor', 'accessory'].filter(s => !hero.equipment?.[s]);
+    if (emptySlots.length > 0) {
+      const shortLabel = emptySlots.length === 3 ? 'No gear' : `No ${emptySlots.join(', ')}`;
+      result.push({ type: 'emptySlot', label: shortLabel, color: 'text-red-400', symbol: '\u25CB' });
+    }
+    // Upgrade available
+    if (inventory && compareToEquipped) {
+      const hasUpgrade = inventory.some(item => {
+        const cmp = compareToEquipped(item, hero.id);
+        return cmp?.isBetter;
+      });
+      if (hasUpgrade) {
+        result.push({ type: 'upgrade', label: 'Upgrade in bags', color: 'text-green-400', symbol: '\u25B2' });
+      }
+    }
+    return result;
+  }, [inDungeon, hero, inventory, compareToEquipped]);
 
   // Check Phoenix status
   const phoenixStatus = useMemo(() => {
@@ -130,11 +162,11 @@ const HeroCard = memo(({ hero, combatHero, cooldowns, effects, buffs, usedPhoeni
   const heroSkillIds = combatHero?.skills || hero.skills || [];
 
   return (
-    <div className="pixel-panel-dark p-1.5" style={{ boxShadow: 'none' }}>
-      <div className="flex items-center gap-2">
-        <HeroIcon classId={hero.classId} equipment={hero.equipment} size={20} />
+    <div className="pixel-panel-dark p-1" style={{ boxShadow: 'none' }}>
+      <div className="flex items-center gap-1.5">
+        <HeroIcon classId={hero.classId} equipment={hero.equipment} size={16} />
         <div className="flex-1 min-w-0">
-          <div className="flex justify-between text-xs">
+          <div className="flex items-center text-xs">
             <span className="text-white truncate flex items-center gap-1">
               {hero.name}
               <span className="text-yellow-400">Lv{hero.level || 1}</span>
@@ -144,9 +176,8 @@ const HeroCard = memo(({ hero, combatHero, cooldowns, effects, buffs, usedPhoeni
                 </span>
               )}
             </span>
-            <span className="text-gray-400">{Math.floor(currentHp)}/{Math.floor(maxHp)}</span>
           </div>
-          <div className="pixel-bar h-[8px]">
+          <div className="pixel-bar h-[5px]" title={`HP: ${Math.floor(currentHp)}/${Math.floor(maxHp)}`}>
             <div
               className={`pixel-bar-fill ${
                 hpPercent > 50 ? 'pixel-bar-hp' :
@@ -156,8 +187,8 @@ const HeroCard = memo(({ hero, combatHero, cooldowns, effects, buffs, usedPhoeni
             />
           </div>
           {/* XP Bar */}
-          <div className="flex items-center gap-1 mt-0.5">
-            <div className="pixel-bar h-[4px] flex-1">
+          <div className="mt-px">
+            <div className="pixel-bar h-[3px]">
               <div
                 className="pixel-bar-fill"
                 style={{
@@ -166,53 +197,66 @@ const HeroCard = memo(({ hero, combatHero, cooldowns, effects, buffs, usedPhoeni
                 }}
               />
             </div>
-            <span className="text-[9px] text-purple-400 min-w-[40px] text-right">
-              {hero.xp || 0}/{xpForLevel(hero.level || 1)}
-            </span>
           </div>
         </div>
       </div>
 
+      {/* Actionable badges (idle only) */}
+      {!inDungeon && badges.length > 0 && (
+        <div className="mt-0.5 flex flex-wrap gap-0.5">
+          {badges.map(b => (
+            <span
+              key={b.type}
+              className={`text-[9px] ${b.color} flex items-center gap-0.5`}
+              title={b.label}
+            >
+              <span className="text-[8px]">{b.symbol}</span>
+              <span>{b.type === 'skillPoints' ? `${b.label.split(' ')[0]} SP` : b.type === 'upgrade' ? 'Upgrade' : b.label}</span>
+            </span>
+          ))}
+        </div>
+      )}
+
       {/* Status Effects & Skill Buffs */}
       {inDungeon && (
-        <div className="mt-1 flex flex-wrap gap-1 min-h-[20px] items-center">
+        <div className="mt-1 flex flex-wrap gap-0.5 min-h-[16px] items-center">
           {isDead && (
-            <span className="cursor-help bg-gray-600/60 rounded px-1 flex items-center" title="Dead">
-              <GhostIcon size={14} />
+            <span className="cursor-help bg-gray-600/60 rounded flex items-center" title="Dead">
+              <GhostIcon size={12} />
             </span>
           )}
           {phoenixStatus && (
             <span
-              className={`cursor-help rounded px-1 flex items-center ${phoenixStatus.used ? 'bg-gray-600/40 opacity-50' : 'bg-yellow-600/40'}`}
+              className={`cursor-help rounded flex items-center ${phoenixStatus.used ? 'bg-gray-600/40 opacity-50' : 'bg-yellow-600/40'}`}
               title={phoenixStatus.used ? 'Phoenix: Used' : 'Phoenix: Ready'}
             >
-              <phoenixStatus.Icon size={14} />
+              <phoenixStatus.Icon size={12} />
             </span>
           )}
           {skillBuffs.map((buff, i) => (
-            <span key={`sb-${i}`} className="cursor-help bg-green-600/40 rounded px-1 flex items-center" title={`${buff.name} (${buff.duration}t)`}>
-              <buff.Icon size={14} />
+            <span key={`sb-${i}`} className="cursor-help bg-green-600/40 rounded flex items-center" title={`${buff.name} (${buff.duration}t)`}>
+              <buff.Icon size={12} />
             </span>
           ))}
           {uniqueBuffs.map((ub, i) => (
-            <span key={`ub-${i}`} className={`cursor-help ${ub.color} rounded px-1 flex items-center gap-0.5`} title={`${ub.name}: ${ub.value}`}>
-              <ub.Icon size={14} />
+            <span key={`ub-${i}`} className={`cursor-help ${ub.color} rounded flex items-center gap-0.5`} title={`${ub.name}: ${ub.value}`}>
+              <ub.Icon size={12} />
               <span className="text-[8px] text-white font-bold">{ub.value}</span>
             </span>
           ))}
           {statusBuffs.map((effect, i) => {
             const def = STATUS_EFFECTS[effect.id];
             return def ? (
-              <span key={`b-${i}`} className="cursor-help bg-green-600/40 rounded px-1 flex items-center" title={`${def.name} (${effect.duration}t)`}>
-                <StatusEffectIcon effectId={effect.id} size={14} />
+              <span key={`b-${i}`} className="cursor-help bg-green-600/40 rounded flex items-center" title={`${def.name} (${effect.duration}t)`}>
+                <StatusEffectIcon effectId={effect.id} size={12} />
               </span>
             ) : null;
           })}
           {debuffs.map((effect, i) => {
             const def = STATUS_EFFECTS[effect.id];
             return def ? (
-              <span key={`d-${i}`} className="cursor-help bg-red-600/40 rounded px-1 flex items-center" title={`${def.name} (${effect.duration}t)`}>
-                <StatusEffectIcon effectId={effect.id} size={14} />
+              <span key={`d-${i}`} className="cursor-help bg-red-600/40 rounded flex items-center" title={`${def.name} (${effect.duration}t)`}>
+                <StatusEffectIcon effectId={effect.id} size={12} />
               </span>
             ) : null;
           })}
@@ -221,7 +265,7 @@ const HeroCard = memo(({ hero, combatHero, cooldowns, effects, buffs, usedPhoeni
 
       {/* Skill Cooldowns */}
       {heroSkillIds.length > 0 && inDungeon && (
-        <div className="flex gap-1 mt-1 flex-wrap">
+        <div className="flex gap-0.5 mt-1 flex-wrap">
           {heroSkillIds.map(skillId => {
             const skill = getSkillById(skillId);
             if (!skill || skill.type !== SKILL_TYPE.ACTIVE) return null;
@@ -230,11 +274,11 @@ const HeroCard = memo(({ hero, combatHero, cooldowns, effects, buffs, usedPhoeni
             return (
               <div
                 key={skillId}
-                className={`w-5 h-5 rounded flex items-center justify-center relative ${isReady ? 'bg-blue-600' : 'bg-gray-700'}`}
+                className={`w-4 h-4 rounded flex items-center justify-center relative ${isReady ? 'bg-blue-600' : 'bg-gray-700'}`}
                 title={`${skill.name}${isReady ? ' (Ready)' : ` (${cd} turns)`}`}
               >
                 <span className={isReady ? '' : 'opacity-50'}>
-                  <SkillIcon skillId={skillId} size={16} />
+                  <SkillIcon skillId={skillId} size={12} />
                 </span>
                 {!isReady && (
                   <span className="absolute -bottom-0.5 -right-0.5 bg-gray-900 text-[8px] text-gray-400 w-3 h-3 rounded-full flex items-center justify-center">
@@ -330,16 +374,16 @@ const Sidebar = memo(({
   const ascensionCount = useGameStore(state => state.ascension?.count || 0);
 
   return (
-    <aside className="w-64 pixel-panel-dark flex flex-col h-full" style={{ borderRadius: 0 }}>
+    <aside className="w-48 pixel-panel-dark flex flex-col h-full" style={{ borderRadius: 0 }}>
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto min-h-0">
       {/* Party Status */}
-      <div className="p-3 border-b-3 border-[var(--color-border)]">
-        <h3 className="pixel-subtitle mb-2">Party</h3>
+      <div className="p-2 border-b-2 border-[var(--color-border)]">
+        <h3 className="pixel-subtitle mb-1">Party</h3>
         {heroes.length === 0 ? (
           <div className="text-gray-500 text-xs">No heroes recruited</div>
         ) : (
-          <div className="space-y-2">
+          <div className="space-y-1.5">
             {heroes.filter(Boolean).map(hero => {
               const combatHero = displayHeroes.find(h => h.id === hero.id);
               return (
@@ -360,25 +404,17 @@ const Sidebar = memo(({
         )}
       </div>
 
-      {/* Contribution Meter - shows during active dungeon */}
-      {dungeon && (
-        <div className="px-3 pb-2 border-b-3 border-[var(--color-border)]">
+      {/* Contribution Meter (combat only) */}
+      {!!dungeon && (
+        <div className="p-2 border-b-2 border-[var(--color-border)]">
           <ContributionMeter />
         </div>
       )}
 
-      {/* Dungeon Status - Simplified (main info shown in Zone Header above gameplay) */}
-      {!dungeon && (
-        <div className="p-3 border-b-3 border-[var(--color-border)]">
-          <h3 className="pixel-subtitle mb-2">Dungeon</h3>
-          <div className="text-gray-500 text-xs">No active dungeon</div>
-        </div>
-      )}
-
       {/* Progress Overview */}
-      <div className="p-3 border-b-3 border-[var(--color-border)]">
-        <h3 className="pixel-subtitle mb-2">Progress</h3>
-        <div className="text-xs space-y-1">
+      <div className="p-2 border-b-2 border-[var(--color-border)]">
+        <h3 className="pixel-subtitle mb-1">Progress</h3>
+        <div className="text-xs space-y-0.5">
           {ascensionCount > 0 && (
             <div className="flex justify-between">
               <span className="pixel-label">Ascension</span>
@@ -386,7 +422,7 @@ const Sidebar = memo(({
             </div>
           )}
           <div className="flex justify-between">
-            <span className="pixel-label">Highest Cleared</span>
+            <span className="pixel-label">Cleared</span>
             <span className="text-[var(--color-gold)]">{highestDungeonCleared}/{maxDungeonLevel}</span>
           </div>
           <div className="flex justify-between">
@@ -397,8 +433,9 @@ const Sidebar = memo(({
       </div>
 
       </div>
+
       {/* Actions - Fixed at bottom, always visible */}
-      <div className="p-3 border-t-3 border-[var(--color-border)] space-y-2 flex-shrink-0">
+      <div className="p-2 border-t-2 border-[var(--color-border)] space-y-1.5 flex-shrink-0">
         {/* Hide change dungeon button when in a raid */}
         {!isInRaid && (
           <button

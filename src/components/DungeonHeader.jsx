@@ -3,7 +3,7 @@ import { RAIDS, RAID_DIFFICULTY_TIERS } from '../data/raids';
 import { getWorldBossForLevel, getZoneWorldBoss } from '../data/worldBosses';
 import { PHASES } from '../game/constants';
 import {
-  CrownIcon, SkullIcon, LockIcon,
+  CrownIcon, SkullIcon,
   GemIcon, TreeIcon, CastleIcon, FireIcon, GhostIcon,
 } from './icons/ui';
 import { WorldBossIcon } from './icons/worldBosses';
@@ -26,13 +26,12 @@ const TIER_THEME_COLORS = {
   void: '#a855f7',
 };
 
-const DungeonHeader = ({ dungeon, phase, enemyCount, displayRoomCombat, highestDungeonCleared, raidState, upcomingUnlocks }) => {
+const DungeonHeader = ({ dungeon, phase, enemyCount, displayRoomCombat, highestDungeonCleared, raidState }) => {
   const currentTier = DUNGEON_TIERS.find(
     t => dungeon.level >= t.minLevel && dungeon.level <= t.maxLevel
   ) || DUNGEON_TIERS[0];
   const TierIcon = TIER_THEME_ICONS[currentTier.theme];
   const tierColor = TIER_THEME_COLORS[currentTier.theme];
-  const tierSize = currentTier.maxLevel - currentTier.minLevel + 1;
 
   const totalMonsters = enemyCount.total;
   const killedMonsters = totalMonsters - enemyCount.alive;
@@ -60,8 +59,8 @@ const DungeonHeader = ({ dungeon, phase, enemyCount, displayRoomCombat, highestD
   const zoneBossDefeated = zoneBoss && highestDungeonCleared >= zoneBoss.level;
 
   return (
-    <div className="pixel-panel mb-3" style={isRaidDungeon ? { borderColor: '#f59e0b' } : {}}>
-      <div className="flex items-center gap-4 px-3 py-2">
+    <div className="pixel-panel mb-0.5" style={isRaidDungeon ? { borderColor: '#f59e0b' } : {}}>
+      <div className="flex items-center gap-2 px-2 py-1">
         {/* Zone World Boss Mascot */}
         {!isRaidDungeon && zoneBoss && (
           <div className={`flex items-center gap-2 px-2 py-1 rounded border ${
@@ -69,7 +68,7 @@ const DungeonHeader = ({ dungeon, phase, enemyCount, displayRoomCombat, highestD
               ? 'border-green-500/40 bg-green-900/20'
               : 'border-amber-500/40 bg-amber-900/20'
           }`}>
-            <WorldBossIcon bossId={zoneBoss.id} size={28} />
+            <WorldBossIcon bossId={zoneBoss.id} size={20} />
             <div className="text-[10px] leading-tight">
               <div className="text-gray-500">World Boss:</div>
               <div className={zoneBossDefeated ? 'text-green-400' : 'text-amber-400'}>
@@ -88,7 +87,7 @@ const DungeonHeader = ({ dungeon, phase, enemyCount, displayRoomCombat, highestD
           const diffTier = RAID_DIFFICULTY_TIERS[raidDiff];
           return (
             <div className="flex items-center gap-2">
-              <CrownIcon size={24} className="text-amber-400" />
+              <CrownIcon size={18} className="text-amber-400" />
               <div>
                 <div className="pixel-text font-bold text-amber-400">
                   {raidData.name}
@@ -107,7 +106,7 @@ const DungeonHeader = ({ dungeon, phase, enemyCount, displayRoomCombat, highestD
         })() : (
           <div className="flex items-center gap-2">
             <div style={{ color: tierColor }}>
-              <TierIcon size={24} />
+              <TierIcon size={18} />
             </div>
             <div>
               <div className="pixel-text font-bold" style={{ color: tierColor }}>
@@ -119,52 +118,6 @@ const DungeonHeader = ({ dungeon, phase, enemyCount, displayRoomCombat, highestD
             </div>
           </div>
         )}
-
-        {/* Tier progress mini-bar */}
-        {!isRaidDungeon && (
-          <div className="flex gap-1">
-            {Array.from({ length: tierSize }, (_, i) => {
-              const level = currentTier.minLevel + i;
-              const isCurrent = level === dungeon.level;
-              const isCleared = level < dungeon.level || (level === dungeon.level && phase === PHASES.COMPLETE);
-              return (
-                <div
-                  key={level}
-                  className="w-4 h-2 border border-[var(--color-border)]"
-                  style={{
-                    background: isCleared ? tierColor : isCurrent ? `${tierColor}60` : 'var(--color-panel-dark)',
-                  }}
-                  title={`Level ${level}${isCleared ? ' (Cleared)' : isCurrent ? ' (Current)' : ''}`}
-                />
-              );
-            })}
-          </div>
-        )}
-
-        {/* Next unlock indicator */}
-        {!isRaidDungeon && upcomingUnlocks && (() => {
-          const isCurrentLevel = dungeon.level === upcomingUnlocks.dungeonRequired;
-          return (
-            <div className={`flex items-center gap-1.5 px-2 py-1 rounded text-xs ${
-              isCurrentLevel
-                ? 'bg-green-900/30 border border-green-500/50 animate-pulse'
-                : 'bg-blue-900/30 border border-blue-500/30'
-            }`}>
-              <LockIcon size={12} className={isCurrentLevel ? 'text-green-400' : 'text-blue-400'} />
-              <span className={isCurrentLevel ? 'text-green-300' : 'text-blue-300'}>
-                {isCurrentLevel ? 'Unlocking Now!' : `Next Unlock at Lv ${upcomingUnlocks.dungeonRequired}`}:{' '}
-                {upcomingUnlocks.unlocks.map((u, i) => (
-                  <span key={i}>
-                    {i > 0 && ', '}
-                    {u.type === 'raid' ? (
-                      <><span className="text-amber-400">(Raid)</span> {u.name}</>
-                    ) : u.name}
-                  </span>
-                ))}
-              </span>
-            </div>
-          );
-        })()}
 
         {/* Difficulty badge */}
         {!isRaidDungeon && (dungeon.difficultyMultiplier || 1.0) > 1.0 && (
@@ -191,7 +144,7 @@ const DungeonHeader = ({ dungeon, phase, enemyCount, displayRoomCombat, highestD
           <span className="pixel-label">
             Enemies: {killedMonsters}/{totalMonsters}
           </span>
-          <div className="pixel-bar w-20 h-2">
+          <div className="pixel-bar w-16 h-2">
             <div
               className="pixel-bar-fill pixel-bar-red"
               style={{ width: `${totalMonsters > 0 ? (killedMonsters / totalMonsters) * 100 : 0}%` }}
@@ -205,7 +158,7 @@ const DungeonHeader = ({ dungeon, phase, enemyCount, displayRoomCombat, highestD
           const isWorldBoss = boss.isWorldBoss || worldBoss;
 
           return (
-            <div className={`flex items-center gap-1.5 ${
+            <div className={`flex items-center gap-1 ${
               bossUnlocked
                 ? isWorldBoss ? 'text-amber-400' : 'text-red-400'
                 : 'text-gray-500'

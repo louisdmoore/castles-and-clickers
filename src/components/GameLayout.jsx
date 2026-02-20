@@ -244,7 +244,7 @@ const GameLayout = () => {
         {sidebarOpen && (
           <div className="fixed inset-0 z-40 md:hidden">
             <div className="absolute inset-0 bg-black/60" onClick={() => setSidebarOpen(false)} />
-            <div className="absolute left-0 top-0 bottom-0 w-72 animate-slide-in">
+            <div className="absolute left-0 top-0 bottom-0 w-56 animate-slide-in">
               <Sidebar
                 heroes={heroes}
                 dungeon={dungeon}
@@ -256,25 +256,26 @@ const GameLayout = () => {
         )}
 
         {/* Main area */}
-        <main className="flex-1 p-4 overflow-hidden flex flex-col min-w-0 relative">
+        <main className="flex-1 px-2 py-1 overflow-hidden flex flex-col min-w-0 relative">
           {dungeon && mazeDungeonState ? (
             <>
-              <DungeonHeader
-                dungeon={dungeon}
-                phase={phase}
-                enemyCount={enemyCount}
-                displayRoomCombat={displayRoomCombat}
-                highestDungeonCleared={highestDungeonCleared}
-                raidState={raidState}
-                upcomingUnlocks={upcomingUnlocks}
-              />
-              <div className="flex-1 min-h-0">
+              <div className="flex-shrink-0">
+                <DungeonHeader
+                  dungeon={dungeon}
+                  phase={phase}
+                  enemyCount={enemyCount}
+                  displayRoomCombat={displayRoomCombat}
+                  highestDungeonCleared={highestDungeonCleared}
+                  raidState={raidState}
+                />
+              </div>
+              <div className="flex-1 min-h-0 overflow-hidden">
                 <CanvasDungeonView
                   effects={combatEffects}
                   onEffectComplete={memoizedRemoveEffect}
                 />
               </div>
-              <div className="mt-3 max-h-24">
+              <div className="mt-0.5 flex-shrink-0">
                 <CombatLog />
               </div>
             </>
@@ -306,7 +307,7 @@ const GameLayout = () => {
           {!rightPanelOpen && (
             <button
               onClick={() => setRightPanelOpen(true)}
-              className="right-panel-toggle absolute top-4 right-0 items-center justify-center w-8 h-16 pixel-panel-dark rounded-l cursor-pointer z-10"
+              className="right-panel-toggle absolute top-24 right-0 items-center justify-center w-8 h-16 pixel-panel-dark rounded-l cursor-pointer z-10"
               aria-label="Open details panel"
               title="Show run stats"
               style={{ borderRight: 'none', borderRadius: '4px 0 0 4px' }}
