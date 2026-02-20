@@ -313,6 +313,8 @@ export const processStatusEffectDamage = (ctx, actor) => {
         if (monsterIdx !== -1) {
           newMonsters[monsterIdx].stats.hp = Math.max(0, newMonsters[monsterIdx].stats.hp - dotDamage);
         }
+        // Track biggest single hit from DOT damage dealt to monsters
+        if (dotDamage > ctx.biggestSingleHit) ctx.biggestSingleHit = dotDamage;
 
         // Check for DOT lifesteal (Necromancer Necrosis) - heal heroes who have this passive
         for (const hero of aliveHeroes) {

@@ -143,6 +143,7 @@ export const useGameStore = create(
               defeatedWingBosses: [],
               heroHpSnapshot: {},
             },
+            runHistory: [],
           });
         },
       }),
@@ -171,6 +172,7 @@ export const useGameStore = create(
           lastDeathRecap: null,
           prepPhase: null,
           deathLog: [],
+          pendingModal: null,
         }),
         // Ensure stats has all new fields even if old save doesn't
         merge: (persistedState, currentState) => {
@@ -223,6 +225,7 @@ export const useGameStore = create(
             shopConsumables: persistedState?.shopConsumables || [],
             pendingDungeonBuffs: persistedState?.pendingDungeonBuffs || [],
             earnedAchievements: persistedState?.earnedAchievements || [],
+            runHistory: persistedState?.runHistory || [],
             homestead: (() => {
               const h = persistedState?.homestead || {};
               // Strip old building keys from persisted saves

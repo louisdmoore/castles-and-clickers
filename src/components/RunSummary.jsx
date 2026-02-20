@@ -1,9 +1,10 @@
-import { memo, useEffect, useCallback, useMemo } from 'react';
+import { memo, useEffect, useCallback, useMemo, useRef, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { CLASSES } from '../data/classes';
+import { formatTime, formatRate } from '../game/constants';
 import ClassIcon from './icons/ClassIcon';
 import ModalOverlay from './ModalOverlay';
-import { SwordIcon, HeartIcon, ShieldIcon, TrophyIcon, StarIcon } from './icons/ui';
+import { SwordIcon, HeartIcon, ShieldIcon, TrophyIcon, StarIcon, SpeedIcon } from './icons/ui';
 
 function formatStat(value) {
   if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -31,13 +32,23 @@ const RunSummary = () => {
   const lastRunSummary = useGameStore(state => state.lastRunSummary);
   const autoAdvance = useGameStore(state => state.dungeonSettings?.autoAdvance);
   const dismissRunSummary = useGameStore(state => state.dismissRunSummary);
+  const [lastInteractionTime, setLastInteractionTime] = useState(0);
+  const timerRef = useRef(null);
 
-  // Auto-dismiss after 5s when auto-advance is on
+  // Derive userInteracted: true if user interacted AFTER this summary appeared
+  // This automatically resets to false when a new summary with newer timestamp appears
+  const userInteracted = lastRunSummary?.timestamp
+    ? lastInteractionTime > lastRunSummary.timestamp
+    : false;
+
+  // Auto-dismiss after 3s when auto-advance is on, unless user has interacted
   useEffect(() => {
-    if (!lastRunSummary || !autoAdvance) return;
-    const timer = setTimeout(dismissRunSummary, 3000);
-    return () => clearTimeout(timer);
-  }, [lastRunSummary, autoAdvance, dismissRunSummary]);
+    if (!lastRunSummary || !autoAdvance || userInteracted) return;
+    timerRef.current = setTimeout(dismissRunSummary, 3000);
+    return () => {
+      if (timerRef.current) clearTimeout(timerRef.current);
+    };
+  }, [lastRunSummary, autoAdvance, dismissRunSummary, userInteracted]);
 
   const handleClose = useCallback(() => {
     dismissRunSummary();
@@ -49,80 +60,19 @@ const RunSummary = () => {
     return messages[lastRunSummary.timestamp % messages.length];
   }, [lastRunSummary]);
 
-  const insight = useMemo(() => {
-    if (!lastRunSummary) return { text: '', color: '' };
-    const { success, heroStats } = lastRunSummary;
-    const entries = Object.entries(heroStats);
+  const handleViewDetails = useCallback(() => {
+    dismissRunSummary();
+    useGameStore.getState().setPendingModal('stats');
+  }, [dismissRunSummary]);
 
-    // 1. Damage concentration
-    const totalDmg = entries.reduce((s, [, st]) => s + (st.damageDealt || 0), 0);
-    if (totalDmg > 0) {
-      let maxDmgHero = null;
-      let maxDmg = 0;
-      for (const [, stats] of entries) {
-        if ((stats.damageDealt || 0) > maxDmg) {
-          maxDmg = stats.damageDealt || 0;
-          maxDmgHero = stats;
-        }
-      }
-      if (maxDmgHero && maxDmg > totalDmg * 0.6) {
-        return {
-          text: `Damage is concentrated on ${maxDmgHero.name}. If they fall, the run collapses. Consider spreading damage across more DPS.`,
-          color: '#fbbf24',
-        };
-      }
-    }
-
-    // 2. Healer taking too much damage
-    const healers = entries.filter(([, st]) => CLASSES[st.classId]?.role === 'healer');
-    const dpsHeroes = entries.filter(([, st]) => CLASSES[st.classId]?.role === 'dps');
-    if (healers.length > 0 && dpsHeroes.length > 0) {
-      const avgDpsDmgTaken = dpsHeroes.reduce((s, [, st]) => s + (st.damageTaken || 0), 0) / dpsHeroes.length;
-      const overexposedHealer = healers.find(([, st]) => (st.damageTaken || 0) > avgDpsDmgTaken);
-      if (overexposedHealer) {
-        return {
-          text: `Your healer ${overexposedHealer[1].name} took more damage than your DPS. A tank with taunt could protect them.`,
-          color: '#fbbf24',
-        };
-      }
-    }
-
-    // 3. Healing deficit
-    const totalHealingDone = entries.reduce((s, [, st]) => s + (st.healingDone || 0), 0);
-    const totalDamageTaken = entries.reduce((s, [, st]) => s + (st.damageTaken || 0), 0);
-    if (!success && totalDamageTaken > 0 && totalHealingDone < totalDamageTaken * 0.2) {
-      return {
-        text: "Healing couldn't keep up with incoming damage. Consider adding a healer or leveling your current one.",
-        color: '#ef4444',
-      };
-    }
-
-    // 4. Flawless success
-    if (success && entries.every(([, st]) => (st.damageTaken || 0) === 0)) {
-      return {
-        text: 'Flawless! Your party took zero damage. Try a harder dungeon for better rewards.',
-        color: '#22c55e',
-      };
-    }
-
-    // 5. Clean success
-    if (success) {
-      return {
-        text: 'Solid run. If it felt easy, bump up the difficulty for better loot.',
-        color: '#22c55e',
-      };
-    }
-
-    // 6. Default defeat
-    return {
-      text: 'Tough fight. Check your party composition and gear before retrying.',
-      color: 'var(--color-text-dim)',
-    };
-  }, [lastRunSummary]);
+  // Cancel auto-dismiss when user interacts with modal
+  const handleMouseEnter = useCallback(() => {
+    setLastInteractionTime(Date.now());
+  }, []);
 
   if (!lastRunSummary) return null;
 
-  const { success, dungeonLevel, heroStats, totalDamage, mvpId, biggestHit, biggestHitHero } = lastRunSummary;
+  const { success, dungeonLevel, heroStats, totalDamage, mvpId, biggestHit, biggestHitHero, totalCombatTime, averageDPS } = lastRunSummary;
   const mvpHero = mvpId ? heroStats[mvpId] : null;
 
   const heroEntries = Object.entries(heroStats).sort(
@@ -136,100 +86,112 @@ const RunSummary = () => {
       title={success ? 'Dungeon Complete!' : 'Dungeon Failed'}
       size="sm"
     >
-      <div className="text-center mb-4">
-        <div className="pixel-label text-lg mb-1" style={{ color: success ? 'var(--color-green)' : 'var(--color-red)' }}>
-          {success ? <TrophyIcon size={20} /> : null} Dungeon Level {dungeonLevel}
-        </div>
-        <p className="pixel-label" style={{ color: 'var(--color-gold)' }}>{message}</p>
-      </div>
-
-      {mvpHero && (
-        <div className="pixel-panel-dark p-3 mb-3 text-center">
-          <div className="pixel-label text-xs mb-1">MVP</div>
-          <div className="flex items-center justify-center gap-2">
-            <ClassIcon classId={mvpHero.classId} size={24} />
-            <span className="pixel-title text-base">{mvpHero.name}</span>
+      <div onMouseEnter={handleMouseEnter}>
+        <div className="text-center mb-4">
+          <div className="pixel-label text-lg mb-1" style={{ color: success ? 'var(--color-green)' : 'var(--color-red)' }}>
+            {success ? <TrophyIcon size={20} /> : null} Dungeon Level {dungeonLevel}
           </div>
-          <div className="pixel-label text-xs mt-1">
-            {formatStat(mvpHero.damageDealt || 0)} damage dealt
-          </div>
+          <p className="pixel-label" style={{ color: 'var(--color-gold)' }}>{message}</p>
         </div>
-      )}
 
-      <div className="pixel-panel-dark p-3 mb-3">
-        <div className="grid grid-cols-2 gap-2 text-center">
-          <div>
-            <div className="flex items-center justify-center gap-1">
-              <SwordIcon size={14} />
-              <span className="pixel-label text-xs">Total Damage</span>
+        {mvpHero && (
+          <div className="pixel-panel-dark p-3 mb-3 text-center">
+            <div className="pixel-label text-xs mb-1">MVP</div>
+            <div className="flex items-center justify-center gap-2">
+              <ClassIcon classId={mvpHero.classId} size={24} />
+              <span className="pixel-title text-base">{mvpHero.name}</span>
             </div>
-            <span className="text-red-400 font-bold">{formatStat(totalDamage)}</span>
+            <div className="pixel-label text-xs mt-1">
+              {formatStat(mvpHero.damageDealt || 0)} damage dealt
+            </div>
+          </div>
+        )}
+
+        <div className="pixel-panel-dark p-3 mb-3">
+          <div className="grid grid-cols-3 gap-2 text-center">
+            <div>
+              <div className="flex items-center justify-center gap-1">
+                <SwordIcon size={14} />
+                <span className="pixel-label text-xs">Total Damage</span>
+              </div>
+              <span className="text-red-400 font-bold">{formatStat(totalDamage)}</span>
+            </div>
+            <div>
+              <div className="flex items-center justify-center gap-1">
+                <SwordIcon size={14} />
+                <span className="pixel-label text-xs">Average DPS</span>
+              </div>
+              <span className="text-amber-400 font-bold">{formatRate(averageDPS || 0)}</span>
+            </div>
+            <div>
+              <div className="flex items-center justify-center gap-1">
+                <SpeedIcon size={14} />
+                <span className="pixel-label text-xs">Duration</span>
+              </div>
+              <span className="font-bold">{formatTime(totalCombatTime || 0)}</span>
+            </div>
           </div>
           {biggestHit > 0 && (
-            <div>
+            <div className="mt-2 pt-2 border-t border-gray-700 text-center">
               <div className="flex items-center justify-center gap-1">
                 <StarIcon size={14} />
                 <span className="pixel-label text-xs">Biggest Hit</span>
               </div>
               <span className="text-amber-400 font-bold">{formatStat(biggestHit)}</span>
               {biggestHitHero && (
-                <div className="pixel-label text-xs">by {biggestHitHero}</div>
+                <span className="pixel-label text-xs ml-1">by {biggestHitHero}</span>
               )}
             </div>
           )}
         </div>
-      </div>
 
-      <div className="pixel-panel-dark p-3">
-        <div className="pixel-label text-xs mb-2">Hero Breakdown</div>
-        {heroEntries.map(([heroId, stats]) => {
-          const cls = CLASSES[stats.classId];
-          const role = cls?.role || 'dps';
-          return (
-            <div key={heroId} className="flex items-center gap-2 mb-1.5 text-sm">
-              <ClassIcon classId={stats.classId} size={16} />
-              <span className="pixel-label text-xs w-16 truncate">{stats.name}</span>
-              <div className="flex gap-3 text-xs ml-auto">
-                {role === 'dps' || (stats.damageDealt || 0) > 0 ? (
-                  <span className="flex items-center gap-0.5 text-red-400">
-                    <SwordIcon size={10} /> {formatStat(stats.damageDealt || 0)}
-                  </span>
-                ) : null}
-                {role === 'healer' || (stats.healingDone || 0) > 0 ? (
-                  <span className="flex items-center gap-0.5 text-green-400">
-                    <HeartIcon size={10} /> {formatStat(stats.healingDone || 0)}
-                  </span>
-                ) : null}
-                {role === 'tank' || (stats.damageTaken || 0) > 0 ? (
-                  <span className="flex items-center gap-0.5 text-blue-400">
-                    <ShieldIcon size={10} /> {formatStat(stats.damageTaken || 0)}
-                  </span>
-                ) : null}
+        <div className="pixel-panel-dark p-3">
+          <div className="pixel-label text-xs mb-2">Hero Breakdown</div>
+          {heroEntries.map(([heroId, stats]) => {
+            const cls = CLASSES[stats.classId];
+            const role = cls?.role || 'dps';
+            return (
+              <div key={heroId} className="flex items-center gap-2 mb-1.5 text-sm">
+                <ClassIcon classId={stats.classId} size={16} />
+                <span className="pixel-label text-xs w-16 truncate">{stats.name}</span>
+                <div className="flex gap-3 text-xs ml-auto">
+                  {role === 'dps' || (stats.damageDealt || 0) > 0 ? (
+                    <span className="flex items-center gap-0.5 text-red-400">
+                      <SwordIcon size={10} /> {formatStat(stats.damageDealt || 0)}
+                    </span>
+                  ) : null}
+                  {role === 'healer' || (stats.healingDone || 0) > 0 ? (
+                    <span className="flex items-center gap-0.5 text-green-400">
+                      <HeartIcon size={10} /> {formatStat(stats.healingDone || 0)}
+                    </span>
+                  ) : null}
+                  {role === 'tank' || (stats.damageTaken || 0) > 0 ? (
+                    <span className="flex items-center gap-0.5 text-blue-400">
+                      <ShieldIcon size={10} /> {formatStat(stats.damageTaken || 0)}
+                    </span>
+                  ) : null}
+                </div>
               </div>
-            </div>
-          );
-        })}
-      </div>
-
-      <div className="pixel-panel-dark p-3 mt-3">
-        <div className="pixel-label text-xs mb-1">Key Insight</div>
-        <p className="text-xs" style={{ color: insight.color }}>
-          {insight.text}
-        </p>
-      </div>
-
-      {autoAdvance && (
-        <div className="text-center mt-3">
-          <span className="pixel-label text-xs" style={{ color: 'var(--color-text-dim)' }}>
-            Auto-advancing in 3s...
-          </span>
+            );
+          })}
         </div>
-      )}
 
-      <div className="text-center mt-3">
-        <button onClick={handleClose} className="pixel-btn pixel-btn-primary">
-          Continue
-        </button>
+        {autoAdvance && !userInteracted && (
+          <div className="text-center mt-3">
+            <span className="pixel-label text-xs" style={{ color: 'var(--color-text-dim)' }}>
+              Auto-advancing in 3s...
+            </span>
+          </div>
+        )}
+
+        <div className="flex gap-2 justify-center mt-3">
+          <button onClick={handleViewDetails} className="pixel-btn">
+            View Details
+          </button>
+          <button onClick={handleClose} className="pixel-btn pixel-btn-primary">
+            Continue
+          </button>
+        </div>
       </div>
     </ModalOverlay>
   );

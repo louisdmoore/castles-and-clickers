@@ -1,9 +1,21 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.2.3';
+export const CURRENT_VERSION = '0.2.4';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.2.4',
+    title: 'DPS Meter & Run History',
+    date: '2026-02-20',
+    changes: [
+      { type: 'feature', text: 'DPS Meter — replaces contribution meter with live DPS/HPS tracking and combat timer. See real damage per second rates!' },
+      { type: 'feature', text: 'Run History — new "Recent Runs" tab in Stats screen shows your last 50 dungeon runs with full DPS metrics per hero' },
+      { type: 'improvement', text: 'Run Summary now displays average DPS, combat duration, and biggest hit in a cleaner layout' },
+      { type: 'improvement', text: 'Simplified run insights — removed vague "solid run" feedback, keeping only specific actionable advice' },
+      { type: 'improvement', text: '"View Details" button added to Run Summary — opens stats screen to see full run breakdown' },
+    ],
+  },
   {
     version: '0.2.3',
     title: 'Bug Fixes',

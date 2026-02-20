@@ -790,6 +790,7 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
 
   // Track damage dealt
   ctx.totalDamageDealtThisTurn += finalDmg;
+  if (finalDmg > ctx.biggestSingleHit) ctx.biggestSingleHit = finalDmg;
 
   // Apply hpCostPerAttack (Life Tap passive)
   if (actor.isHero && passiveBonuses.hpCostPerAttack > 0) {
@@ -853,6 +854,7 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
         if (chainIdx !== -1) {
           newMonsters[chainIdx].stats.hp = Math.max(0, newMonsters[chainIdx].stats.hp - chainDmg);
           ctx.totalDamageDealtThisTurn += chainDmg;
+          if (chainDmg > ctx.biggestSingleHit) ctx.biggestSingleHit = chainDmg;
         }
         addCombatLog({ type: 'system', message: `Lightning chains to ${chainTarget.name} for ${chainDmg}!` });
         addEffect({ type: 'beam', from: target.position, to: chainTarget.position, attackerClass: 'mage' });
@@ -892,6 +894,7 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
       const bonusDmg = Math.floor(uniqueOnHitResult.bonusDamage);
       newMonsters[targetMonsterIdx].stats.hp = Math.max(0, newMonsters[targetMonsterIdx].stats.hp - bonusDmg);
       ctx.totalDamageDealtThisTurn += bonusDmg;
+      if (bonusDmg > ctx.biggestSingleHit) ctx.biggestSingleHit = bonusDmg;
       addCombatLog({ type: 'system', message: `Unique power deals ${bonusDmg} bonus damage!` });
     }
 
@@ -937,6 +940,7 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
           const chainDmg = Math.floor(uniqueOnHitResult.chainDamage);
           newMonsters[chainIdx].stats.hp = Math.max(0, newMonsters[chainIdx].stats.hp - chainDmg);
           ctx.totalDamageDealtThisTurn += chainDmg;
+          if (chainDmg > ctx.biggestSingleHit) ctx.biggestSingleHit = chainDmg;
           addCombatLog({ type: 'system', message: `Chain lightning hits ${chainTarget.name} for ${chainDmg}!` });
           addEffect({ type: 'beam', from: target.position, to: chainTarget.position, attackerClass: 'mage' });
           addEffect({ type: 'damage', position: chainTarget.position, damage: chainDmg });
@@ -1008,6 +1012,7 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
         while (currentChainDmg > 0 && newMonsters[targetMonsterIdx].stats.hp > 0 && chainCount < CHAIN_ATTACK_MAX) {
           newMonsters[targetMonsterIdx].stats.hp = Math.max(0, newMonsters[targetMonsterIdx].stats.hp - currentChainDmg);
           ctx.totalDamageDealtThisTurn += currentChainDmg;
+          if (currentChainDmg > ctx.biggestSingleHit) ctx.biggestSingleHit = currentChainDmg;
           chainCount++;
           addCombatLog({ type: 'system', message: `Chain Strike x${chainCount}! ${actor.name} hits for ${currentChainDmg}!` });
           addEffect({ type: 'beam', from: actor.position, to: target.position, attackerClass: actor.classId });
@@ -1022,6 +1027,7 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
         const bonusDmg = Math.floor(uniqueCritResult.bonusDamage);
         newMonsters[targetMonsterIdx].stats.hp = Math.max(0, newMonsters[targetMonsterIdx].stats.hp - bonusDmg);
         ctx.totalDamageDealtThisTurn += bonusDmg;
+        if (bonusDmg > ctx.biggestSingleHit) ctx.biggestSingleHit = bonusDmg;
       }
 
       if (uniqueCritResult.buffsToApply.length > 0) {
@@ -1072,6 +1078,7 @@ export const resolveMonsterTargetDamage = (ctx, actor, target, attackResult) => 
             if (nearbyIdx !== -1) {
               newMonsters[nearbyIdx].stats.hp = Math.max(0, newMonsters[nearbyIdx].stats.hp - explosionDmg);
               ctx.totalDamageDealtThisTurn += explosionDmg;
+              if (explosionDmg > ctx.biggestSingleHit) ctx.biggestSingleHit = explosionDmg;
               addCombatLog({ type: 'system', message: `Explosion hits ${nearbyEnemy.name} for ${explosionDmg}!` });
               addEffect({ type: 'damage', position: nearbyEnemy.position, damage: explosionDmg });
               if (newMonsters[nearbyIdx].stats.hp <= 0) {
@@ -1320,6 +1327,7 @@ export const processDoubleAttack = (ctx, actor, target, attackResult) => {
   if (targetMonsterIdx !== -1) {
     newMonsters[targetMonsterIdx].stats.hp = Math.max(0, hpBeforeBonus - bonusDmg);
     ctx.totalDamageDealtThisTurn += bonusDmg;
+    if (bonusDmg > ctx.biggestSingleHit) ctx.biggestSingleHit = bonusDmg;
   }
   const hpAfterBonus = targetMonsterIdx !== -1 ? newMonsters[targetMonsterIdx].stats.hp : 0;
 
@@ -1369,6 +1377,7 @@ export const processDoubleAttack = (ctx, actor, target, attackResult) => {
       const doubleHitDmg = Math.max(1, Math.floor(dmg));
       newMonsters[targetMonsterIdx].stats.hp = Math.max(0, newMonsters[targetMonsterIdx].stats.hp - doubleHitDmg);
       ctx.totalDamageDealtThisTurn += doubleHitDmg;
+      if (doubleHitDmg > ctx.biggestSingleHit) ctx.biggestSingleHit = doubleHitDmg;
       addCombatLog({ type: 'system', message: `Reality Shard! ${actor.name}'s attack hits twice for ${doubleHitDmg}!` });
       addEffect({ type: 'beam', from: actor.position, to: target.position, attackerClass: actor.classId });
       addEffect({ type: 'damage', position: target.position, damage: doubleHitDmg });
@@ -1411,6 +1420,7 @@ export const processAscendanceAOE = (ctx, actor, target, attackResult) => {
       newMonsters[otherIdx].stats.hp = Math.max(0, oldHp - aoeDmg);
       const newHp = newMonsters[otherIdx].stats.hp;
       ctx.totalDamageDealtThisTurn += aoeDmg;
+      if (aoeDmg > ctx.biggestSingleHit) ctx.biggestSingleHit = aoeDmg;
 
       addEffect({ type: 'beam', from: actor.position, to: otherTarget.position, attackerClass: actor.classId });
       addEffect({ type: 'damage', position: otherTarget.position, damage: aoeDmg });

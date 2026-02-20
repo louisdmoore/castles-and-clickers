@@ -213,6 +213,7 @@ export const useCombat = ({ addEffect }) => {
       defeatWingBoss: (id) => useGameStore.getState().defeatWingBoss(id),
       completeRaid: () => useGameStore.getState().completeRaid(),
       pauseCombat: (ms) => useGameStore.getState().pauseCombat(ms),
+      incrementCombatTick: () => useGameStore.getState().incrementCombatTick(),
       getOwnedUniques: () => useGameStore.getState().ownedUniques || [],
       gainUniqueXp: (templateId, amount) => useGameStore.getState().gainUniqueXp(templateId, amount),
       // Read-only game state
@@ -220,6 +221,7 @@ export const useCombat = ({ addEffect }) => {
       // Derived constants
       goldMultiplier, xpMultiplier, crownMultiplier, damageBonus, defenseBonus, critBonus,
       // Per-tick tracking (mutable)
+      biggestSingleHit: 0,
       totalDamageDealtThisTurn: 0,
       damageTakenByHero: {},
       healingDoneByHero: {},
@@ -309,6 +311,8 @@ export const useCombat = ({ addEffect }) => {
         clearedStatusEffects[hero.id] = [];
         clearedBuffs[hero.id] = {};
       }
+      // Flush combat ticks before transitioning to DEFEAT phase
+      useGameStore.getState().flushCombatTicks();
       updateRoomCombat({ phase: PHASES.DEFEAT, tick: 0, statusEffects: clearedStatusEffects, buffs: clearedBuffs });
       addCombatLog({ type: 'system', message: 'Party Defeated!' });
       return true;
@@ -334,6 +338,8 @@ export const useCombat = ({ addEffect }) => {
         clearedStatusEffects[hero.id] = [];
         clearedBuffs[hero.id] = {};
       }
+      // Flush combat ticks before transitioning to CLEARING phase (between rooms)
+      useGameStore.getState().flushCombatTicks();
       updateRoomCombat({ phase: PHASES.CLEARING, tick: 0, statusEffects: clearedStatusEffects, buffs: clearedBuffs });
       addCombatLog({ type: 'system', message: 'Victory!' });
       return true;
@@ -355,6 +361,11 @@ export const useCombat = ({ addEffect }) => {
       return true;
     }
     lastProcessedTurnRef.current = turnKey;
+
+    // === 7b. Increment combat tick once per round (after duplicate guard) ===
+    if (roomCombat.currentTurnIndex === 0) {
+      ctx.incrementCombatTick();
+    }
 
     // === 8. Cooldown decrement ===
     if (actor.isHero && newSkillCooldowns[actor.id]) {
@@ -496,7 +507,9 @@ export const useCombat = ({ addEffect }) => {
       if (ctx.totalDamageDealtThisTurn > 0) {
         incrementStat('totalDamageDealt', ctx.totalDamageDealtThisTurn, { heroId: statHeroId });
         runUpdates.damageDealt = ctx.totalDamageDealtThisTurn;
-        runUpdates.biggestHit = ctx.totalDamageDealtThisTurn;
+        if (ctx.biggestSingleHit > 0) {
+          runUpdates.biggestHit = ctx.biggestSingleHit;
+        }
       }
       updateRunStats(statHeroId, runUpdates);
     }

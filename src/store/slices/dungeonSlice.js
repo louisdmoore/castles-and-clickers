@@ -4,6 +4,7 @@ import { DUNGEON_THEMES } from '../../data/dungeonThemes';
 import { getAscensionDungeonCap, getAscensionGoldCost } from '../../data/ascensionMilestones';
 import { clearStatCache, setAscensionCount } from '../helpers/statCalculator';
 import throttledStorage from '../helpers/throttledStorage';
+import { buildRunSnapshot } from '../helpers/runSnapshotHelper';
 
 export const createDungeonSlice = (set, get) => ({
   // State
@@ -111,44 +112,24 @@ export const createDungeonSlice = (set, get) => ({
   },
 
   endDungeon: (success) => {
+    // Flush any in-progress combat ticks before reading runStats
+    get().flushCombatTicks();
+
     const { maxDungeonLevel, processPendingRecruits, runStats, heroes, deathLog } = get();
 
     // Snapshot dungeon data before clearing state
     const dungeonLevel = get().dungeon?.level;
-    const runSummary = {
-      success,
-      dungeonLevel,
-      timestamp: Date.now(),
-      heroStats: {},
-    };
-    let totalDamage = 0;
-    let mvpId = null;
-    let mvpDamage = 0;
-    let biggestHit = 0;
-    let biggestHitHero = null;
 
-    for (const hero of heroes.filter(Boolean)) {
-      const stats = runStats[hero.id];
-      if (!stats) continue;
-      runSummary.heroStats[hero.id] = {
-        name: hero.name,
-        classId: hero.classId,
-        ...stats,
-      };
-      totalDamage += stats.damageDealt || 0;
-      if ((stats.damageDealt || 0) > mvpDamage) {
-        mvpDamage = stats.damageDealt || 0;
-        mvpId = hero.id;
-      }
-      if ((stats.biggestHit || 0) > biggestHit) {
-        biggestHit = stats.biggestHit || 0;
-        biggestHitHero = hero.name;
-      }
-    }
-    runSummary.totalDamage = totalDamage;
-    runSummary.mvpId = mvpId;
-    runSummary.biggestHit = biggestHit;
-    runSummary.biggestHitHero = biggestHitHero;
+    // Use helper to build run snapshot and history entry
+    const { historyEntry, runSummary, totalDamage } = buildRunSnapshot({
+      dungeonLevel,
+      success,
+      heroes,
+      runStats,
+    });
+
+    // Save to run history
+    get().saveRunToHistory(historyEntry);
 
     // Build death recap on defeat
     let deathRecap = null;
@@ -277,7 +258,37 @@ export const createDungeonSlice = (set, get) => ({
   },
 
   abandonDungeon: () => {
-    const { processPendingRecruits, raidState } = get();
+    // Flush any in-progress combat ticks before clearing state
+    get().flushCombatTicks();
+
+    const { processPendingRecruits, raidState, runStats, heroes, dungeon } = get();
+
+    // Save raid defeat to run history
+    if (raidState.active && raidState.raidId) {
+      const raid = RAIDS[raidState.raidId];
+      if (raid) {
+        const dungeonLevel = dungeon?.level;
+        const { historyEntry } = buildRunSnapshot({
+          dungeonLevel,
+          success: false,
+          heroes,
+          runStats,
+          isRaid: true,
+          raidName: raid.name,
+        });
+        get().saveRunToHistory(historyEntry);
+      }
+    } else if (dungeon) {
+      // Save normal dungeon abandon to run history
+      const dungeonLevel = dungeon.level;
+      const { historyEntry } = buildRunSnapshot({
+        dungeonLevel,
+        success: false,
+        heroes,
+        runStats,
+      });
+      get().saveRunToHistory(historyEntry);
+    }
 
     // Clear raid state if abandoning a raid
     const raidCleanup = raidState.active ? {
@@ -463,7 +474,7 @@ export const createDungeonSlice = (set, get) => ({
   // ========================================
 
   enterRaid: (raidId, difficulty = 'normal') => {
-    const { heroes, highestDungeonCleared, heroHp, initializeHeroHp, pendingDungeonBuffs, ascension } = get();
+    const { heroes, highestDungeonCleared, heroHp, initializeHeroHp, initRunStats, pendingDungeonBuffs, ascension } = get();
     if (heroes.filter(Boolean).length === 0) return false;
 
     const raid = RAIDS[raidId];
@@ -496,6 +507,7 @@ export const createDungeonSlice = (set, get) => ({
     });
 
     initializeHeroHp();
+    initRunStats();
 
     set(state => ({
       raidState: {
@@ -564,6 +576,25 @@ export const createDungeonSlice = (set, get) => ({
     const raid = RAIDS[raidState.raidId];
     if (!raid) return;
 
+    // Flush any in-progress combat ticks before reading runStats
+    get().flushCombatTicks();
+
+    // Use helper to build run snapshot and history entry
+    const state = get();
+    const { runStats, heroes } = state;
+    const dungeonLevel = state.dungeon?.level;
+    const { historyEntry, runSummary, totalDamage } = buildRunSnapshot({
+      dungeonLevel,
+      success: true,
+      heroes,
+      runStats,
+      isRaid: true,
+      raidName: raid.name,
+    });
+
+    // Save to run history
+    get().saveRunToHistory(historyEntry);
+
     // Record completion
     const completionKey = `${raidState.raidId}:complete`;
 
@@ -583,6 +614,7 @@ export const createDungeonSlice = (set, get) => ({
         lootDrops,
         completedAt: Date.now(),
       },
+      lastRunSummary: totalDamage > 0 ? runSummary : null,
       raidState: {
         active: false,
         raidId: null,
@@ -606,6 +638,8 @@ export const createDungeonSlice = (set, get) => ({
       dungeon: null,
       roomCombat: null,
       isRunning: false,
+      runStats: {},
+      deathLog: [],
     }));
 
     // Immediate save on raid completion

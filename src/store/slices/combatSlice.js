@@ -35,6 +35,10 @@ export const createCombatSlice = (set, get) => ({
   runStats: {},
   // Death log for death recap — records each hero death event during a run
   deathLog: [],
+  // Run history — last 50 runs with DPS metrics
+  runHistory: [],
+  // Pending modal request — lets non-layout components (e.g. RunSummary) request a modal open
+  pendingModal: null,
 
   // Actions
   setCombat: (combat) => set({ combat }),
@@ -42,7 +46,10 @@ export const createCombatSlice = (set, get) => ({
   // Initialize per-run stats for all heroes at dungeon start
   initRunStats: () => {
     const { heroes } = get();
-    const stats = {};
+    const stats = {
+      totalCombatTime: 0,
+      combatTicks: 0,
+    };
     heroes.filter(Boolean).forEach(hero => {
       stats[hero.id] = {
         damageDealt: 0,
@@ -94,6 +101,51 @@ export const createCombatSlice = (set, get) => ({
       };
     });
   },
+
+  // Increment combat tick counter (called once per round from useCombat)
+  // Each tick = one combat round = 0.25s of game time
+  incrementCombatTick: () => {
+    set(state => ({
+      runStats: {
+        ...state.runStats,
+        combatTicks: (state.runStats.combatTicks || 0) + 1,
+      },
+    }));
+  },
+
+  // Flush accumulated combat ticks into totalCombatTime (called at room end / dungeon end)
+  flushCombatTicks: () => {
+    set(state => {
+      const { runStats } = state;
+      const ticks = runStats.combatTicks || 0;
+      if (ticks === 0) return state;
+
+      const elapsed = ticks * 0.25; // Each tick = 0.25s game time
+      return {
+        runStats: {
+          ...runStats,
+          totalCombatTime: (runStats.totalCombatTime || 0) + elapsed,
+          combatTicks: 0,
+        },
+      };
+    });
+  },
+
+  // Save run to history (called from endDungeon)
+  saveRunToHistory: (runSnapshot) => {
+    set(state => {
+      const newHistory = [runSnapshot, ...state.runHistory];
+      // Keep only last 50 runs (FIFO)
+      if (newHistory.length > 50) {
+        newHistory.length = 50;
+      }
+      return { runHistory: newHistory };
+    });
+  },
+
+  // Request a modal to be opened (consumed by GameLayout)
+  setPendingModal: (modalId) => set({ pendingModal: modalId }),
+  clearPendingModal: () => set({ pendingModal: null }),
 
   // OPTIMIZATION: Batched combat log to reduce state updates (44+ calls per tick -> 1)
   addCombatLog: (message) => {

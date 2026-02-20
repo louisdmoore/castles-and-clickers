@@ -91,3 +91,21 @@ export const createTurnOrder = (heroes, monsters) => {
 
   return allUnits.map(u => u.id);
 };
+
+// Format seconds as MM:SS
+export const formatTime = (seconds) => {
+  if (!seconds || seconds < 0) return '0:00';
+  const mins = Math.floor(seconds / 60);
+  const secs = Math.floor(seconds % 60);
+  return `${mins}:${secs.toString().padStart(2, '0')}`;
+};
+
+// Format per-second rates (DPS/HPS) with appropriate precision
+export const formatRate = (value) => {
+  // Guard against undefined, null, or NaN
+  if (value == null || isNaN(value)) return '0.0';
+  if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
+  if (value >= 1000) return `${(value / 1000).toFixed(1)}K`;
+  if (value >= 100) return Math.floor(value).toString();
+  return value.toFixed(1);
+};

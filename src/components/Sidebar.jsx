@@ -8,7 +8,7 @@ import { RoleIcon } from './icons/ClassIcon';
 import { GhostIcon, FireIcon, ShieldBuffIcon, TauntIcon, EvasionIcon, HasteIcon, RegenIcon, MightIcon, SpeedIcon, SoulStackIcon, HungerStackIcon, VoidStorageIcon, TidalIcon, StealthIcon, SoulReapIcon, PhaseIcon } from './icons/ui';
 import { SkillIcon } from './icons/skills';
 import { StatusEffectIcon } from './icons/statusEffects';
-import ContributionMeter from './ContributionMeter';
+import DPSMeter from './DPSMeter';
 
 // OPTIMIZATION: Stable defaults to prevent re-renders
 const EMPTY_OBJECT = {};
@@ -404,10 +404,10 @@ const Sidebar = memo(({
         )}
       </div>
 
-      {/* Contribution Meter (combat only) */}
+      {/* DPS Meter (combat only) */}
       {!!dungeon && (
         <div className="p-2 border-b-2 border-[var(--color-border)]">
-          <ContributionMeter />
+          <DPSMeter />
         </div>
       )}
 

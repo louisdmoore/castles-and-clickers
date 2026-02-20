@@ -94,6 +94,7 @@ export const executeHeroSkillAction = (ctx, actor) => {
 
         // Track skill damage dealt
         ctx.totalDamageDealtThisTurn += result.damage;
+        if (result.damage > ctx.biggestSingleHit) ctx.biggestSingleHit = result.damage;
 
         // Trigger on_damage abilities (Enrage) if monster survived
         if (newHp > 0) {

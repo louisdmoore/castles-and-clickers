@@ -364,6 +364,8 @@ export const useDungeon = ({ addEffect }) => {
 
     // Check defeat
     if (aliveHeroes.length === 0) {
+      // Flush combat ticks before transitioning to DEFEAT phase
+      useGameStore.getState().flushCombatTicks();
       updateRoomCombat({ phase: PHASES.DEFEAT, tick: 0 });
       addCombatLog({ type: 'system', message: 'Party Defeated!' });
       return true;

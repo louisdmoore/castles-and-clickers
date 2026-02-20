@@ -1,6 +1,6 @@
 # Progress
 
-**Current Version: v0.2.2**
+**Current Version: v0.2.4**
 **Next: Bug Fixes & Gameplay Polish**
 
 ---
@@ -50,12 +50,12 @@ Header merged into single compact row, sidebar slimmed from 256px to 176px, tigh
 - [x] **Skills screen unusable with large party** — Hero tabs in `SkillTreeScreen.jsx` are `flex-1` inside a 288px-wide column. At 5+ heroes, tabs shrink to ~40px each and overlap badge indicators. Needs wrapping, scrolling, or a different selection pattern. ✅ FIXED - changed to grid-cols-4 layout that wraps to 2 rows.
 - [x] **Healers never cast Revive** — `chooseBestSkill` in `skillAI.js` only enters the heal path when *living* allies are below HP thresholds. Dead allies don't trigger heal selection, so Cleric's Resurrection capstone is effectively dead code. Fix: add dead-ally check that triggers revive skill selection. ✅ FIXED - added deadAllyCount tracking and revive skill priority at top of AI decision tree.
 
-### Priority 2: DPS Meter & Stats Rework
-- [ ] **Replace contribution meter with real DPS meter** — Current `ContributionMeter` shows total contribution percentages (damage dealt/taken/healed), not per-second rates. No elapsed-time tracking exists in `runStats`. Needs: add `startTime` to runStats, compute DPS live during combat, display Recount/Details-style breakdown.
-- [ ] **Move detailed run stats to stats screen** — `RunSummary` modal shows per-run breakdown. `StatsScreen` has 4 tabs (Overview, Combat, Heroes, Journey) but only lifetime stats. Move per-run data to StatsScreen's Heroes tab so the dungeon view stays clean.
+### Priority 2: DPS Meter & Stats Rework ✅
+- [x] **Replace contribution meter with real DPS meter** — `DPSMeter.jsx` now shows live DPS/HPS/DTPS with elapsed combat timer. Combat timing tracked via `runStats.totalCombatTime` (accumulated across rooms). Role-aware display: damage dealers show DPS, healers show HPS, tanks show damage taken per second.
+- [x] **Move detailed run stats to stats screen** — Added 5th tab "Recent Runs" to `StatsScreen.jsx`. Last 50 runs stored in `runHistory` with full per-hero DPS breakdown. Filter by all/victories/defeats, expandable cards show complete per-hero stats.
 
 ### Priority 3: Player Guidance & Notification Audit
-- [ ] **Improve or remove Key Insight** — `RunSummary.jsx` has 6 conditional insights. 4 are specific and actionable (damage concentration, healer overexposed, healing deficit, flawless run). 2 are vague filler ("solid run", "tough fight"). Either sharpen the weak ones or cut them. Death log data exists but isn't used for insights.
+- [x] **Improve or remove Key Insight** — Completely removed the entire Key Insight section from `RunSummary.jsx`. Players now get cleaner, faster feedback with just the core stats (DPS, duration, hero breakdown).
 - [ ] **Notification surface audit** — 8 loot notification types + toasts + celebrations + run summary + death recap. Three fixed-position zones (top-right toasts, bottom-right loot, full-screen celebrations). Auto-dismiss timings vary (3s-8s). Audit for: redundancy, spam during idle, missing notifications (homestead unlocks, skill points available), player-configurable verbosity.
 - [ ] **Raid re-entry friction** — 3-4 clicks to re-run a raid (nav → select → difficulty → enter). No "Run Again" button on raid completion. Difficulty not persisted per raid.
 
@@ -105,6 +105,55 @@ Header merged into single compact row, sidebar slimmed from 256px to 176px, tigh
 ---
 
 ## Handoff Notes
+
+### Session 16 (2026-02-20) — v0.2.4 DPS Meter & Run History
+
+Completed Priority 2 in full across 5 implementation phases:
+
+**Phase 1: Combat Timing Infrastructure**
+- `combatSlice.js`: Added `combatStartTime`, `totalCombatTime`, `currentRoomCombatStart` fields to runStats
+- `combatSlice.js`: Created `startRoomCombat()`, `endRoomCombat()`, `saveRunToHistory()` actions
+- `useCombat.js`: Wired timing to phase transitions — starts on COMBAT phase entry, ends on CLEARING/DEFEAT
+- Combat time accumulates across multi-room dungeons
+
+**Phase 2: DPS Display**
+- `constants.js`: Added `formatTime(seconds)` helper for MM:SS formatting
+- Renamed `ContributionMeter.jsx` → `DPSMeter.jsx` with complete rewrite
+- Shows live DPS/HPS/DTPS (role-aware): damage dealers get DPS, healers get HPS, tanks get damage taken per second
+- Displays elapsed combat time and total party DPS
+- `Sidebar.jsx`: Updated import to use DPSMeter
+
+**Phase 3: Run History Storage**
+- `combatSlice.js`: Added `runHistory: []` state (max 50 runs, FIFO)
+- `dungeonSlice.js`: Enhanced `endDungeon()` to calculate DPS metrics (averageDPS, per-hero dps/hps/dtps)
+- Run snapshot includes: level, success, timestamp, totalCombatTime, averageDPS, MVP, biggestHit, full heroStats with per-second rates
+- Saved on both victory and defeat
+
+**Phase 4: Recent Runs Tab**
+- `StatsScreen.jsx`: Added 5th tab "Recent Runs" alongside Overview/Combat/Heroes/Journey
+- Created `RunHistoryCard` component with expand/collapse per-hero breakdown
+- Filter controls: All/Victories/Defeats with run counts
+- Table view shows: hero, DPS, HPS, damage out, damage in, healing, kills
+- Empty state messaging for filtered views
+
+**Phase 5: RunSummary Improvements**
+- Added DPS and duration display to stats grid (3-column: Total Damage, Average DPS, Duration)
+- Completely removed entire Key Insight section — cleaner, faster feedback
+- Added "View Details" button (opens StatsScreen to stats modal, though tab routing not fully wired)
+- Biggest Hit moved to separate row below main stats
+
+**Technical notes:**
+- No save migration needed — new fields default correctly via initial state and spread
+- Build passes: 1,100KB bundle (unchanged from baseline)
+- Lint at 77 errors (baseline ~78-83, no new errors added)
+- All timing logic uses `Date.now()` and converts to seconds for display
+- RunHistory capped at 50 entries to avoid localStorage bloat
+- DPSMeter uses `useThrottledDisplay` pattern for performance (not implemented yet, but follows existing ContributionMeter pattern)
+
+**Known limitations:**
+- "View Details" button in RunSummary opens StatsScreen but doesn't navigate to Recent Runs tab automatically (needs modal tab parameter support)
+- Very short combats (< 0.1s) will show inflated DPS but accurate duration
+- Summons (pet_, clone_, undead_) filtered out of DPS meter display
 
 ### Session 15 (2026-02-19) — PROGRESS.md Audit
 

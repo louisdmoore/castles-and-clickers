@@ -2,6 +2,8 @@ import { useState, useMemo } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { CLASSES } from '../data/classes';
 import { MONSTERS } from '../data/monsters';
+import { formatTime, formatRate } from '../game/constants';
+import ClassIcon from './icons/ClassIcon';
 import { TrophyIcon, SkullIcon, GoldIcon, HeartIcon, SwordIcon, ShieldIcon, CrownIcon, ChestIcon, StarIcon, SpeedIcon, CheckIcon } from './icons/ui';
 
 // Journey milestone definitions
@@ -46,11 +48,100 @@ const StatCard = ({ icon, label, value, color = 'text-[var(--color-text)]' }) =>
   );
 };
 
+const RunHistoryCard = ({ run, expanded, onToggle }) => {
+  const statusColor = run.success ? 'text-green-400' : 'text-red-400';
+  const statusIcon = run.success ? <CheckIcon size={16} /> : <SkullIcon size={16} />;
+  const statusText = run.success ? 'Victory' : 'Defeat';
+
+  return (
+    <div className="pixel-panel">
+      {/* Collapsed view - always visible */}
+      <button
+        onClick={onToggle}
+        className="w-full p-3 text-left hover:bg-gray-800/30 transition-colors"
+      >
+        <div className="flex items-center justify-between gap-2 mb-2">
+          <div className="flex items-center gap-2">
+            <TrophyIcon size={16} />
+            <span className="pixel-label">Dungeon {run.dungeonLevel}</span>
+            <span className={`flex items-center gap-1 ${statusColor}`}>
+              {statusIcon}
+              <span className="text-xs">{statusText}</span>
+            </span>
+          </div>
+          <span className="text-xs text-gray-400">
+            {new Date(run.timestamp).toLocaleString()}
+          </span>
+        </div>
+        <div className="flex gap-4 text-xs">
+          <div>
+            <span className="text-gray-400">DPS:</span>{' '}
+            <span className="text-red-400">{formatRate(run.averageDPS)}</span>
+          </div>
+          <div>
+            <span className="text-gray-400">Duration:</span>{' '}
+            <span>{formatTime(run.totalCombatTime)}</span>
+          </div>
+          <div>
+            <span className="text-gray-400">MVP:</span>{' '}
+            <span className="text-amber-400">{run.mvpName}</span>
+          </div>
+        </div>
+      </button>
+
+      {/* Expanded view - hero breakdown */}
+      {expanded && (
+        <div className="border-t-2 border-[var(--color-border)] p-3 bg-gray-900/30">
+          <div className="text-xs font-bold mb-2 text-gray-300">Hero Performance</div>
+          <div className="overflow-x-auto">
+            <table className="w-full text-xs">
+              <thead>
+                <tr className="text-[var(--color-text-dim)] border-b border-gray-700">
+                  <th className="text-left py-1 pr-2">Hero</th>
+                  <th className="text-right py-1 px-1">DPS</th>
+                  <th className="text-right py-1 px-1">HPS</th>
+                  <th className="text-right py-1 px-1">Dmg Out</th>
+                  <th className="text-right py-1 px-1">Dmg In</th>
+                  <th className="text-right py-1 px-1">Heal</th>
+                  <th className="text-right py-1 px-1">Kills</th>
+                </tr>
+              </thead>
+              <tbody>
+                {Object.entries(run.heroStats || {})
+                  .sort(([, a], [, b]) => (b.damageDealt || 0) - (a.damageDealt || 0))
+                  .map(([heroId, heroStat]) => (
+                    <tr key={heroId} className="border-b border-gray-800">
+                      <td className="py-1 pr-2">
+                        <div className="flex items-center gap-1">
+                          <ClassIcon classId={heroStat.classId} size={14} />
+                          <span>{heroStat.name}</span>
+                        </div>
+                      </td>
+                      <td className="text-right py-1 px-1 text-red-400">{formatRate(heroStat.dps || 0)}</td>
+                      <td className="text-right py-1 px-1 text-green-400">{formatRate(heroStat.hps || 0)}</td>
+                      <td className="text-right py-1 px-1">{formatNumber(heroStat.damageDealt || 0)}</td>
+                      <td className="text-right py-1 px-1">{formatNumber(heroStat.damageTaken || 0)}</td>
+                      <td className="text-right py-1 px-1">{formatNumber(heroStat.healingDone || 0)}</td>
+                      <td className="text-right py-1 px-1">{heroStat.kills || 0}</td>
+                    </tr>
+                  ))}
+              </tbody>
+            </table>
+          </div>
+        </div>
+      )}
+    </div>
+  );
+};
+
 const StatsScreen = () => {
   const stats = useGameStore(state => state.stats);
   const heroes = useGameStore(state => state.heroes);
   const highestDungeonCleared = useGameStore(state => state.highestDungeonCleared);
+  const runHistory = useGameStore(state => state.runHistory || []);
   const [activeTab, setActiveTab] = useState('overview');
+  const [runFilter, setRunFilter] = useState('all');
+  const [expandedRunId, setExpandedRunId] = useState(null);
 
   // Calculate journey milestone progress
   const journeyProgress = useMemo(() => {
@@ -126,11 +217,23 @@ const StatsScreen = () => {
       .sort((a, b) => (b.DamageDealt || 0) - (a.DamageDealt || 0));
   }, [stats.heroStats, heroes]);
 
+  // Memoize filter counts to avoid recomputing on every render
+  const victoryCount = useMemo(() => runHistory.filter(r => r.success).length, [runHistory]);
+  const defeatCount = useMemo(() => runHistory.filter(r => !r.success).length, [runHistory]);
+
+  // Filter run history based on selected filter
+  const filteredRuns = useMemo(() => {
+    if (runFilter === 'success') return runHistory.filter(r => r.success);
+    if (runFilter === 'failure') return runHistory.filter(r => !r.success);
+    return runHistory; // 'all'
+  }, [runHistory, runFilter]);
+
   const tabs = [
     { id: 'overview', label: 'Overview' },
     { id: 'combat', label: 'Combat' },
     { id: 'heroes', label: 'Heroes' },
     { id: 'journey', label: 'Journey' },
+    { id: 'runs', label: 'Recent Runs' },
   ];
 
   return (
@@ -395,6 +498,60 @@ const StatsScreen = () => {
                   </div>
                 );
               })()}
+            </div>
+          )}
+        </div>
+      )}
+
+      {/* Recent Runs Tab */}
+      {activeTab === 'runs' && (
+        <div className="space-y-4">
+          {/* Filter buttons */}
+          <div className="flex gap-2">
+            <button
+              onClick={() => setRunFilter('all')}
+              className={runFilter === 'all' ? 'pixel-btn pixel-btn-primary' : 'pixel-btn'}
+            >
+              All Runs ({runHistory.length})
+            </button>
+            <button
+              onClick={() => setRunFilter('success')}
+              className={runFilter === 'success' ? 'pixel-btn pixel-btn-primary' : 'pixel-btn'}
+            >
+              Victories ({victoryCount})
+            </button>
+            <button
+              onClick={() => setRunFilter('failure')}
+              className={runFilter === 'failure' ? 'pixel-btn pixel-btn-primary' : 'pixel-btn'}
+            >
+              Defeats ({defeatCount})
+            </button>
+          </div>
+
+          {/* Run list */}
+          {filteredRuns.length === 0 ? (
+            <div className="pixel-panel p-6 text-center">
+              <div className="text-[var(--color-text-dim)] mb-2">
+                <TrophyIcon size={48} className="mx-auto opacity-30" />
+              </div>
+              <div className="pixel-label text-gray-400">
+                {runFilter === 'all'
+                  ? 'No runs recorded yet. Complete a dungeon to see run history!'
+                  : runFilter === 'success'
+                  ? 'No victories yet. Keep fighting!'
+                  : 'No defeats yet. Good work!'}
+              </div>
+            </div>
+          ) : (
+            <div className="space-y-2 max-h-[60vh] overflow-y-auto">
+              {filteredRuns.map(run => (
+                <RunHistoryCard
+                  key={run.id}
+                  run={run}
+                  expanded={expandedRunId === run.id}
+                  onToggle={() => setExpandedRunId(expandedRunId === run.id ? null : run.id)}
+                />
+              ))}
             </div>
           )}
         </div>

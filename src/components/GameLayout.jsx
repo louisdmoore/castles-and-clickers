@@ -43,16 +43,16 @@ const GameLayout = () => {
   const resetGame = useGameStore(state => state.resetGame);
   const featureUnlocks = useGameStore(state => state.featureUnlocks);
   const markFeatureSeen = useGameStore(state => state.markFeatureSeen);
-  const markAllUniquesRead = useGameStore(state => state.markAllUniquesRead);
   const dungeonSettings = useGameStore(state => state.dungeonSettings);
   const setDungeonSettings = useGameStore(state => state.setDungeonSettings);
   const highestDungeonCleared = useGameStore(state => state.highestDungeonCleared);
   const maxDungeonLevel = useGameStore(state => state.maxDungeonLevel);
   const lastDungeonSuccess = useGameStore(state => state.lastDungeonSuccess);
-  const unreadUniques = useGameStore(state => state.unreadUniques || []);
   const raidState = useGameStore(state => state.raidState);
   const prepPhase = useGameStore(state => state.prepPhase);
   const setLastSeenVersion = useGameStore(state => state.setLastSeenVersion);
+  const pendingModal = useGameStore(state => state.pendingModal);
+  const clearPendingModal = useGameStore(state => state.clearPendingModal);
   // Game orchestration (hooks, combat, dungeon, display)
   const {
     combatEffects,
@@ -179,18 +179,28 @@ const GameLayout = () => {
 
   const closeModal = () => setActiveModal(null);
 
-  const openModal = (modalId) => {
+  const openModal = useCallback((modalId) => {
     setActiveModal(modalId);
-    if (modalId === 'homestead' && !featureUnlocks?.homesteadSeen) {
-      markFeatureSeen('homesteadSeen');
+    // Use imperative store access to avoid dependency on reactive selectors
+    const state = useGameStore.getState();
+    if (modalId === 'homestead' && !state.featureUnlocks?.homesteadSeen) {
+      state.markFeatureSeen('homesteadSeen');
     }
     if (modalId === 'raids') {
-      markFeatureSeen('lastSeenRaidsAt');
+      state.markFeatureSeen('lastSeenRaidsAt');
     }
-    if (modalId === 'equipment' && unreadUniques.length > 0) {
-      markAllUniquesRead();
+    if (modalId === 'equipment' && (state.unreadUniques || []).length > 0) {
+      state.markAllUniquesRead();
     }
-  };
+  }, []);
+
+  // Consume pending modal requests from the store (e.g. RunSummary "View Details")
+  useEffect(() => {
+    if (pendingModal) {
+      openModal(pendingModal);
+      clearPendingModal();
+    }
+  }, [pendingModal, clearPendingModal, openModal]);
 
   return (
     <div className="h-screen flex flex-col overflow-hidden bg-[var(--color-bg)]">
