@@ -1,7 +1,6 @@
 import { memo, useMemo } from 'react';
 import { useGameStore, xpForLevel } from '../store/gameStore';
 import { CLASSES } from '../data/classes';
-import { PARTY_SLOTS } from '../data/classes';
 import { getAllUniqueItems } from '../data/uniqueItems';
 import { BUILDINGS } from '../data/homestead';
 import { StarIcon, TrophyIcon, LockIcon, ChestIcon, GoldIcon } from './icons/ui';
@@ -47,12 +46,8 @@ const MilestoneWidget = () => {
       }
     }
 
-    // 2. Next dungeon unlock (hero slot, feature, or raid)
+    // 2. Next dungeon unlock (feature or raid — party slots are barracks/ascension-gated now)
     const allUnlocks = [
-      ...PARTY_SLOTS.slice(1).filter(s => !s.flex).map(slot => ({
-        name: `${slot.role.charAt(0).toUpperCase() + slot.role.slice(1)} Slot`,
-        dungeonRequired: slot.dungeonRequired,
-      })),
       { name: 'Shop', dungeonRequired: 5 },
       { name: 'Auto-Run', dungeonRequired: 5 },
       { name: 'Sunken Temple Raid', dungeonRequired: 12 },

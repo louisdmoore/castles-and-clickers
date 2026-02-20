@@ -3,7 +3,7 @@ import { useGameStore, calculateHeroStats } from '../store/gameStore';
 import { CLASSES, PARTY_SLOTS, ROLE_INFO, getClassesByRole } from '../data/classes';
 import ClassIcon, { RoleIcon } from './icons/ClassIcon';
 import HeroIcon from './icons/HeroIcon';
-import { LockIcon, StarIcon } from './icons/ui';
+import { StarIcon } from './icons/ui';
 
 // Base costs for re-recruitment (when first-recruit discount is used)
 const BASE_RECRUIT_COSTS = { tank: 100, healer: 150, dps: 200 };
@@ -13,7 +13,6 @@ const HeroManagement = () => {
   const gold = useGameStore(state => state.gold);
   const dungeon = useGameStore(state => state.dungeon);
   const maxPartySize = useGameStore(state => state.maxPartySize);
-  const highestDungeonCleared = useGameStore(state => state.highestDungeonCleared);
   const usedSlotDiscounts = useGameStore(state => state.usedSlotDiscounts);
   const addHero = useGameStore(state => state.addHero);
   const spendGold = useGameStore(state => state.spendGold);
@@ -29,13 +28,6 @@ const HeroManagement = () => {
     }
     return slots;
   }, [maxPartySize]);
-
-  // Check if a slot is unlocked based on dungeon progress + ascension
-  const isSlotUnlocked = (slotIndex) => {
-    const slot = PARTY_SLOTS[slotIndex];
-    if (!slot) return false;
-    return highestDungeonCleared >= slot.dungeonRequired;
-  };
 
   // Check if the slot's first-recruit discount has been used
   const isFirstRecruitAvailable = (slotIndex) => {
@@ -75,39 +67,23 @@ const HeroManagement = () => {
           const pendingHero = pendingRecruits.find(p => p.slotIndex === index);
           const roleInfo = role ? ROLE_INFO[role] : null;
           const isExpanded = expandedSlot === index;
-          const slotUnlocked = isSlotUnlocked(index);
           const firstRecruitAvailable = isFirstRecruitAvailable(index);
           const availableClasses = getClassesForSlot(index);
           const recruitCost = flex ? 0 : (BASE_RECRUIT_COSTS[role] || 150);
 
           return (
-            <div key={index} className={`pixel-panel overflow-hidden ${!slotUnlocked ? 'opacity-60' : ''}`}>
+            <div key={index} className="pixel-panel overflow-hidden">
               {/* Slot Header */}
               <div className="flex items-center justify-between px-3 py-2 border-b-2 border-[var(--color-border)]" style={{ background: 'linear-gradient(180deg, #3a3a5a 0%, #2a2a4a 100%)' }}>
                 <div className="flex items-center gap-2">
                   {flex ? <StarIcon size={18} /> : <RoleIcon role={role} size={18} />}
                   <span className="text-white text-sm font-medium">{flex ? 'Flex' : roleInfo?.name}</span>
                 </div>
-                {!slotUnlocked && (
-                  <span className="text-xs text-gray-500 flex items-center gap-1">
-                    <LockIcon size={12} /> D{PARTY_SLOTS[index]?.dungeonRequired}
-                  </span>
-                )}
               </div>
 
               {/* Slot Content */}
               <div className="p-3">
-                {/* Locked slot */}
-                {!slotUnlocked ? (
-                  <div className="text-center py-6">
-                    <div className="flex justify-center mb-2">
-                      <LockIcon size={40} />
-                    </div>
-                    <div className="text-gray-500 text-sm">
-                      Clear Dungeon {PARTY_SLOTS[index]?.dungeonRequired} to unlock
-                    </div>
-                  </div>
-                ) : pendingHero ? (
+                {pendingHero ? (
                   // Pending hero (recruited during dungeon)
                   <div className="text-center py-3">
                     <div className="flex items-center justify-center gap-3 mb-2 opacity-60">

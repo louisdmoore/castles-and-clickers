@@ -79,7 +79,6 @@ const NavBar = ({ activeModal, onOpenModal }) => {
     if (emptySlotIndex === -1 || emptySlotIndex >= maxPartySize) return false;
     const slot = PARTY_SLOTS[emptySlotIndex];
     if (!slot) return false;
-    if (highestDungeonCleared < slot.dungeonRequired) return false;
 
     const discountUsed = usedSlotDiscounts.includes(emptySlotIndex);
     const recruitCost = discountUsed
@@ -87,7 +86,7 @@ const NavBar = ({ activeModal, onOpenModal }) => {
       : slot.cost;
 
     return gold >= recruitCost;
-  }, [heroes, maxPartySize, highestDungeonCleared, gold, usedSlotDiscounts]);
+  }, [heroes, maxPartySize, gold, usedSlotDiscounts]);
 
   // Check if homestead is newly available
   const homesteadNewlyAvailable = highestDungeonCleared >= 3 && !featureUnlocks?.homesteadSeen;

@@ -215,7 +215,7 @@ export const createDungeonSlice = (set, get) => ({
         updates.highestDungeonCleared = newHighest;
 
         // Expand party size based on dungeon progress
-        const newMaxPartySize = getMaxPartySize(newHighest, state.ascension?.count || 0, state.homestead?.barracks || 0);
+        const newMaxPartySize = getMaxPartySize(state.homestead?.barracks || 0, state.ascension?.count || 0);
         if (newMaxPartySize > (state.maxPartySize || 4)) {
           updates.maxPartySize = newMaxPartySize;
         }
@@ -363,6 +363,13 @@ export const createDungeonSlice = (set, get) => ({
       // Unlock new dungeon levels (set dungeonUnlocked to current highest + 1)
       dungeonUnlocked: Math.min(state.highestDungeonCleared + 1, newDungeonCap),
     }));
+
+    // Recalculate party size — ascension can unlock flex slots 7-8
+    const newMaxPartySize = getMaxPartySize(get().homestead?.barracks || 0, newCount);
+    if (newMaxPartySize > (get().maxPartySize || 4)) {
+      set({ maxPartySize: newMaxPartySize });
+      get().addToast({ type: 'success', message: `Flex party slot ${newMaxPartySize} unlocked!` });
+    }
 
     // Celebration toast
     get().addToast({ type: 'success', message: `Ascended to A${newCount}! +${newCount * 10}% all stats, dungeon cap D${newDungeonCap}` });

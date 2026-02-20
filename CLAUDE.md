@@ -342,14 +342,14 @@ merge: (persistedState, currentState) => ({
 - Dungeon cap: `maxDungeonLevel` state derived from `getAscensionDungeonCap(count)` — increases +5 per ascension.
 - If you add new systems that read ascension count, import `setAscensionCount` from `gameStore.js` (re-exported) or read `get().ascension.count` in store actions.
 
-## Party Slot System (v0.3.0)
+## Party Slot System (v0.3.0, updated v0.2.3)
 
 `PARTY_SLOTS` in `src/data/classes.js` has 8 entries:
-- Slots 1-4: Role-restricted (tank, healer, DPS, DPS), unlocked by dungeon clears
-- Slots 5-6: Role-restricted (DPS at D10, healer at D20)
-- Slots 7-8: **Flex slots** (`role: null`, `flex: true`, `ascensionRequired: 1/3`) — any class allowed
+- Slots 1-4: Role-restricted (tank, healer, DPS, DPS), always available (gold recruit cost is the only gate)
+- Slots 5-6: Role-restricted (DPS, healer), unlocked via Barracks level 3/7 (`barracksRequired` field)
+- Slots 7-8: **Flex slots** (`role: null`, `flex: true`, `ascensionRequired: 1/3`) — any class allowed, unlocked via Ascension
 
-`getMaxPartySize(highestDungeonCleared, ascensionCount)` returns how many slots are available (4-8). **Both parameters are required** at all call sites. When iterating party slots, always use `maxPartySize` from state, never `PARTY_SLOTS.length`.
+`getMaxPartySize(barracksLevel, ascensionCount)` returns how many slots are available (4-8). **Both parameters are required** at all call sites. When iterating party slots, always use `maxPartySize` from state, never `PARTY_SLOTS.length`. No dungeon-clear gating exists for party slots.
 
 `getClassesByRole(null)` returns all classes (for flex slots). Role checks must handle null: `if (slot.role && heroRole !== slot.role)`.
 

@@ -87,24 +87,18 @@ const HeroPortrait = ({ hero, slot, onClick, isActive = false }) => {
 const HeroPortraitBar = ({ onHeroClick }) => {
   const heroes = useGameStore(state => state.heroes);
   const maxPartySize = useGameStore(state => state.maxPartySize);
-  const highestDungeonCleared = useGameStore(state => state.highestDungeonCleared);
-
-  // Determine which slots to show (unlocked slots up to maxPartySize)
+  // All slots within maxPartySize are unlocked
   const slots = useMemo(() => {
     const result = [];
     for (let i = 0; i < maxPartySize && i < PARTY_SLOTS.length; i++) {
-      const slot = PARTY_SLOTS[i];
-      const isUnlocked = highestDungeonCleared >= slot.dungeonRequired;
-      if (isUnlocked) {
-        result.push({
-          index: i,
-          hero: heroes[i] || null,
-          slot,
-        });
-      }
+      result.push({
+        index: i,
+        hero: heroes[i] || null,
+        slot: PARTY_SLOTS[i],
+      });
     }
     return result;
-  }, [heroes, maxPartySize, highestDungeonCleared]);
+  }, [heroes, maxPartySize]);
 
   return (
     <div className="flex items-center gap-1">

@@ -231,7 +231,7 @@ const ClassesSection = () => {
             slot.role === 'tank' ? 'text-blue-400' :
             slot.role === 'healer' ? 'text-green-400' : 'text-red-400'
           }>{slot.role}</span>,
-          slot.dungeonRequired === 0 ? 'Start' : `D${slot.dungeonRequired}`,
+          slot.ascensionRequired ? `A${slot.ascensionRequired}` : slot.barracksRequired ? `Barracks ${slot.barracksRequired}` : 'Start',
           `${slot.cost}g`,
         ])}
       />

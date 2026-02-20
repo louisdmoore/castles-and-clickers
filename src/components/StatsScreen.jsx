@@ -7,11 +7,11 @@ import { TrophyIcon, SkullIcon, GoldIcon, HeartIcon, SwordIcon, ShieldIcon, Crow
 // Journey milestone definitions
 const JOURNEY_MILESTONES = [
   { id: 'slot1', name: 'First Hero', description: 'Recruit your first Tank', dungeonRequired: 0, type: 'hero' },
-  { id: 'slot2', name: 'Healer Unlocked', description: 'Recruit a Healer (Slot 2)', dungeonRequired: 1, type: 'hero' },
+  { id: 'slot2', name: 'Healer Unlocked', description: 'Recruit a Healer (Slot 2)', dungeonRequired: 0, type: 'hero' },
   // Homestead hidden for now
   // { id: 'homestead', name: 'Homestead', description: 'Unlock base upgrades', dungeonRequired: 3, type: 'feature' },
-  { id: 'slot3', name: 'DPS Unlocked', description: 'Recruit a DPS (Slot 3)', dungeonRequired: 3, type: 'hero' },
-  { id: 'slot4', name: 'Full Party', description: 'Recruit 4th hero (Slot 4)', dungeonRequired: 4, type: 'hero' },
+  { id: 'slot3', name: 'DPS Unlocked', description: 'Recruit a DPS (Slot 3)', dungeonRequired: 0, type: 'hero' },
+  { id: 'slot4', name: 'Full Party', description: 'Recruit 4th hero (Slot 4)', dungeonRequired: 0, type: 'hero' },
   { id: 'shop', name: 'Item Shop', description: 'Buy equipment', dungeonRequired: 5, type: 'feature' },
   { id: 'autorun', name: 'Auto-Run', description: 'Unlock automatic dungeon runs', dungeonRequired: 5, type: 'feature' },
   { id: 'd10', name: 'Dungeon 10', description: 'Reach the deep dungeons', dungeonRequired: 10, type: 'progress' },

@@ -6,18 +6,18 @@ export const ROLES = {
 };
 
 // Party slot configuration
-// Slots 1-4: role-restricted (core party)
-// Slots 5-6: role-restricted (dungeon milestone unlocks)
-// Slots 7-8: flex — any role (ascension unlocks)
+// Slots 1-4: always available (gold recruit cost is the only gate)
+// Slots 5-6: unlocked via Barracks upgrades (level 3 / 7)
+// Slots 7-8: flex — any role, unlocked via Ascension (A1 / A3)
 export const PARTY_SLOTS = [
-  { slot: 1, role: ROLES.TANK, cost: 0, dungeonRequired: 0 },
-  { slot: 2, role: ROLES.HEALER, cost: 75, dungeonRequired: 1 },
-  { slot: 3, role: ROLES.DPS, cost: 1000, dungeonRequired: 3 },
-  { slot: 4, role: ROLES.DPS, cost: 5000, dungeonRequired: 4 },
-  { slot: 5, role: ROLES.DPS, cost: 8000, dungeonRequired: 10 },
-  { slot: 6, role: ROLES.HEALER, cost: 12000, dungeonRequired: 20 },
-  { slot: 7, role: null, cost: 0, dungeonRequired: 0, flex: true },
-  { slot: 8, role: null, cost: 0, dungeonRequired: 0, flex: true },
+  { slot: 1, role: ROLES.TANK, cost: 0 },
+  { slot: 2, role: ROLES.HEALER, cost: 75 },
+  { slot: 3, role: ROLES.DPS, cost: 1000 },
+  { slot: 4, role: ROLES.DPS, cost: 5000 },
+  { slot: 5, role: ROLES.DPS, cost: 8000, barracksRequired: 3 },
+  { slot: 6, role: ROLES.HEALER, cost: 12000, barracksRequired: 7 },
+  { slot: 7, role: null, cost: 0, flex: true, ascensionRequired: 1 },
+  { slot: 8, role: null, cost: 0, flex: true, ascensionRequired: 3 },
 ];
 
 // Hero classes with base stats and abilities

@@ -26,17 +26,16 @@ export const getDungeonTier = (level) => {
   return DUNGEON_TIERS.find(t => level >= t.minLevel && level <= t.maxLevel) || DUNGEON_TIERS[5];
 };
 
-// Get max party size (base 4, increases at dungeon clears + homestead Barracks)
-// eslint-disable-next-line no-unused-vars
-export const getMaxPartySize = (highestDungeonCleared = 0, _ascensionCount = 0, barracksLevel = 0) => {
+// Get max party size (base 4, increases via Barracks upgrades + Ascension)
+// Slots 1-4: always available (gold recruit cost is the only gate)
+// Slots 5-6: Barracks level 3 / 7
+// Slots 7-8: Ascension 1 / 3
+export const getMaxPartySize = (barracksLevel = 0, ascensionCount = 0) => {
   let size = 4;
-  // Legacy dungeon-based unlocks for slots 5-6
-  if (highestDungeonCleared >= 10) size = Math.max(size, 5);
-  if (highestDungeonCleared >= 20) size = Math.max(size, 6);
-  // Homestead Barracks-based unlocks (override dungeon-based if higher)
   if (barracksLevel >= 3) size = Math.max(size, 5);
   if (barracksLevel >= 7) size = Math.max(size, 6);
-  if (barracksLevel >= 10) size = Math.max(size, 7);
+  if (ascensionCount >= 1) size = Math.max(size, 7);
+  if (ascensionCount >= 3) size = Math.max(size, 8);
   return size;
 };
 

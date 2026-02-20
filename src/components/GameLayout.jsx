@@ -151,30 +151,14 @@ const GameLayout = () => {
   const hasNewHeroSlotAvailable = useMemo(() => {
     const maxSize = useGameStore.getState().maxPartySize;
     for (let i = 0; i < maxSize && i < PARTY_SLOTS.length; i++) {
-      const slot = PARTY_SLOTS[i];
-      // Slot is available if within maxPartySize (barracks/dungeon-based)
-      const isUnlocked = highestDungeonCleared >= slot.dungeonRequired;
-      const isEmpty = !heroes[i];
-      if (isUnlocked && isEmpty) return true;
+      if (!heroes[i]) return true;
     }
     return false;
-  }, [heroes, highestDungeonCleared]);
+  }, [heroes]);
 
   const upcomingUnlocks = useMemo(() => {
+    // Party slots are now barracks/ascension-gated, not dungeon milestones
     const allUnlocks = [
-      ...(() => {
-        const dpsCount = { current: 0 };
-        return PARTY_SLOTS.slice(1).filter(s => !s.flex).map((slot) => {
-          let name;
-          if (slot.role === 'dps') {
-            dpsCount.current++;
-            name = `DPS Slot ${dpsCount.current}`;
-          } else {
-            name = `${slot.role.charAt(0).toUpperCase() + slot.role.slice(1)} Slot`;
-          }
-          return { type: 'hero', name, dungeonRequired: slot.dungeonRequired };
-        });
-      })(),
       { type: 'feature', name: 'Shop', dungeonRequired: 5 },
       { type: 'feature', name: 'Auto-Run', dungeonRequired: 5 },
       { type: 'raid', name: 'Sunken Temple', dungeonRequired: 12 },
