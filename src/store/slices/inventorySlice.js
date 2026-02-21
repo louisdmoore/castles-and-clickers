@@ -548,10 +548,7 @@ export const createInventorySlice = (set, get) => ({
     // Immediate save on unique item drop
     throttledStorage.flush();
 
-    get().addLootNotification({
-      type: 'unique-drop',
-      item: uniqueItem,
-    });
+    // Celebration modal is the primary feedback for new uniques — no loot notification needed
 
     // Trigger celebration modal for new unique
     get().triggerUniqueCelebration(uniqueItem);
@@ -700,8 +697,27 @@ export const createInventorySlice = (set, get) => ({
     };
   },
 
-  // Add loot notification
+  // Add loot notification (filtered by notificationSettings.level)
   addLootNotification: (notification) => {
+    const level = get().notificationSettings?.level || 'full';
+
+    // Filter based on notification type and verbosity level
+    if (level !== 'full') {
+      const type = notification.type;
+      if (type === 'auto-sold') return; // Suppress in reduced+minimal
+      if (type === 'auto-equipped') {
+        if (level === 'minimal') return; // Suppress all auto-equip in minimal
+        // In reduced, suppress common/uncommon auto-equips
+        const rarity = notification.item?.rarity;
+        if (rarity === 'common' || rarity === 'uncommon') return;
+      }
+      if (level === 'minimal') {
+        if (type === 'looted') return;
+        // Suppress partial collection milestones in minimal
+        if (type === 'collection-milestone' && !notification.isComplete) return;
+      }
+    }
+
     const id = `notif_${Date.now()}_${Math.random().toString(36).substring(2, 7)}`;
     set(state => ({
       lootNotifications: [

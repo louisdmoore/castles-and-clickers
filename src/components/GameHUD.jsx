@@ -58,6 +58,12 @@ function useThrottledHeaderStats() {
   return headerStats;
 }
 
+const NOTIFICATION_LEVELS = [
+  { id: 'full', label: 'Full' },
+  { id: 'reduced', label: 'Reduced' },
+  { id: 'minimal', label: 'Minimal' },
+];
+
 const GameHUD = ({
   activeModal,
   onOpenModal,
@@ -77,6 +83,8 @@ const GameHUD = ({
   const headerStats = useThrottledHeaderStats();
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef(null);
+  const notificationLevel = useGameStore(state => state.notificationSettings?.level || 'full');
+  const setNotificationLevel = useGameStore(state => state.setNotificationLevel);
 
   // Close settings dropdown on outside click
   useEffect(() => {
@@ -202,7 +210,25 @@ const GameHUD = ({
               <SettingsIcon size={16} />
             </button>
             {settingsOpen && (
-              <div className="absolute top-full right-0 mt-1 pixel-panel p-2 z-50 min-w-[120px]">
+              <div className="absolute top-full right-0 mt-1 pixel-panel p-2 z-50 min-w-[160px] space-y-2">
+                <div>
+                  <div className="text-[10px] text-gray-400 mb-1">Notifications</div>
+                  <div className="flex gap-0.5">
+                    {NOTIFICATION_LEVELS.map(lvl => (
+                      <button
+                        key={lvl.id}
+                        onClick={() => setNotificationLevel(lvl.id)}
+                        className={`flex-1 px-1 py-0.5 text-[10px] rounded border transition-colors ${
+                          notificationLevel === lvl.id
+                            ? 'border-blue-400 bg-blue-900/40 text-blue-300'
+                            : 'border-gray-700 text-gray-500 hover:text-gray-300'
+                        }`}
+                      >
+                        {lvl.label}
+                      </button>
+                    ))}
+                  </div>
+                </div>
                 <button
                   onClick={handleReset}
                   className="pixel-btn text-xs text-[var(--color-red)] hover:border-[var(--color-red)] w-full"

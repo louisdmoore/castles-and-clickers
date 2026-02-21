@@ -2,6 +2,7 @@ import { useMemo } from 'react';
 import { useGameStore, calculateSkillPoints, calculateUsedSkillPoints } from '../store/gameStore';
 import { CLASSES, ROLE_INFO } from '../data/classes';
 import { getWorldBossForLevel } from '../data/worldBosses';
+import { RAIDS, isRaidUnlocked, RAID_DIFFICULTY_TIERS } from '../data/raids';
 import { WorldBossIcon } from './icons/worldBosses';
 import HeroIcon from './icons/HeroIcon';
 import { RoleIcon } from './icons/ClassIcon';
@@ -87,6 +88,21 @@ const IdleScreen = ({
   hasNewHeroSlotAvailable,
   upcomingUnlocks,
 }) => {
+  // All hooks must be called unconditionally (before any early returns)
+  const raidPreferences = useGameStore(state => state.raidPreferences);
+  const enterRaid = useGameStore(state => state.enterRaid);
+
+  // Quick Raid: show if player has a last raid and it's still unlocked
+  const quickRaid = useMemo(() => {
+    if (!raidPreferences?.lastRaidId) return null;
+    const raid = RAIDS[raidPreferences.lastRaidId];
+    if (!raid) return null;
+    if (!isRaidUnlocked(raidPreferences.lastRaidId, highestDungeonCleared)) return null;
+    const difficulty = raidPreferences.lastRaidDifficulty || 'normal';
+    const tier = RAID_DIFFICULTY_TIERS[difficulty];
+    return { raid, difficulty, tierName: tier?.name || 'Normal', tierColor: tier?.color || '#9ca3af' };
+  }, [raidPreferences, highestDungeonCleared]);
+
   // New player experience
   if (heroes.length === 0) {
     return (
@@ -252,6 +268,23 @@ const IdleScreen = ({
                 </button>
               )}
             </div>
+            {quickRaid && (
+              <button
+                onClick={() => enterRaid(quickRaid.raid.id, quickRaid.difficulty)}
+                className="pixel-btn w-full flex items-center justify-center gap-2 text-sm"
+                style={{ borderColor: quickRaid.tierColor }}
+              >
+                <CrownIcon size={14} style={{ color: quickRaid.tierColor }} />
+                <span>
+                  Quick Raid: {quickRaid.raid.name}
+                  {quickRaid.difficulty !== 'normal' && (
+                    <span className="ml-1" style={{ color: quickRaid.tierColor }}>
+                      ({quickRaid.tierName})
+                    </span>
+                  )}
+                </span>
+              </button>
+            )}
           </div>
         </div>
       </div>

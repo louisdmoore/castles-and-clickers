@@ -1,9 +1,22 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.2.4';
+export const CURRENT_VERSION = '0.2.5';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.2.5',
+    title: 'Notification Settings & Raid QoL',
+    date: '2026-02-20',
+    changes: [
+      { type: 'feature', text: 'Notification verbosity setting — choose Full, Reduced, or Minimal in the settings gear to control loot notification spam' },
+      { type: 'feature', text: 'Quick Raid button on the idle screen — one click to re-run your last raid at the same difficulty' },
+      { type: 'feature', text: '"Run Again" button on raid completion — instantly restart the same raid without reopening the selector' },
+      { type: 'improvement', text: 'Raid difficulty is now remembered per raid — no more resetting to Normal every time you reopen the modal' },
+      { type: 'improvement', text: 'Homestead upgrades now toast when unlocking new features (difficulty tiers, shop, consumables, etc.)' },
+      { type: 'improvement', text: 'Unique item drops no longer show a redundant loot notification behind the celebration modal' },
+    ],
+  },
   {
     version: '0.2.4',
     title: 'DPS Meter & Run History',

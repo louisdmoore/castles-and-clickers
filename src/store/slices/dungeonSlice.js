@@ -41,6 +41,7 @@ export const createDungeonSlice = (set, get) => ({
     heroHpSnapshot: {},
   },
   pendingRaidRecap: null,
+  raidPreferences: { lastRaidId: null, lastRaidDifficulty: null, difficultyPerRaid: {} },
   lastRunSummary: null,
   lastDeathRecap: null,
   prepPhase: null, // { nextLevel, success, dungeonType }
@@ -538,6 +539,8 @@ export const createDungeonSlice = (set, get) => ({
       isRunning: true,
     }));
 
+    get().setLastRaid(raidId, difficulty);
+
     return true;
   },
 
@@ -575,6 +578,10 @@ export const createDungeonSlice = (set, get) => ({
 
     const raid = RAIDS[raidState.raidId];
     if (!raid) return;
+
+    // Capture raid info before the big set() clears raidState
+    const completedRaidId = raidState.raidId;
+    const completedRaidDifficulty = raidState.difficulty || 'normal';
 
     // Flush any in-progress combat ticks before reading runStats
     get().flushCombatTicks();
@@ -642,11 +649,36 @@ export const createDungeonSlice = (set, get) => ({
       deathLog: [],
     }));
 
+    // Persist last raid for quick re-entry
+    get().setLastRaid(completedRaidId, completedRaidDifficulty);
+
     // Immediate save on raid completion
     throttledStorage.flush();
 
     // Check for newly earned achievements
     get().checkAchievements();
+  },
+
+  setRaidDifficulty: (raidId, difficulty) => {
+    set(state => ({
+      raidPreferences: {
+        ...state.raidPreferences,
+        difficultyPerRaid: {
+          ...state.raidPreferences.difficultyPerRaid,
+          [raidId]: difficulty,
+        },
+      },
+    }));
+  },
+
+  setLastRaid: (raidId, difficulty) => {
+    set(state => ({
+      raidPreferences: {
+        ...state.raidPreferences,
+        lastRaidId: raidId,
+        lastRaidDifficulty: difficulty,
+      },
+    }));
   },
 
   clearRaidRecap: () => {

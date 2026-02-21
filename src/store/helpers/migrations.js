@@ -11,7 +11,7 @@
  *   3. The migration receives the full persisted state and returns the updated state
  */
 
-export const SAVE_VERSION = 9;
+export const SAVE_VERSION = 10;
 
 // Sequential migration functions: fromVersion -> transform
 const MIGRATIONS = {
@@ -138,6 +138,17 @@ const MIGRATIONS = {
   // v8 → v9: Phase 4 — Specialization system
   // hero.specialization defaults to undefined (not specialized), no field init needed
   8: (state) => {
+    return state;
+  },
+
+  // v9 → v10: Notification settings + raid preferences
+  9: (state) => {
+    if (!state.notificationSettings) {
+      state.notificationSettings = { level: 'full' };
+    }
+    if (!state.raidPreferences) {
+      state.raidPreferences = { lastRaidId: null, lastRaidDifficulty: null, difficultyPerRaid: {} };
+    }
     return state;
   },
 };

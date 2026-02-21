@@ -206,8 +206,13 @@ const DifficultySelector = memo(({ selected, onSelect, gold, ascensionCount }) =
 DifficultySelector.displayName = 'DifficultySelector';
 
 // Raid card component - Multi-boss dungeon system
-const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExpanded, onToggle, gold, ascensionCount }) => {
-  const [difficulty, setDifficulty] = useState('normal');
+const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExpanded, onToggle, gold, ascensionCount, persistedDifficulty, onDifficultyChange }) => {
+  const [difficulty, setDifficulty] = useState(persistedDifficulty || 'normal');
+
+  const handleDifficultyChange = (d) => {
+    setDifficulty(d);
+    onDifficultyChange(raid.id, d);
+  };
   const raidUniqueIds = useMemo(() => getRaidUniqueIds(raid.id), [raid.id]);
   const ownedCount = raidUniqueIds.filter(id => ownedUniques.includes(id)).length;
   const isOwned = (itemId) => ownedUniques.includes(itemId);
@@ -289,7 +294,7 @@ const RaidCard = ({ raid, isUnlocked, ownedUniques, runCount, onEnterRaid, isExp
         {isUnlocked && (
           <DifficultySelector
             selected={difficulty}
-            onSelect={setDifficulty}
+            onSelect={handleDifficultyChange}
             gold={gold}
             ascensionCount={ascensionCount}
           />
@@ -363,6 +368,8 @@ const RaidSelectorModal = ({ onClose }) => {
   const gold = useGameStore(state => state.gold);
   const ascensionCount = useGameStore(state => state.ascension?.count) || 0;
   const enterRaid = useGameStore(state => state.enterRaid);
+  const raidPreferences = useGameStore(state => state.raidPreferences) || EMPTY_OBJECT;
+  const setRaidDifficulty = useGameStore(state => state.setRaidDifficulty);
 
   const raids = useMemo(() => getAllRaids(), []);
 
@@ -464,6 +471,8 @@ const RaidSelectorModal = ({ onClose }) => {
             onToggle={() => toggleRaid(raid.id)}
             gold={gold}
             ascensionCount={ascensionCount}
+            persistedDifficulty={raidPreferences.difficultyPerRaid?.[raid.id]}
+            onDifficultyChange={setRaidDifficulty}
           />
         ))}
       </div>

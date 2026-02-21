@@ -10,10 +10,21 @@ const RaidRecapScreen = () => {
   const pendingRaidRecap = useGameStore(state => state.pendingRaidRecap);
   const pendingUniqueCelebration = useGameStore(state => state.pendingUniqueCelebration);
   const clearRaidRecap = useGameStore(state => state.clearRaidRecap);
+  const enterRaid = useGameStore(state => state.enterRaid);
 
   const handleClose = useCallback(() => {
     clearRaidRecap();
   }, [clearRaidRecap]);
+
+  const handleRunAgain = useCallback(() => {
+    if (!pendingRaidRecap) return;
+    const { raidId, difficulty } = pendingRaidRecap;
+    clearRaidRecap();
+    // Small delay to let state settle after clearing recap
+    setTimeout(() => {
+      enterRaid(raidId, difficulty || 'normal');
+    }, 100);
+  }, [pendingRaidRecap, clearRaidRecap, enterRaid]);
 
   // Wait for unique celebration to be dismissed first
   if (!pendingRaidRecap || pendingUniqueCelebration) return null;
@@ -100,13 +111,21 @@ const RaidRecapScreen = () => {
           </div>
         </div>
 
-        {/* Close button */}
-        <button
-          onClick={handleClose}
-          className="pixel-btn-primary px-6 py-2"
-        >
-          Continue
-        </button>
+        {/* Action buttons */}
+        <div className="flex gap-3 justify-center">
+          <button
+            onClick={handleRunAgain}
+            className="pixel-btn-primary px-6 py-2"
+          >
+            Run Again
+          </button>
+          <button
+            onClick={handleClose}
+            className="pixel-btn px-6 py-2"
+          >
+            Continue
+          </button>
+        </div>
 
         <div className="text-gray-500 text-xs mt-3">
           Click anywhere to close

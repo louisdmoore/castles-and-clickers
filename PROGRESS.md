@@ -1,6 +1,6 @@
 # Progress
 
-**Current Version: v0.2.4**
+**Current Version: v0.2.5**
 **Next: Bug Fixes & Gameplay Polish**
 
 ---
@@ -54,10 +54,10 @@ Header merged into single compact row, sidebar slimmed from 256px to 176px, tigh
 - [x] **Replace contribution meter with real DPS meter** — `DPSMeter.jsx` now shows live DPS/HPS/DTPS with elapsed combat timer. Combat timing tracked via `runStats.totalCombatTime` (accumulated across rooms). Role-aware display: damage dealers show DPS, healers show HPS, tanks show damage taken per second.
 - [x] **Move detailed run stats to stats screen** — Added 5th tab "Recent Runs" to `StatsScreen.jsx`. Last 50 runs stored in `runHistory` with full per-hero DPS breakdown. Filter by all/victories/defeats, expandable cards show complete per-hero stats.
 
-### Priority 3: Player Guidance & Notification Audit
+### Priority 3: Player Guidance & Notification Audit ✅
 - [x] **Improve or remove Key Insight** — Completely removed the entire Key Insight section from `RunSummary.jsx`. Players now get cleaner, faster feedback with just the core stats (DPS, duration, hero breakdown).
-- [ ] **Notification surface audit** — 8 loot notification types + toasts + celebrations + run summary + death recap. Three fixed-position zones (top-right toasts, bottom-right loot, full-screen celebrations). Auto-dismiss timings vary (3s-8s). Audit for: redundancy, spam during idle, missing notifications (homestead unlocks, skill points available), player-configurable verbosity.
-- [ ] **Raid re-entry friction** — 3-4 clicks to re-run a raid (nav → select → difficulty → enter). No "Run Again" button on raid completion. Difficulty not persisted per raid.
+- [x] **Notification surface audit** — Added 3-level verbosity setting (Full/Reduced/Minimal) in settings gear. Reduced suppresses auto-sold and common/uncommon auto-equips. Minimal also suppresses looted and partial collection milestones. Unique-drop loot notification removed (celebration modal is primary feedback). Homestead unlock toasts added for non-partySlot features.
+- [x] **Raid re-entry friction** — "Run Again" button on RaidRecapScreen re-enters same raid/difficulty. Difficulty persisted per raid in `raidPreferences.difficultyPerRaid`. Quick Raid button on IdleScreen for one-click re-entry to last raid.
 
 ### Priority 4: Difficulty System
 - [ ] **Move difficulty to persistent global setting** — Currently a per-dungeon slider on PrepScreen (5 stops, 1.0x-3.0x, unlocks at D10). Backed by `dungeonSettings.difficultyMultiplier` in dungeonSlice. Move to a "set and forget" global setting accessible from settings or HUD, with optional per-dungeon override.
@@ -105,6 +105,31 @@ Header merged into single compact row, sidebar slimmed from 256px to 176px, tigh
 ---
 
 ## Handoff Notes
+
+### Session 17 (2026-02-20) — v0.2.5 Notification Settings & Raid QoL
+
+Completed Priority 3 in full (notification audit + raid re-entry friction):
+
+**Part A: Notification Settings & Audit**
+- Save migration v9→v10: `notificationSettings: { level: 'full' }` and `raidPreferences` state
+- `economySlice.js`: Added `notificationSettings` initial state + `setNotificationLevel(level)` action
+- `inventorySlice.js`: Filtering logic at top of `addLootNotification` — checks `notificationSettings.level` before creating notification. Matrix: auto-sold suppressed in reduced+, common/uncommon auto-equip suppressed in reduced+, looted + partial milestones suppressed in minimal
+- `inventorySlice.js`: Removed redundant `unique-drop` loot notification from `processUniqueDrop` (celebration modal is primary feedback)
+- `economySlice.js`: Added homestead unlock toasts in `upgradeBuilding` for non-partySlot unlocks
+- `GameHUD.jsx`: Added Full/Reduced/Minimal toggle in settings dropdown above Reset button
+
+**Part B: Raid Re-entry Friction**
+- `dungeonSlice.js`: Added `raidPreferences` state + `setRaidDifficulty(raidId, difficulty)` / `setLastRaid(raidId, difficulty)` actions
+- `enterRaid()` and `completeRaid()` both call `setLastRaid()` to persist the most recent raid
+- `RaidRecapScreen.jsx`: Added "Run Again" button (primary) alongside existing "Continue" button. Uses `setTimeout(100)` delay after clearing recap to let state settle
+- `RaidSelectorModal.jsx`: `RaidCard` initializes difficulty from `raidPreferences.difficultyPerRaid[raid.id]`. Difficulty changes persist via `setRaidDifficulty`
+- `IdleScreen.jsx`: Quick Raid button shows if `raidPreferences.lastRaidId` exists and is unlocked. One-click re-entry with persisted difficulty
+
+**Technical notes:**
+- Build passes: 1,106KB bundle (unchanged)
+- Lint at 77 errors (below ~83 baseline, 3 fewer than before — fixed conditional hooks in IdleScreen)
+- All hooks in IdleScreen moved above early returns to satisfy rules-of-hooks
+- `gameStore.js` merge and resetGame both handle the two new state fields
 
 ### Session 16 (2026-02-20) — v0.2.4 DPS Meter & Run History
 

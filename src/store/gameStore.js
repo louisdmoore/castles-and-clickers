@@ -144,6 +144,8 @@ export const useGameStore = create(
               heroHpSnapshot: {},
             },
             runHistory: [],
+            notificationSettings: { level: 'full' },
+            raidPreferences: { lastRaidId: null, lastRaidDifficulty: null, difficultyPerRaid: {} },
           });
         },
       }),
@@ -226,6 +228,8 @@ export const useGameStore = create(
             pendingDungeonBuffs: persistedState?.pendingDungeonBuffs || [],
             earnedAchievements: persistedState?.earnedAchievements || [],
             runHistory: persistedState?.runHistory || [],
+            notificationSettings: persistedState?.notificationSettings || { level: 'full' },
+            raidPreferences: persistedState?.raidPreferences || { lastRaidId: null, lastRaidDifficulty: null, difficultyPerRaid: {} },
             homestead: (() => {
               const h = persistedState?.homestead || {};
               // Strip old building keys from persisted saves

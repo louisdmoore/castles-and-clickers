@@ -54,6 +54,7 @@ export const createEconomySlice = (set, get) => ({
   saveStatus: { success: true, timestamp: Date.now() },
   toasts: [],
   earnedAchievements: [],
+  notificationSettings: { level: 'full' },
 
   // Actions
   addGold: (amount) => {
@@ -114,6 +115,13 @@ export const createEconomySlice = (set, get) => ({
         [buildingId]: currentLevel + 1,
       },
     });
+
+    // Toast for non-partySlot unlocks at this level
+    const newLevel = currentLevel + 1;
+    const unlock = building.unlocks?.[newLevel];
+    if (unlock && unlock.type !== 'partySlot') {
+      get().addToast({ type: 'success', message: `${building.name} Lv${newLevel}: ${unlock.label}` });
+    }
 
     // After upgrading barracks, recalculate max party size
     if (buildingId === 'barracks') {
@@ -527,4 +535,8 @@ export const createEconomySlice = (set, get) => ({
   updateSaveStatus: (status) => set({ saveStatus: status }),
 
   updateLastSaveTime: () => set({ lastSaveTime: Date.now() }),
+
+  setNotificationLevel: (level) => {
+    set({ notificationSettings: { level } });
+  },
 });
