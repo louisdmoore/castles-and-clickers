@@ -1,9 +1,36 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.2.5';
+export const CURRENT_VERSION = '0.2.8';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.2.8',
+    title: 'Equipment Screen Overhaul',
+    date: '2026-02-21',
+    changes: [
+      { type: 'feature', text: 'Completely redesigned equipment screen with paper doll character display and grid inventory' },
+      { type: 'feature', text: 'Click any stat (HP, ATK, DEF, SPD) to see a full breakdown of where your stats come from' },
+      { type: 'feature', text: 'Rarity glow effects — rare items pulse blue, epic glows purple, legendary shines gold' },
+      { type: 'improvement', text: 'Items now display as visual cards in a grid instead of a scrolling list' },
+      { type: 'improvement', text: 'Equipment slots shown as clickable tiles around your hero portrait' },
+      { type: 'improvement', text: 'Infused and Ascended quality items have shimmering border effects' },
+    ],
+  },
+  {
+    version: '0.2.6',
+    title: 'Difficulty Overhaul',
+    date: '2026-02-20',
+    changes: [
+      { type: 'feature', text: 'Global difficulty badge in the HUD — change difficulty anytime without visiting PrepScreen' },
+      { type: 'feature', text: 'Per-run difficulty override on PrepScreen — try a harder setting without changing your global preference' },
+      { type: 'feature', text: 'Difficulty completion bonus — earn bonus gold for clearing dungeons above Normal difficulty' },
+      { type: 'improvement', text: 'XP and gold rewards now properly scale with difficulty — 3.0x enemies give ~3x rewards' },
+      { type: 'improvement', text: 'Higher difficulty makes monsters faster, not just tankier — dodge and initiative scale up' },
+      { type: 'improvement', text: 'More elite monsters spawn at higher difficulty levels' },
+      { type: 'improvement', text: 'Difficulty badges now show named labels (Normal, Hard, Brutal, Nightmare, Infernal) everywhere' },
+    ],
+  },
   {
     version: '0.2.5',
     title: 'Notification Settings & Raid QoL',

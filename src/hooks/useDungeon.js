@@ -78,6 +78,7 @@ export const useDungeon = ({ addEffect }) => {
     const allMonsters = placeMonsters(mazeDungeon, dungeon.level, {
       dungeonType,
       statMultiplier: raidMultiplier * difficultyMultiplier,
+      difficultyMultiplier, // Separate for speed/elite scaling
       raidId: isRaid ? dungeon.raidId : undefined,
     });
 

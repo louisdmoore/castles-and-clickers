@@ -54,7 +54,11 @@
       "Bash(npx playwright install chromium)",
       "Bash(npx playwright test)",
       "Bash(npx playwright test --update-snapshots)",
-      "Bash(npx playwright test:*)"
+      "Bash(npx playwright test:*)",
+      "Bash(gh api:*)",
+      "Bash(git pull:*)",
+      "Bash(git merge:*)",
+      "Bash(npx playwright:*)"
     ]
   }
 }

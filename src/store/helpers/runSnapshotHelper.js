@@ -11,6 +11,7 @@ export const buildRunSnapshot = (params) => {
     runStats,
     isRaid = false,
     raidName = null,
+    difficultyMultiplier = 1.0,
   } = params;
 
   // Calculate DPS metrics (floor at one tick to avoid division by zero)
@@ -90,6 +91,11 @@ export const buildRunSnapshot = (params) => {
     ),
   };
 
+  // Add difficulty to history entry
+  if (difficultyMultiplier > 1.0) {
+    historyEntry.difficultyMultiplier = difficultyMultiplier;
+  }
+
   // Add raid-specific fields if applicable
   if (isRaid && raidName) {
     historyEntry.isRaid = true;
@@ -100,6 +106,7 @@ export const buildRunSnapshot = (params) => {
   const runSummary = {
     success,
     dungeonLevel,
+    difficultyMultiplier,
     timestamp: Date.now(),
     heroStats,
     totalDamage,

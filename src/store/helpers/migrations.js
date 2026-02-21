@@ -11,7 +11,7 @@
  *   3. The migration receives the full persisted state and returns the updated state
  */
 
-export const SAVE_VERSION = 10;
+export const SAVE_VERSION = 11;
 
 // Sequential migration functions: fromVersion -> transform
 const MIGRATIONS = {
@@ -148,6 +148,15 @@ const MIGRATIONS = {
     }
     if (!state.raidPreferences) {
       state.raidPreferences = { lastRaidId: null, lastRaidDifficulty: null, difficultyPerRaid: {} };
+    }
+    return state;
+  },
+
+  // v10 → v11: Global difficulty setting (difficulty becomes first-class, not just a dungeon setting)
+  10: (state) => {
+    // Migrate existing difficulty preference to new global field
+    if (state.globalDifficulty === undefined) {
+      state.globalDifficulty = state.dungeonSettings?.difficultyMultiplier || 1.0;
     }
     return state;
   },

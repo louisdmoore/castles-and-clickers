@@ -118,6 +118,8 @@ export const useGameStore = create(
             saveStatus: { success: true, timestamp: Date.now() },
             toasts: [],
             ascension: { count: 0 },
+            globalDifficulty: 1.0,
+            difficultyOverride: null,
             dungeonSettings: {
               type: 'normal',
               autoAdvance: false,
@@ -169,6 +171,7 @@ export const useGameStore = create(
           toasts: undefined,
           // These are recomputed on dungeon start
           heroHp: state.dungeon ? state.heroHp : {},
+          difficultyOverride: null,
           runStats: {},
           lastRunSummary: null,
           lastDeathRecap: null,
@@ -229,6 +232,7 @@ export const useGameStore = create(
             earnedAchievements: persistedState?.earnedAchievements || [],
             runHistory: persistedState?.runHistory || [],
             notificationSettings: persistedState?.notificationSettings || { level: 'full' },
+            globalDifficulty: persistedState?.globalDifficulty ?? persistedState?.dungeonSettings?.difficultyMultiplier ?? 1.0,
             raidPreferences: persistedState?.raidPreferences || { lastRaidId: null, lastRaidDifficulty: null, difficultyPerRaid: {} },
             homestead: (() => {
               const h = persistedState?.homestead || {};
@@ -280,5 +284,5 @@ if (import.meta.env.DEV) {
 }
 
 // Re-export helpers (preserves identical import API for all consumers)
-export { calculateHeroStats, xpForLevel, calculateSkillPoints, calculateUsedSkillPoints, invalidateStatCache, clearStatCache, setAscensionCount, setUniqueLevels } from './helpers/statCalculator';
+export { calculateHeroStats, calculateHeroStatsWithBreakdown, xpForLevel, calculateSkillPoints, calculateUsedSkillPoints, invalidateStatCache, clearStatCache, setAscensionCount, setUniqueLevels } from './helpers/statCalculator';
 export { calculateItemScore, calculateSellValue, STAT_PRIORITIES, RARITY_ORDER } from './helpers/itemScoring';

@@ -2,6 +2,7 @@ import { DUNGEON_TIERS } from '../data/milestones';
 import { RAIDS, RAID_DIFFICULTY_TIERS } from '../data/raids';
 import { getWorldBossForLevel, getZoneWorldBoss } from '../data/worldBosses';
 import { PHASES } from '../game/constants';
+import { getDifficultyInfo } from '../data/difficulty';
 import {
   CrownIcon, SkullIcon,
   GemIcon, TreeIcon, CastleIcon, FireIcon, GhostIcon,
@@ -120,19 +121,22 @@ const DungeonHeader = ({ dungeon, phase, enemyCount, displayRoomCombat, highestD
         )}
 
         {/* Difficulty badge */}
-        {!isRaidDungeon && (dungeon.difficultyMultiplier || 1.0) > 1.0 && (
-          <span
-            className="px-1.5 py-0.5 rounded text-[10px] font-bold border"
-            style={{
-              color: dungeon.difficultyMultiplier >= 3.0 ? '#ef4444' : dungeon.difficultyMultiplier >= 2.0 ? '#f59e0b' : '#22c55e',
-              borderColor: dungeon.difficultyMultiplier >= 3.0 ? '#ef444460' : dungeon.difficultyMultiplier >= 2.0 ? '#f59e0b60' : '#22c55e60',
-              backgroundColor: dungeon.difficultyMultiplier >= 3.0 ? '#ef444415' : dungeon.difficultyMultiplier >= 2.0 ? '#f59e0b15' : '#22c55e15',
-            }}
-            title={`Difficulty: ${dungeon.difficultyMultiplier}x monster stats and loot`}
-          >
-            {dungeon.difficultyMultiplier}x
-          </span>
-        )}
+        {!isRaidDungeon && (dungeon.difficultyMultiplier || 1.0) > 1.0 && (() => {
+          const diffInfo = getDifficultyInfo(dungeon.difficultyMultiplier);
+          return (
+            <span
+              className="px-1.5 py-0.5 rounded text-[10px] font-bold border"
+              style={{
+                color: diffInfo.color,
+                borderColor: diffInfo.color + '60',
+                backgroundColor: diffInfo.color + '15',
+              }}
+              title={`Difficulty: ${diffInfo.label} (${dungeon.difficultyMultiplier}x) — ${diffInfo.desc}`}
+            >
+              {diffInfo.label}
+            </span>
+          );
+        })()}
 
         {/* Phase indicator */}
         <div className={`pixel-label ${phaseInfo.color}`}>

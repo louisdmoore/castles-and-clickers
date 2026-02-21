@@ -1,7 +1,7 @@
 # Progress
 
-**Current Version: v0.2.5**
-**Next: Bug Fixes & Gameplay Polish**
+**Current Version: v0.2.8**
+**Current: Equipment & RPG Overhaul (Phase 2 of 5 complete, needs visual feedback testing)**
 
 ---
 
@@ -59,7 +59,7 @@ Header merged into single compact row, sidebar slimmed from 256px to 176px, tigh
 - [x] **Notification surface audit** — Added 3-level verbosity setting (Full/Reduced/Minimal) in settings gear. Reduced suppresses auto-sold and common/uncommon auto-equips. Minimal also suppresses looted and partial collection milestones. Unique-drop loot notification removed (celebration modal is primary feedback). Homestead unlock toasts added for non-partySlot features.
 - [x] **Raid re-entry friction** — "Run Again" button on RaidRecapScreen re-enters same raid/difficulty. Difficulty persisted per raid in `raidPreferences.difficultyPerRaid`. Quick Raid button on IdleScreen for one-click re-entry to last raid.
 
-### Priority 4: Difficulty System
+### Priority 5: Difficulty System
 - [ ] **Move difficulty to persistent global setting** — Currently a per-dungeon slider on PrepScreen (5 stops, 1.0x-3.0x, unlocks at D10). Backed by `dungeonSettings.difficultyMultiplier` in dungeonSlice. Move to a "set and forget" global setting accessible from settings or HUD, with optional per-dungeon override.
 
 ### Priority 5: Equipment Screen Overhaul
@@ -76,8 +76,11 @@ Header merged into single compact row, sidebar slimmed from 256px to 176px, tigh
 - [ ] **Achievement improvements** — polish UI, rename away from "achieve" terminology, progress indicators, celebration effects, category filtering
 - [ ] **Status effect icon consistency** — unify status effect icons across all contexts (combat log, sidebar hero cards, tooltips, dungeon canvas)
 - [ ] **HUD top-right info rethink** — evaluate the resource/stat bar. Polish pass.
+- [ ] **DPS meter clarity** — showing DPS/HPS/DTPS per role is confusing. Consider: just show DPS for everyone (damage is the universal metric), or use clearer labels, or show a single "contribution %" instead of raw per-second numbers.
+- [ ] **RunSummary "View Details" is useless** — just opens generic stats screen. Either: expand RunSummary inline with full per-hero table, deep-link to the specific run in Recent Runs tab, or remove the button entirely.
 - [ ] **Overall UX pass** — friction points, click counts, information discoverability
 - [ ] **Shop & consumables rework** — current shop feels weak. More consumable types, bulk buying, pre-dungeon loadout, visible buff durations
+- [ ] **Raid completion says "Dungeon Level X Cleared"** — message/toast incorrectly refers to raid as a dungeon clear
 
 ### Priority 8: Skill Management UX
 - [ ] **Reduce skill management tedium** — Currently manual per-hero allocation with no templates or auto-spend. With 5-7 heroes, that's 7 context switches minimum. Options: auto-spend with manual override, saved builds per class, batch level-up, or fewer/bigger skill choices.
@@ -104,7 +107,58 @@ Header merged into single compact row, sidebar slimmed from 256px to 176px, tigh
 
 ---
 
+## Equipment & RPG Overhaul — "Make Gear Matter"
+
+Full plan in session transcript. 5 phases, currently on Phase 2.
+
+### Phase 1: Paper Doll & Component Architecture (v0.2.7) ✅
+- Decomposed `EquipmentScreen.jsx` (430→~100 lines) into 6 focused subcomponents under `src/components/equipment/`
+- New 3-column layout: Stats+Settings (w-48) | Paper Doll (w-56) | Inventory Grid (flex-1)
+- Mobile responsive: collapses to single column with stats+doll side-by-side above grid
+- Created `src/utils/rarityStyles.js` — `getRarityBorderClass(item)` helper
+- Added rarity glow CSS: animated borders for rare (blue 3s), epic (purple 2.5s), legendary (gold 2s), plus infused/ascended shimmer overlays
+- Modal size changed from `xl` to `full` in ModalManager
+- No state changes, no migration
+
+### Phase 2: Stat Breakdown & Build Visibility (v0.2.8) ✅ (code done, needs visual testing)
+- Added `calculateHeroStatsWithBreakdown(hero, allHeroes, homesteadBonuses)` to `statCalculator.js` (~120 lines)
+- Mirrors the 9-stage stat pipeline, recording each source's contribution
+- Created `StatBreakdown.jsx` — tree-view display with source icons, labels, +/- values
+- Stats in `StatsSummary.jsx` are now clickable — toggle expandable breakdown panel
+- Re-exported from `gameStore.js`
+- **NEEDS TESTING:** Click each stat, verify breakdown totals match displayed stats. Test with homestead bonuses, skills, party auras, specialization, ascension.
+- No state changes, no migration
+
+### Phase 3: Affix Synergy System (v0.2.9) — NOT STARTED
+### Phase 4: Enhanced Tooltips & Loot Feel (v0.3.0) — NOT STARTED
+### Phase 5: Polish & Progression (v0.3.1) — NOT STARTED
+
+---
+
 ## Handoff Notes
+
+### Session 18 (2026-02-21) — v0.2.6-v0.2.8: Difficulty System + Equipment Overhaul Phases 1-2
+
+**v0.2.6: Difficulty System** (pre-existing in working tree, committed this session)
+- `src/data/difficulty.js`: 5 difficulty stops, speed/elite bonuses, `getDifficultyInfo()`
+- `globalDifficulty` (persistent) + `difficultyOverride` (transient per-run) state
+- Monster scaling via `statMultiplier` + `difficultyMultiplier` in `placeMonsters`
+- XP/Gold rewards multiply by difficulty. Completion bonus in `endDungeon`
+- HUD badge, PrepScreen override panel, DungeonHeader label, RunSummary bonus line
+- Save migration v10→v11
+
+**v0.2.7: Equipment Phase 1 — Paper Doll + Component Architecture**
+- 6 new components: `HeroSelector`, `PaperDoll`, `StatsSummary`, `ItemCard`, `InventoryGrid`, `EquipmentSettings`
+- `EquipmentScreen.jsx` gutted to thin orchestrator
+- Rarity glow CSS + `rarityStyles.js` utility
+- Modal size `xl` → `full`
+
+**v0.2.8: Equipment Phase 2 — Stat Breakdown**
+- `calculateHeroStatsWithBreakdown()` in statCalculator.js
+- `StatBreakdown.jsx` component, wired into `StatsSummary.jsx` click-to-expand
+- **Still needs visual feedback testing — breakdown hasn't been verified in-browser yet**
+
+**Next session:** Visually test the equipment screen + stat breakdowns in-browser. Then proceed to Phase 3 (affix synergies) or Phase 4 (enhanced tooltips).
 
 ### Session 17 (2026-02-20) — v0.2.5 Notification Settings & Raid QoL
 

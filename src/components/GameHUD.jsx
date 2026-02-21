@@ -3,6 +3,7 @@ import { useGameStore } from '../store/gameStore';
 import NavBar from './NavBar';
 import { GoldIcon, BagIcon, MenuIcon, WarningIcon, SettingsIcon } from './icons/ui';
 import { CURRENT_VERSION } from '../data/changelog';
+import { DIFFICULTY_STOPS, getDifficultyInfo } from '../data/difficulty';
 
 const SaveIndicator = () => {
   const saveStatus = useGameStore(state => state.saveStatus);
@@ -82,9 +83,13 @@ const GameHUD = ({
 }) => {
   const headerStats = useThrottledHeaderStats();
   const [settingsOpen, setSettingsOpen] = useState(false);
+  const [difficultyOpen, setDifficultyOpen] = useState(false);
   const settingsRef = useRef(null);
+  const difficultyRef = useRef(null);
   const notificationLevel = useGameStore(state => state.notificationSettings?.level || 'full');
   const setNotificationLevel = useGameStore(state => state.setNotificationLevel);
+  const globalDifficulty = useGameStore(state => state.globalDifficulty ?? 1.0);
+  const setGlobalDifficulty = useGameStore(state => state.setGlobalDifficulty);
 
   // Close settings dropdown on outside click
   useEffect(() => {
@@ -97,6 +102,18 @@ const GameHUD = ({
     document.addEventListener('mousedown', handler);
     return () => document.removeEventListener('mousedown', handler);
   }, [settingsOpen]);
+
+  // Close difficulty dropdown on outside click
+  useEffect(() => {
+    if (!difficultyOpen) return;
+    const handler = (e) => {
+      if (difficultyRef.current && !difficultyRef.current.contains(e.target)) {
+        setDifficultyOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [difficultyOpen]);
 
   const handleReset = useCallback(() => {
     setSettingsOpen(false);
@@ -143,6 +160,51 @@ const GameHUD = ({
           <span className={`pixel-stat ${headerStats.inventoryCount >= headerStats.maxInventory ? 'pixel-stat-red' : 'pixel-stat-blue'}`}>
             <BagIcon size={14} /> {headerStats.inventoryCount}/{headerStats.maxInventory}
           </span>
+          {featureUnlocks?.difficultyUnlocked && (
+            <div className="relative" ref={difficultyRef}>
+              <button
+                onClick={() => setDifficultyOpen(prev => !prev)}
+                className="px-1.5 py-0.5 rounded text-[10px] font-bold border cursor-pointer transition-colors"
+                style={{
+                  color: getDifficultyInfo(globalDifficulty).color,
+                  borderColor: getDifficultyInfo(globalDifficulty).color + '60',
+                  backgroundColor: getDifficultyInfo(globalDifficulty).color + '15',
+                }}
+                title={`Difficulty: ${getDifficultyInfo(globalDifficulty).label} (${globalDifficulty}x)`}
+                aria-label={`Difficulty: ${getDifficultyInfo(globalDifficulty).label}`}
+                aria-expanded={difficultyOpen}
+              >
+                {getDifficultyInfo(globalDifficulty).label}
+              </button>
+              {difficultyOpen && (
+                <div className="absolute top-full left-0 mt-1 pixel-panel p-2 z-50 min-w-[140px] space-y-0.5">
+                  <div className="text-[10px] text-gray-400 mb-1">Global Difficulty</div>
+                  {DIFFICULTY_STOPS.map(stop => {
+                    const info = getDifficultyInfo(stop);
+                    const isActive = stop === globalDifficulty;
+                    return (
+                      <button
+                        key={stop}
+                        onClick={() => {
+                          setGlobalDifficulty(stop);
+                          setDifficultyOpen(false);
+                        }}
+                        className={`w-full text-left px-2 py-1 rounded text-xs transition-colors ${
+                          isActive
+                            ? 'bg-gray-700'
+                            : 'hover:bg-gray-800'
+                        }`}
+                        style={{ color: info.color }}
+                      >
+                        <span className="font-bold">{info.label}</span>
+                        <span className="text-gray-500 ml-1">({stop}x)</span>
+                      </button>
+                    );
+                  })}
+                </div>
+              )}
+            </div>
+          )}
         </div>
 
         {/* Navigation */}

@@ -82,7 +82,7 @@ Combat uses initiative-based turn order with A* pathfinding for movement. Speed 
 ## Critical Files
 
 - `src/store/gameStore.js` - Store composition, persistence config, resetGame (~220 lines)
-- `src/game/mazeGenerator.js` - Room-based dungeon generation with A* pathfinding (29KB)
+- `src/game/mazeGenerator.js` - Room-based dungeon generation with A* pathfinding (29KB). `placeMonsters(dungeon, level, options)` creates all monsters — options include `statMultiplier` (HP/ATK/DEF) and `difficultyMultiplier` (speed/elite bonuses)
 - `src/hooks/useCombat.js` - Combat orchestrator (~560 lines, dispatches to combat modules)
 - `src/game/combatHelpers.js` - Combat utilities: targeting, death handling, viewport
 - `src/game/combatDamageResolution.js` - Basic attack damage, on-hit/kill/crit effects (~1100 lines)
@@ -232,6 +232,7 @@ When importing from game data files, verify actual export names — they don't a
 - **Temporal Dead Zone (TDZ) in component files**: When adding helper functions used by components in the same file, always define the helper **above** the component that uses it. `const` declarations are not hoisted — if a component calls a `const` function defined below it, the component will crash with a `ReferenceError` at runtime. This won't be caught by ESLint or the build step. (Bug found in v0.3.2: `getReforgeCostForDisplay` was defined after `ReforgePanel` that used it.)
 - **EquipmentScreen left panel overflow**: The left column (`w-64 flex flex-col`) in EquipmentScreen.jsx is inside a `h-[60vh]` container. It contains hero tabs, stats, synergies, equipment slots, unequip button, reforge panel, and settings (`mt-auto`). Adding new elements here can cause content to overflow and become invisible. The column has `overflow-y-auto` to handle this, but be mindful of vertical space. Test with all slots populated.
 - **Combat resolution data flow**: `calculateBasicAttackDamage` returns `{ dmg, isCrit, passiveBonuses, uniqueBonuses, heroData, affixBonuses }`. This `attackResult` object is passed to `resolveMonsterTargetDamage` and `resolveHeroTargetDamage`. If you need new data in resolution functions, add it to this return value rather than recomputing it.
+- **Transient vs persistent state**: New state fields need to be added in 3 places: (1) slice initial state, (2) `resetGame` in gameStore.js, (3) `partialize` in gameStore.js if transient (set to null/empty to exclude from saves). Forgetting `partialize` for frequently-changing transient state causes save lag. Forgetting `resetGame` causes stale state after reset.
 
 ## Lint Pitfalls
 
@@ -240,7 +241,7 @@ When importing from game data files, verify actual export names — they don't a
 
 ## Lint Baseline
 
-`npm run lint` currently reports ~83 pre-existing errors (mostly unused vars in canvas files and React hooks warnings). Do not try to fix these unless specifically asked — just verify your changes don't add new ones.
+`npm run lint` currently reports ~77 pre-existing errors (mostly unused vars in canvas files and React hooks warnings). Do not try to fix these unless specifically asked — just verify your changes don't add new ones.
 
 ## Layout Positioning (learned v0.2.1)
 
@@ -308,11 +309,11 @@ The combat system already tracks per-hero stats that new features build on:
 
 ## Save Migration System (v0.3.0+)
 
-New persistent state fields require a save migration. The system lives in `src/store/helpers/migrations.js`:
+New persistent state fields require a save migration. The system lives in `src/store/helpers/migrations.js` (currently at SAVE_VERSION 11):
 
 ```js
 // 1. Increment SAVE_VERSION
-export const SAVE_VERSION = 4; // was 3
+export const SAVE_VERSION = 12; // was 11
 
 // 2. Add a numbered migration function (key = previous version)
 const MIGRATIONS = {
@@ -372,6 +373,17 @@ Phase 0 created data definition files that later phases consume. Check these bef
 - `src/data/heroTraits.js` — 14 traits with weighted rolling (`rollHeroTraits()`)
 - `src/data/statusEffects.js` — includes `STATUS_COMBOS` + `getActiveCombos()` (wired in Phase 6)
 - `src/data/itemAffixes.js` — includes `AFFIX_SYNERGY_BONUSES` + `getActiveSynergies()` (wired in Phase 6)
+- `src/data/difficulty.js` — 5 difficulty stops with speed/elite bonuses, completion bonus factor, unlock level, `getDifficultyInfo()`
+
+## Difficulty System (v0.2.6)
+
+- **Data file**: `src/data/difficulty.js` — all constants (`DIFFICULTY_STOPS`, `DIFFICULTY_INFO`, speed/elite bonuses, `getDifficultyInfo()`)
+- **State**: `globalDifficulty` (persistent, root-level) + `difficultyOverride` (transient per-run, cleared in endDungeon/abandonDungeon). Resolved as `override ?? global ?? 1.0` in `startDungeon`.
+- **Legacy**: `dungeonSettings.difficultyMultiplier` still exists in old saves but is no longer read by startDungeon. Migrated to `globalDifficulty` in save migration v10→v11.
+- **Monster scaling in `placeMonsters`**: `options.statMultiplier` scales HP/ATK/DEF (combines raid multiplier and difficulty). `options.difficultyMultiplier` is passed separately for speed bonus and elite count bonus — these use lookup tables, not linear scaling.
+- **XP/Gold rewards**: All monster types (regular, boss, corridor, raid boss) multiply rewards by `typeMultiplier` which includes the difficulty multiplier.
+- **Completion bonus**: Awarded in `endDungeon` for difficulty > 1.0. Formula: `floor(level * 10 * 1.09^(level-1) * (difficulty - 1) * 0.5)`. Patched onto `lastRunSummary.completionBonus`.
+- **UI**: HUD badge (GameHUD.jsx, dropdown picker), PrepScreen override panel, DungeonHeader named label, RunSummary difficulty label + bonus line.
 
 ## Known Technical Debt
 

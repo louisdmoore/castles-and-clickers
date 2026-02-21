@@ -279,6 +279,169 @@ export const clearStatCache = () => {
   partySkillBonusCacheVersion++; // Invalidate cache keys
 };
 
+// Calculate hero stats with a per-source breakdown (called on-demand, not cached)
+// Returns { stats, breakdown } where breakdown maps stat keys to arrays of { source, label, value }
+export const calculateHeroStatsWithBreakdown = (hero, allHeroes = [], homesteadBonuses = null) => {
+  const STATS = ['maxHp', 'attack', 'defense', 'speed'];
+  const breakdown = {};
+  for (const stat of STATS) breakdown[stat] = [];
+
+  const addEntry = (stat, source, label, value) => {
+    if (value === 0) return;
+    if (breakdown[stat]) breakdown[stat].push({ source, label, value });
+  };
+
+  const classData = CLASSES[hero.classId];
+  const baseStats = { ...classData.baseStats };
+  const growth = classData.growthPerLevel;
+
+  // 1. Base + level growth
+  const levelStats = {
+    maxHp: baseStats.maxHp + growth.maxHp * (hero.level - 1),
+    attack: baseStats.attack + growth.attack * (hero.level - 1),
+    defense: baseStats.defense + growth.defense * (hero.level - 1),
+    speed: baseStats.speed + growth.speed * (hero.level - 1),
+  };
+  const classLabel = `${classData.name} Lv${hero.level}`;
+  for (const stat of STATS) addEntry(stat, 'base', classLabel, levelStats[stat]);
+
+  let stats = { ...levelStats };
+
+  // 2. Homestead percentage bonuses
+  if (homesteadBonuses) {
+    for (const [stat, key] of [['maxHp', 'hp'], ['attack', 'attack'], ['defense', 'defense']]) {
+      const pct = homesteadBonuses[key] || 0;
+      if (pct > 0) {
+        const bonus = Math.floor(stats[stat] * (1 + pct)) - stats[stat];
+        addEntry(stat, 'homestead', `Homestead (+${Math.round(pct * 100)}%)`, bonus);
+        stats[stat] += bonus;
+      }
+    }
+  }
+
+  // 3. Equipment
+  const highestPartyLevel = allHeroes.length > 0
+    ? Math.max(...allHeroes.map(h => h.level))
+    : hero.level;
+
+  for (const slot of ['weapon', 'armor', 'accessory']) {
+    const item = hero.equipment[slot];
+    if (!item) continue;
+    const uniqueLevel = (item.isUnique && item.templateId)
+      ? (currentUniqueLevels[item.templateId]?.level || 1)
+      : 1;
+    const itemStats = (item.isUnique && item.baseStats)
+      ? scaleUniqueStats(item.baseStats, highestPartyLevel, uniqueLevel)
+      : item.stats;
+    for (const [stat, value] of Object.entries(itemStats)) {
+      if (stats[stat] !== undefined) {
+        addEntry(stat, `equipment_${slot}`, item.name, value);
+        stats[stat] += value;
+      }
+    }
+  }
+
+  // 4. Passive affix bonuses
+  const affixBonuses = getPassiveAffixBonuses(hero);
+  if (affixBonuses.maxHpBonus > 0) {
+    const bonus = Math.floor(stats.maxHp * (1 + affixBonuses.maxHpBonus)) - stats.maxHp;
+    addEntry('maxHp', 'affix', `Affix: HP (+${Math.round(affixBonuses.maxHpBonus * 100)}%)`, bonus);
+    stats.maxHp += bonus;
+  }
+  if (affixBonuses.speedBonus > 0) {
+    addEntry('speed', 'affix', `Affix: Speed`, affixBonuses.speedBonus);
+    stats.speed += affixBonuses.speedBonus;
+  }
+
+  // 5. Passive skill bonuses (own skills)
+  for (const skillId of (hero.skills || [])) {
+    const skill = getSkillById(skillId);
+    if (!skill || skill.type !== SKILL_TYPE.PASSIVE || !skill.passive) continue;
+    const passive = skill.passive;
+
+    if (passive.type === 'stat_bonus' && passive.stats) {
+      for (const [stat, value] of Object.entries(passive.stats)) {
+        if (stats[stat] !== undefined) {
+          addEntry(stat, 'skill', `Skill: ${skill.name}`, value);
+          stats[stat] += value;
+        }
+      }
+    }
+    if (passive.type === 'dodge_chance') {
+      const speedBonus = Math.floor(passive.percent / 5);
+      addEntry('speed', 'skill', `Skill: ${skill.name}`, speedBonus);
+      stats.speed += speedBonus;
+    }
+    if (passive.type === 'threat_bonus') {
+      stats.threat = (stats.threat || 0) + passive.percent;
+    }
+  }
+
+  // 6. Party-wide passive bonuses
+  let partyAttackPercent = 0;
+  let partyDefensePercent = 0;
+  for (const ally of allHeroes) {
+    if (!ally) continue;
+    const partySkills = partySkillBonusCache.get(ally.id);
+    if (!partySkills) continue;
+    for (const skillId of partySkills) {
+      const skill = getSkillById(skillId);
+      if (skill?.passive?.stats) {
+        for (const [stat, value] of Object.entries(skill.passive.stats)) {
+          if (stats[stat] !== undefined) {
+            const srcName = ally.id === hero.id ? skill.name : `${ally.name}: ${skill.name}`;
+            addEntry(stat, 'party_skill', srcName, value);
+            stats[stat] += value;
+          }
+        }
+      }
+      if (skill?.partyBuff) {
+        if (skill.partyBuff.attackPercent) partyAttackPercent += skill.partyBuff.attackPercent;
+        if (skill.partyBuff.defensePercent) partyDefensePercent += skill.partyBuff.defensePercent;
+      }
+    }
+  }
+
+  // 7. Percentage party buffs
+  if (partyAttackPercent > 0) {
+    const bonus = Math.floor(stats.attack * (1 + partyAttackPercent)) - stats.attack;
+    addEntry('attack', 'party_aura', `Party Aura (+${Math.round(partyAttackPercent * 100)}%)`, bonus);
+    stats.attack += bonus;
+  }
+  if (partyDefensePercent > 0) {
+    const bonus = Math.floor(stats.defense * (1 + partyDefensePercent)) - stats.defense;
+    addEntry('defense', 'party_aura', `Party Aura (+${Math.round(partyDefensePercent * 100)}%)`, bonus);
+    stats.defense += bonus;
+  }
+
+  // 8. Specialization
+  if (hero.specialization) {
+    const spec = getSpecialization(hero.specialization);
+    if (spec?.statAdjustments) {
+      for (const [stat, percent] of Object.entries(spec.statAdjustments)) {
+        if (stats[stat] !== undefined) {
+          const bonus = Math.floor(stats[stat] * (1 + percent)) - stats[stat];
+          const sign = percent > 0 ? '+' : '';
+          addEntry(stat, 'specialization', `${spec.name} (${sign}${Math.round(percent * 100)}%)`, bonus);
+          stats[stat] += bonus;
+        }
+      }
+    }
+  }
+
+  // 9. Ascension multiplier
+  if (currentAscensionCount > 0) {
+    const ascMult = getAscensionStatMultiplier(currentAscensionCount);
+    for (const stat of STATS) {
+      const bonus = Math.floor(stats[stat] * ascMult) - stats[stat];
+      addEntry(stat, 'ascension', `Ascension x${currentAscensionCount} (+${Math.round((ascMult - 1) * 100)}%)`, bonus);
+      stats[stat] = Math.floor(stats[stat] * ascMult);
+    }
+  }
+
+  return { stats, breakdown };
+};
+
 // Calculate skill points earned from level
 // L1=0, L2=1, L3=2, then +1 every 3 levels (L6=3, L9=4, etc.)
 export const calculateSkillPoints = (level) => {

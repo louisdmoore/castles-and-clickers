@@ -4,7 +4,8 @@ import { CLASSES } from '../data/classes';
 import { formatTime, formatRate } from '../game/constants';
 import ClassIcon from './icons/ClassIcon';
 import ModalOverlay from './ModalOverlay';
-import { SwordIcon, HeartIcon, ShieldIcon, TrophyIcon, StarIcon, SpeedIcon } from './icons/ui';
+import { SwordIcon, HeartIcon, ShieldIcon, TrophyIcon, StarIcon, SpeedIcon, GoldIcon } from './icons/ui';
+import { getDifficultyInfo } from '../data/difficulty';
 
 function formatStat(value) {
   if (value >= 1000000) return `${(value / 1000000).toFixed(1)}M`;
@@ -72,7 +73,8 @@ const RunSummary = () => {
 
   if (!lastRunSummary) return null;
 
-  const { success, dungeonLevel, heroStats, totalDamage, mvpId, biggestHit, biggestHitHero, totalCombatTime, averageDPS } = lastRunSummary;
+  const { success, dungeonLevel, heroStats, totalDamage, mvpId, biggestHit, biggestHitHero, totalCombatTime, averageDPS, difficultyMultiplier, completionBonus } = lastRunSummary;
+  const diffInfo = difficultyMultiplier > 1.0 ? getDifficultyInfo(difficultyMultiplier) : null;
   const mvpHero = mvpId ? heroStats[mvpId] : null;
 
   const heroEntries = Object.entries(heroStats).sort(
@@ -90,6 +92,11 @@ const RunSummary = () => {
         <div className="text-center mb-4">
           <div className="pixel-label text-lg mb-1" style={{ color: success ? 'var(--color-green)' : 'var(--color-red)' }}>
             {success ? <TrophyIcon size={20} /> : null} Dungeon Level {dungeonLevel}
+            {diffInfo && (
+              <span className="text-sm ml-1.5 font-normal" style={{ color: diffInfo.color }}>
+                [{diffInfo.label}]
+              </span>
+            )}
           </div>
           <p className="pixel-label" style={{ color: 'var(--color-gold)' }}>{message}</p>
         </div>
@@ -141,6 +148,17 @@ const RunSummary = () => {
               {biggestHitHero && (
                 <span className="pixel-label text-xs ml-1">by {biggestHitHero}</span>
               )}
+            </div>
+          )}
+          {completionBonus > 0 && (
+            <div className="mt-2 pt-2 border-t border-gray-700 text-center">
+              <div className="flex items-center justify-center gap-1">
+                <GoldIcon size={14} />
+                <span className="pixel-label text-xs">Difficulty Bonus</span>
+              </div>
+              <span className="font-bold" style={{ color: diffInfo?.color || 'var(--color-gold)' }}>
+                +{completionBonus.toLocaleString()} gold
+              </span>
             </div>
           )}
         </div>

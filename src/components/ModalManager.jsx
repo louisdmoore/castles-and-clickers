@@ -24,7 +24,7 @@ const ModalManager = ({ activeModal, onClose, onStartDungeon }) => {
         <SkillTreeScreen />
       </ModalOverlay>
 
-      <ModalOverlay isOpen={activeModal === 'equipment'} onClose={onClose} title="Equipment" size="xl">
+      <ModalOverlay isOpen={activeModal === 'equipment'} onClose={onClose} title="Equipment" size="full">
         <EquipmentScreen />
       </ModalOverlay>
 

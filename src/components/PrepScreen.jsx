@@ -1,59 +1,88 @@
-import { memo, useEffect, useCallback, useMemo } from 'react';
+import { memo, useEffect, useCallback, useMemo, useState } from 'react';
 import { useGameStore } from '../store/gameStore';
 import { CLASSES } from '../data/classes';
 import { getDungeonTier } from '../data/milestones';
 import { DUNGEON_THEMES } from '../data/dungeonThemes';
 import { getAffix } from '../data/itemAffixes';
 import { getWorldBossForLevel } from '../data/worldBosses';
+import { DIFFICULTY_STOPS, getDifficultyInfo, DIFFICULTY_UNLOCK_LEVEL } from '../data/difficulty';
 
 import ClassIcon from './icons/ClassIcon';
 import { SwordIcon, ShieldIcon, HeartIcon, CrownIcon, ChestIcon, StarIcon } from './icons/ui';
 import MilestoneWidget from './MilestoneWidget';
 
-const DIFFICULTY_STOPS = [1.0, 1.5, 2.0, 2.5, 3.0];
-
-const DIFFICULTY_INFO = {
-  1.0: { label: 'Normal', color: '#9ca3af', desc: 'Standard difficulty' },
-  1.5: { label: 'Hard', color: '#fbbf24', desc: '+50% enemy stats, +50% drop rate' },
-  2.0: { label: 'Brutal', color: '#f97316', desc: '+100% enemy stats, +100% drops, Infused gear' },
-  2.5: { label: 'Nightmare', color: '#ef4444', desc: '+150% enemy stats, +150% drops, higher Infused rate' },
-  3.0: { label: 'Infernal', color: '#a855f7', desc: '+200% enemy stats, +200% drops, Ascended gear' },
-};
-
-const DifficultySlider = memo(({ value, onChange }) => {
-  const stopIndex = DIFFICULTY_STOPS.indexOf(value);
-  const info = DIFFICULTY_INFO[value] || DIFFICULTY_INFO[1.0];
+const DifficultyOverridePanel = memo(({ globalDifficulty, difficultyOverride, setDifficultyOverride, clearDifficultyOverride }) => {
+  const [showSlider, setShowSlider] = useState(difficultyOverride !== null);
+  const effectiveValue = difficultyOverride ?? globalDifficulty;
+  const stopIndex = DIFFICULTY_STOPS.indexOf(effectiveValue);
+  const info = getDifficultyInfo(effectiveValue);
+  const globalInfo = getDifficultyInfo(globalDifficulty);
+  const hasOverride = difficultyOverride !== null;
 
   const handleChange = useCallback((e) => {
     const idx = parseInt(e.target.value, 10);
-    onChange(DIFFICULTY_STOPS[idx]);
-  }, [onChange]);
+    setDifficultyOverride(DIFFICULTY_STOPS[idx]);
+  }, [setDifficultyOverride]);
+
+  const handleReset = useCallback(() => {
+    clearDifficultyOverride();
+    setShowSlider(false);
+  }, [clearDifficultyOverride]);
 
   return (
     <div className="pixel-panel-dark p-3 mb-4">
       <div className="flex items-center justify-between mb-2">
         <span className="pixel-label text-xs">Difficulty</span>
         <span className="pixel-label text-xs font-bold" style={{ color: info.color }}>
-          {info.label} ({value}x)
+          {info.label} ({effectiveValue}x)
         </span>
       </div>
-      <input
-        type="range"
-        min={0}
-        max={DIFFICULTY_STOPS.length - 1}
-        step={1}
-        value={stopIndex >= 0 ? stopIndex : 0}
-        onChange={handleChange}
-        className="w-full accent-current"
-        style={{ accentColor: info.color }}
-        aria-label={`Difficulty: ${info.label}`}
-      />
-      <div className="flex justify-between text-[10px] text-[var(--color-text-dim)] mt-1">
-        {DIFFICULTY_STOPS.map(s => (
-          <span key={s} style={s === value ? { color: info.color, fontWeight: 'bold' } : undefined}>{s}x</span>
-        ))}
-      </div>
-      <div className="text-[10px] text-[var(--color-text-dim)] mt-1 text-center">{info.desc}</div>
+      {!showSlider ? (
+        <div className="flex items-center justify-between">
+          <span className="text-[10px] text-[var(--color-text-dim)]">
+            Using global: <span style={{ color: globalInfo.color }}>{globalInfo.label}</span>
+          </span>
+          <button
+            onClick={() => setShowSlider(true)}
+            className="text-[10px] text-blue-400 hover:text-blue-300 underline"
+          >
+            Override for this run
+          </button>
+        </div>
+      ) : (
+        <>
+          <input
+            type="range"
+            min={0}
+            max={DIFFICULTY_STOPS.length - 1}
+            step={1}
+            value={stopIndex >= 0 ? stopIndex : 0}
+            onChange={handleChange}
+            className="w-full accent-current"
+            style={{ accentColor: info.color }}
+            aria-label={`Difficulty override: ${info.label}`}
+          />
+          <div className="flex justify-between text-[10px] text-[var(--color-text-dim)] mt-1">
+            {DIFFICULTY_STOPS.map(s => (
+              <span key={s} style={s === effectiveValue ? { color: info.color, fontWeight: 'bold' } : undefined}>{s}x</span>
+            ))}
+          </div>
+          <div className="text-[10px] text-[var(--color-text-dim)] mt-1 text-center">{info.desc}</div>
+          <div className="flex items-center justify-between mt-2">
+            {hasOverride ? (
+              <span className="text-[10px] text-amber-400">Override active (this run only)</span>
+            ) : (
+              <span className="text-[10px] text-[var(--color-text-dim)]">Matches global setting</span>
+            )}
+            <button
+              onClick={handleReset}
+              className="text-[10px] text-gray-400 hover:text-gray-300 underline"
+            >
+              Reset to global
+            </button>
+          </div>
+        </>
+      )}
     </div>
   );
 });
@@ -67,8 +96,11 @@ const PrepScreen = ({ onOpenAscension }) => {
   const dismissPrepPhase = useGameStore(state => state.dismissPrepPhase);
   const maxDungeonLevel = useGameStore(state => state.maxDungeonLevel);
   const dungeonSettings = useGameStore(state => state.dungeonSettings);
-  const setDungeonSettings = useGameStore(state => state.setDungeonSettings);
   const highestDungeonCleared = useGameStore(state => state.highestDungeonCleared);
+  const globalDifficulty = useGameStore(state => state.globalDifficulty ?? 1.0);
+  const difficultyOverride = useGameStore(state => state.difficultyOverride);
+  const setDifficultyOverride = useGameStore(state => state.setDifficultyOverride);
+  const clearDifficultyOverride = useGameStore(state => state.clearDifficultyOverride);
   const canAscend = useGameStore(state => state.canAscend);
   const ascension = useGameStore(state => state.ascension);
 
@@ -124,15 +156,15 @@ const PrepScreen = ({ onOpenAscension }) => {
       return sum + estimatedAttack;
     }, 0);
 
-    const difficultyMultiplier = dungeonSettings?.difficultyMultiplier || 1.0;
-    const estimatedDifficulty = dungeonPreview.level * 15 * difficultyMultiplier;
+    const effectiveDifficulty = difficultyOverride ?? globalDifficulty;
+    const estimatedDifficulty = dungeonPreview.level * 15 * effectiveDifficulty;
 
     const ratio = totalAttack / Math.max(1, estimatedDifficulty);
     if (ratio >= 1.5) return { color: '#22c55e', label: 'Strong' };
     if (ratio >= 1.0) return { color: '#fbbf24', label: 'Fair' };
     if (ratio >= 0.7) return { color: '#f97316', label: 'Tough' };
     return { color: '#ef4444', label: 'Dangerous' };
-  }, [heroes, prepPhase, dungeonPreview, dungeonSettings?.difficultyMultiplier]);
+  }, [heroes, prepPhase, dungeonPreview, globalDifficulty, difficultyOverride]);
 
   // Don't render if no prep phase or run summary is still showing
   if (!prepPhase || lastRunSummary) return null;
@@ -278,11 +310,13 @@ const PrepScreen = ({ onOpenAscension }) => {
           )}
         </div>
 
-        {/* Difficulty slider (unlocks at D10) */}
-        {!atMaxLevel && highestDungeonCleared >= 10 && (
-          <DifficultySlider
-            value={dungeonSettings?.difficultyMultiplier || 1.0}
-            onChange={(val) => setDungeonSettings({ difficultyMultiplier: val })}
+        {/* Difficulty override panel (unlocks at D10) */}
+        {!atMaxLevel && highestDungeonCleared >= DIFFICULTY_UNLOCK_LEVEL && (
+          <DifficultyOverridePanel
+            globalDifficulty={globalDifficulty}
+            difficultyOverride={difficultyOverride}
+            setDifficultyOverride={setDifficultyOverride}
+            clearDifficultyOverride={clearDifficultyOverride}
           />
         )}
 

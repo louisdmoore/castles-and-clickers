@@ -2,6 +2,7 @@ import { RAIDS, isRaidUnlocked, getRaidDifficultyTier } from '../../data/raids';
 import { getMaxPartySize, getDungeonTier } from '../../data/milestones';
 import { DUNGEON_THEMES } from '../../data/dungeonThemes';
 import { getAscensionDungeonCap, getAscensionGoldCost } from '../../data/ascensionMilestones';
+import { DIFFICULTY_UNLOCK_LEVEL, COMPLETION_BONUS_FACTOR, getDifficultyInfo } from '../../data/difficulty';
 import { clearStatCache, setAscensionCount } from '../helpers/statCalculator';
 import throttledStorage from '../helpers/throttledStorage';
 import { buildRunSnapshot } from '../helpers/runSnapshotHelper';
@@ -42,6 +43,8 @@ export const createDungeonSlice = (set, get) => ({
   },
   pendingRaidRecap: null,
   raidPreferences: { lastRaidId: null, lastRaidDifficulty: null, difficultyPerRaid: {} },
+  globalDifficulty: 1.0,
+  difficultyOverride: null, // transient per-run override (null = use global)
   lastRunSummary: null,
   lastDeathRecap: null,
   prepPhase: null, // { nextLevel, success, dungeonType }
@@ -66,8 +69,8 @@ export const createDungeonSlice = (set, get) => ({
     // Consume pending dungeon buffs into active buffs
     const activeBuffs = pendingDungeonBuffs.length > 0 ? [...pendingDungeonBuffs] : [];
 
-    // Get difficulty multiplier from settings
-    const difficultyMultiplier = get().dungeonSettings?.difficultyMultiplier || 1.0;
+    // Resolve difficulty: per-run override > global setting > default
+    const difficultyMultiplier = get().difficultyOverride ?? get().globalDifficulty ?? 1.0;
 
     // Look up favored affixes from dungeon theme for loot targeting
     const tier = getDungeonTier(cappedLevel);
@@ -120,6 +123,7 @@ export const createDungeonSlice = (set, get) => ({
 
     // Snapshot dungeon data before clearing state
     const dungeonLevel = get().dungeon?.level;
+    const dungeonDifficulty = get().dungeon?.difficultyMultiplier || 1.0;
 
     // Use helper to build run snapshot and history entry
     const { historyEntry, runSummary, totalDamage } = buildRunSnapshot({
@@ -127,6 +131,7 @@ export const createDungeonSlice = (set, get) => ({
       success,
       heroes,
       runStats,
+      difficultyMultiplier: dungeonDifficulty,
     });
 
     // Save to run history
@@ -171,6 +176,7 @@ export const createDungeonSlice = (set, get) => ({
         lastDungeonSuccess: success, // Track victory or defeat for transition screen
         lastRunSummary: totalDamage > 0 ? runSummary : null,
         lastDeathRecap: deathRecap,
+        difficultyOverride: null, // Clear per-run override after dungeon ends
         prepPhase: {
           nextLevel,
           success,
@@ -237,6 +243,22 @@ export const createDungeonSlice = (set, get) => ({
 
       return updates;
     });
+
+    // Award completion gold bonus for difficulty > 1.0 on success
+    if (success && dungeonDifficulty > 1.0) {
+      const baseGold = Math.floor(dungeonLevel * 10 * Math.pow(1.09, dungeonLevel - 1));
+      const completionBonus = Math.floor(baseGold * (dungeonDifficulty - 1) * COMPLETION_BONUS_FACTOR);
+      if (completionBonus > 0) {
+        get().addGold(completionBonus);
+        const info = getDifficultyInfo(dungeonDifficulty);
+        get().addToast({ type: 'success', message: `${info.label} bonus: +${completionBonus.toLocaleString()} gold` });
+        // Patch the run summary with completion bonus amount
+        const current = get().lastRunSummary;
+        if (current) {
+          set({ lastRunSummary: { ...current, completionBonus } });
+        }
+      }
+    }
 
     // Process any pending recruits and party changes first
     processPendingRecruits();
@@ -307,6 +329,7 @@ export const createDungeonSlice = (set, get) => ({
         combat: null,
         roomCombat: null,
         isRunning: false,
+        difficultyOverride: null, // Clear per-run override on abandon
         dungeonProgress: {
           ...state.dungeonProgress,
           currentType: 'normal',
@@ -401,6 +424,18 @@ export const createDungeonSlice = (set, get) => ({
     }));
   },
 
+  setGlobalDifficulty: (multiplier) => {
+    set({ globalDifficulty: multiplier });
+  },
+
+  setDifficultyOverride: (multiplier) => {
+    set({ difficultyOverride: multiplier });
+  },
+
+  clearDifficultyOverride: () => {
+    set({ difficultyOverride: null });
+  },
+
   markFeatureSeen: (feature) => {
     const { highestDungeonCleared } = get();
     set(state => ({
@@ -449,7 +484,7 @@ export const createDungeonSlice = (set, get) => ({
       { key: 'skillsUnlocked', check: () => highestDungeonCleared >= 2, message: 'Skill Trees unlocked — customize your heroes!' },
       { key: 'bestiaryUnlocked', check: () => highestDungeonCleared >= 3, message: 'Bestiary unlocked — track your enemies!' },
       { key: 'shopUnlocked', check: () => highestDungeonCleared >= 5, message: 'The Shop is open — buy gear and consumables!' },
-      { key: 'difficultyUnlocked', check: () => highestDungeonCleared >= 10, message: 'Difficulty Slider unlocked — risk vs. reward!' },
+      { key: 'difficultyUnlocked', check: () => highestDungeonCleared >= DIFFICULTY_UNLOCK_LEVEL, message: 'Difficulty Slider unlocked — risk vs. reward!' },
       { key: 'raidsUnlocked', check: () => highestDungeonCleared >= 12, message: 'Raids unlocked — face the greatest challenges!' },
 { key: 'lootTargetingUnlocked', check: () => highestDungeonCleared >= 20, message: 'Dungeon Intel — each zone favors different loot!' },
       { key: 'ascensionPrompt', check: () => highestDungeonCleared >= 30, message: 'You have mastered the dungeon. A new path awaits...' },

@@ -6,6 +6,7 @@ import { getThemeForLevel, getThemeForRaid } from '../data/dungeonThemes';
 import { isWorldBossLevel, getWorldBossForLevel } from '../data/worldBosses';
 import { createWorldBossInstance, initBossState } from './bossEngine';
 import { RAIDS } from '../data/raids';
+import { DIFFICULTY_SPEED_BONUS, DIFFICULTY_ELITE_BONUS } from '../data/difficulty';
 
 
 // Tile types for the dungeon grid
@@ -899,7 +900,10 @@ export function placeMonsters(dungeon, level, options = {}) {
   // Level 1: 1.0x, Level 5: 1.41x, Level 10: 2.17x, Level 15: 3.34x, Level 20: 5.14x
   const scaleFactor = Math.pow(1.09, level - 1);
   // Speed scales at 25% of other stats - keeps monsters relevant at high levels
-  const speedScaleFactor = 1 + (scaleFactor - 1) * 0.25;
+  // Higher difficulty adds a speed bonus on top so enemies are faster, not just tankier
+  const diffMult = options.difficultyMultiplier || 1.0;
+  const speedBonus = DIFFICULTY_SPEED_BONUS[diffMult] || 0;
+  const speedScaleFactor = (1 + (scaleFactor - 1) * 0.25) * (1 + speedBonus);
 
   // Level 1 is easier to help new players with solo tank
   const earlyGameMultiplier = level === 1 ? 0.7 : 1.0;
@@ -1001,10 +1005,10 @@ export function placeMonsters(dungeon, level, options = {}) {
           passive: boss.passive || null,
           phases: boss.phases || null,
           summonType: boss.summonType || null,
-          xpReward: Math.floor(boss.xpReward * scaleFactor),
+          xpReward: Math.floor(boss.xpReward * scaleFactor * typeMultiplier),
           goldReward: {
-            min: Math.floor(boss.goldReward.min * scaleFactor),
-            max: Math.floor(boss.goldReward.max * scaleFactor),
+            min: Math.floor(boss.goldReward.min * scaleFactor * typeMultiplier),
+            max: Math.floor(boss.goldReward.max * scaleFactor * typeMultiplier),
           },
         };
         monsters.push(baseMonster);
@@ -1140,10 +1144,10 @@ export function placeMonsters(dungeon, level, options = {}) {
         abilities: template.abilities || [],
         aiType: template.aiType || 'aggressive',
         passive: template.passive || null,
-        xpReward: Math.floor(template.xpReward * scaleFactor),
+        xpReward: Math.floor(template.xpReward * scaleFactor * typeMultiplier),
         goldReward: {
-          min: Math.floor(template.goldReward.min * scaleFactor),
-          max: Math.floor(template.goldReward.max * scaleFactor),
+          min: Math.floor(template.goldReward.min * scaleFactor * typeMultiplier),
+          max: Math.floor(template.goldReward.max * scaleFactor * typeMultiplier),
         },
       };
       monsters.push(baseMonster);
@@ -1191,10 +1195,10 @@ export function placeMonsters(dungeon, level, options = {}) {
         abilities: template.abilities || [],
         aiType: template.aiType || 'aggressive',
         passive: template.passive || null,
-        xpReward: Math.floor(template.xpReward * scaleFactor),
+        xpReward: Math.floor(template.xpReward * scaleFactor * typeMultiplier),
         goldReward: {
-          min: Math.floor(template.goldReward.min * scaleFactor),
-          max: Math.floor(template.goldReward.max * scaleFactor),
+          min: Math.floor(template.goldReward.min * scaleFactor * typeMultiplier),
+          max: Math.floor(template.goldReward.max * scaleFactor * typeMultiplier),
         },
       };
       monsters.push(baseMonster);
@@ -1211,6 +1215,9 @@ export function placeMonsters(dungeon, level, options = {}) {
     if (isRaidDungeon) {
       eliteCount = Math.max(4, Math.floor(eliteCount * 2.5)); // At least 4 elites in raids, 2.5x normal rate
     }
+    // Higher difficulty spawns more elites
+    const diffEliteBonus = DIFFICULTY_ELITE_BONUS[diffMult] || 0;
+    eliteCount += diffEliteBonus;
 
     // Get all non-boss monsters that could become elites (exclude wing/final bosses)
     const eligibleMonsters = monsters.filter(m =>
