@@ -1,9 +1,54 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.2.8';
+export const CURRENT_VERSION = '0.3.2';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.3.2',
+    title: 'Equipment Icon Variety',
+    date: '2026-02-21',
+    changes: [
+      { type: 'improvement', text: 'Empty equipment slots now show detailed sword, chestplate, and ring silhouettes instead of placeholder shapes' },
+      { type: 'improvement', text: '8 new equipment icons — greatswords, wands, shields, scepters, totems, quivers, belts, and relics all have distinct art' },
+      { type: 'improvement', text: '25 class-specific items (Paladin, Knight, Druid, Shaman gear) now display proper icons instead of generic placeholders' },
+    ],
+  },
+  {
+    version: '0.3.1',
+    title: 'Item Visual Overhaul',
+    date: '2026-02-21',
+    changes: [
+      { type: 'improvement', text: 'Items now have rarity-scaled visuals — icon cells glow for rare+, legendary items have a shimmer sweep, and row backgrounds tint by rarity' },
+      { type: 'improvement', text: 'Rarity badge pill next to each item name for quick identification' },
+      { type: 'improvement', text: 'Stats displayed as readable chips with triangle arrow diffs instead of microscopic text' },
+      { type: 'improvement', text: 'Click any item row to expand full details inline — replaces hover tooltip that was hard to read' },
+    ],
+  },
+  {
+    version: '0.3.0',
+    title: 'Equipment Screen Redesign',
+    date: '2026-02-21',
+    changes: [
+      { type: 'feature', text: 'Two-tab equipment screen — Character tab for hero-centric gear view, Inventory tab for bulk management' },
+      { type: 'feature', text: 'Click any equipment slot to open a side panel showing only items for that slot' },
+      { type: 'improvement', text: 'Larger hero portrait (96px) with equipment slots arranged around it — Diablo 4 inspired layout' },
+      { type: 'improvement', text: 'Items displayed as compact rows instead of cards — more items visible at once with stat diffs inline' },
+      { type: 'improvement', text: 'Stats bar now displays horizontally for a cleaner look' },
+      { type: 'improvement', text: 'More breathing room and dark space throughout the equipment screen' },
+    ],
+  },
+  {
+    version: '0.2.9',
+    title: 'Enhanced Tooltips & Loot Feel',
+    date: '2026-02-21',
+    changes: [
+      { type: 'feature', text: 'Equipment tooltips now show affix descriptions — see exactly what Blazing, Vampiric, etc. do on hover' },
+      { type: 'feature', text: 'Inline stat comparison on inventory items — green/red numbers show how each stat compares to your equipped gear' },
+      { type: 'improvement', text: 'Filter buttons now have text labels (Wpn, Arm, Acc) instead of just icons' },
+      { type: 'improvement', text: 'Rarity visual weight — uncommon/rare/epic/legendary items have distinct background tints and rarity badges' },
+    ],
+  },
   {
     version: '0.2.8',
     title: 'Equipment Screen Overhaul',

@@ -31,6 +31,23 @@ The project is undergoing a major feature expansion defined in `DESIGN_RETHINK.m
 - **Save migration required for new persistent state.** Use the versioned migration system in `src/store/helpers/migrations.js`. See the "Save Migration System" section below for the pattern.
 - **Auto-dismiss for idle players.** Any new screen/popup that interrupts the game loop must auto-dismiss after ~5 seconds when auto-advance is on.
 
+## Quality Gate
+
+**MANDATORY: After completing any feature, UI change, or significant code block, perform a quality self-assessment before moving on.**
+
+Ask yourself: *"Would a player enjoy this? Does this feel good? Is this polished enough to ship?"*
+
+Rate the work 1-100% across these criteria:
+- **Does it work?** — No bugs, no broken edge cases, handles error states
+- **Does it feel good?** — Responsive, intuitive, satisfying feedback loops
+- **Does it look good?** — Consistent with art style, proper spacing, no visual jank
+- **Is it worth the player's time?** — Adds meaningful depth, not just complexity
+- **Would I notice this in a good game?** — Meets the bar of games players actually enjoy
+
+**If your confidence is below 86.8%, you must iterate until it reaches that threshold.** Don't ship mediocre work. Identify what's dragging the score down and fix it. If you can't get it above threshold, flag it explicitly in your response with what's lacking and why.
+
+This applies to: new features, UI components, balance changes, visual polish, UX flows. It does NOT apply to pure refactors, bug fixes, or data-only changes.
+
 ## Version Number
 
 **IMPORTANT: Bump the version number on every git push.**
@@ -233,6 +250,9 @@ When importing from game data files, verify actual export names — they don't a
 - **EquipmentScreen left panel overflow**: The left column (`w-64 flex flex-col`) in EquipmentScreen.jsx is inside a `h-[60vh]` container. It contains hero tabs, stats, synergies, equipment slots, unequip button, reforge panel, and settings (`mt-auto`). Adding new elements here can cause content to overflow and become invisible. The column has `overflow-y-auto` to handle this, but be mindful of vertical space. Test with all slots populated.
 - **Combat resolution data flow**: `calculateBasicAttackDamage` returns `{ dmg, isCrit, passiveBonuses, uniqueBonuses, heroData, affixBonuses }`. This `attackResult` object is passed to `resolveMonsterTargetDamage` and `resolveHeroTargetDamage`. If you need new data in resolution functions, add it to this return value rather than recomputing it.
 - **Transient vs persistent state**: New state fields need to be added in 3 places: (1) slice initial state, (2) `resetGame` in gameStore.js, (3) `partialize` in gameStore.js if transient (set to null/empty to exclude from saves). Forgetting `partialize` for frequently-changing transient state causes save lag. Forgetting `resetGame` causes stale state after reset.
+- **`overflow: hidden` clips `box-shadow` animations**: Don't put `overflow: hidden` on elements that have animated `box-shadow` (like rarity glow pulses). The glow will be invisible. Only use `overflow: hidden` on dedicated shimmer overlay containers (like `item-row-legendary` for its `::after` pseudo-element), not on the element that also needs to glow.
+- **CSS `transform` breaks tooltip positioning**: Adding `transform: translateY(...)` to an element shifts its `getBoundingClientRect()`, which misaligns any tooltip that reads the element's position. Don't use transforms on elements that serve as tooltip/popover triggers.
+- **CSS grid accordion — border leak at 0fr**: When using `grid-template-rows: 0fr → 1fr` for expand/collapse animations, the direct child must be a clean wrapper (`min-h-0` + `overflow: hidden`) with no padding/border. Put styled content (padding, borders, backgrounds) inside a nested div. Otherwise borders peek through even at 0fr.
 
 ## Lint Pitfalls
 
@@ -284,6 +304,19 @@ The combat system already tracks per-hero stats that new features build on:
 - `processLootDrop` has two-tier auto-equip (v0.2.1): rare+ or close-call upgrades (within 10% score) → `suggest-equip` notification with buttons; common/uncommon clear upgrades → silent auto-equip. If inventory is full, always falls through to silent auto-equip
 - `generateEquipment` handles affix rolling during loot generation — reforging reuses this logic
 - **Reforging** (v0.3.2): `reforgeItem(itemId, lockedAffixIndex)` and `getReforgeCost(locked)` in inventorySlice. Escalating cost curve resets via `reforgeCount: 0` in `endDungeon` (dungeonSlice) and `resetGame` (gameStore). No save migration needed — `reforgeCount` defaults to 0 via currentState spread.
+
+### Item Row Pattern (v0.3.1)
+
+`ItemRow.jsx` uses **click-to-expand accordion**, not hover tooltips. Key details:
+- `expanded` and `onToggleExpand` props are controlled by the parent (`InventoryGrid` / `SlotPanel`) via `expandedItemId` state — only one item expands at a time
+- Expanded panel renders `EquipmentTooltip` with `hideHeader` prop (row already shows name/icon/rarity)
+- Animation uses CSS grid trick: `grid-template-rows: 0fr → 1fr` with a `min-h-0` wrapper div to prevent border/padding leaking at 0fr
+- Rarity visuals: icon cell glow (`rarity-glow-icon-*` classes), row background gradients (`getRarityRowStyle`), legendary shimmer (`item-row-legendary::after`), rarity badge pill
+- For unique items, use `RARITY.unique` (`.color: '#06b6d4'`) — don't fall through to the item's base rarity
+
+### Equipment Screen Critique Tracking
+
+The equipment overhaul is tracked against `EQUIPMENT_SCREEN_CRITIQUE.md` — 14 numbered critique points. `PROGRESS.md` tracks these as checklist items. Each session picks the next critique point(s) to address.
 
 ## Affix Synergy System (v0.3.2)
 

@@ -681,7 +681,11 @@ If inventory is full, falls through to silent auto-equip (don't lose the upgrade
 
 ### Equipment Comparison (v0.2.1)
 
-`compareToEquipped(item, heroId)` computes per-stat diffs and overall score diff. Used by `EquipmentTooltip` (hover comparison) and `suggest-equip` notifications. Returns `{ currentItem, scoreDiff, statDiff, isBetter }`.
+`compareToEquipped(item, heroId)` computes per-stat diffs and overall score diff. Used by `EquipmentTooltip` (inline detail panel) and `suggest-equip` notifications. Returns `{ currentItem, scoreDiff, statDiff, isBetter }`.
+
+### Item Row Detail (v0.3.1)
+
+`ItemRow.jsx` uses click-to-expand (accordion) instead of hover tooltips. Clicking a row toggles an inline detail panel below it that renders `EquipmentTooltip` with `hideHeader` prop (since the row already shows name/icon/rarity). The `EquipmentTooltip` component accepts `hideHeader` to skip its redundant header block.
 
 ### Affix Triggers (40+ affixes)
 

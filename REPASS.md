@@ -28,11 +28,19 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Healing vs damage balance message — is "Incoming damage outpaced healing by X" actionable feedback?
 - [ ] Kill order accuracy — deaths are recorded per-tick, so simultaneous deaths within one tick may have arbitrary ordering
 
+## Equipment Icons (v0.3.2)
+
+- [ ] Visual verification — 8 new icons (GreatswordIcon, WandIcon, ShieldIcon, ScepterIcon, TotemIcon, QuiverIcon, BeltIcon, RelicIcon) designed from coordinates only, not visually verified in browser
+- [ ] BeltIcon readability at 14px — very horizontal shape in square icon space, buckle may not be visible at small sizes
+- [ ] TotemIcon face details at 14px — carved eyes and mouth may blur together on filter buttons
+- [ ] GenericWeaponIcon at 14px filter buttons — blade bevels and fuller groove are 1px details that may not render at small sizes
+
 ## Equipment Comparison Tooltips
 
-- [ ] Tooltip positioning — does it clip off-screen when hovering items near edges?
+- [x] ~~Tooltip positioning — does it clip off-screen when hovering items near edges?~~ (v0.3.1: replaced hover tooltip with click-to-expand inline panel)
 - [ ] Comparison shows stat diffs but not affix comparison — is that enough info to decide?
-- [ ] Tooltip on mobile — hover doesn't exist on touch, need tap-to-show or long-press
+- [x] ~~Tooltip on mobile — hover doesn't exist on touch, need tap-to-show or long-press~~ (v0.3.1: click-to-expand works on touch)
+- [ ] Expanded detail panel in long inventory lists — does expanding push items below the fold? May need scroll-into-view
 
 ## Run Summary & Prep Screen
 

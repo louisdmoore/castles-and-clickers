@@ -62,55 +62,42 @@ const PaperDoll = ({ hero, selectedSlot, onSelectSlot, onUnequip }) => {
   };
 
   return (
-    <div className="flex flex-col items-center gap-3">
-      {/* Hero portrait */}
-      <div className="relative">
-        <div className="w-16 h-16 rounded-lg border-2 border-gray-600 bg-gray-900/50 flex items-center justify-center">
-          <HeroIcon classId={hero.classId} equipment={hero.equipment} size={48} />
+    <div className="flex flex-col items-center gap-6">
+      {/* Top row: Weapon — Portrait — Accessory */}
+      <div className="flex items-center gap-6">
+        <EquipSlot
+          slot="weapon"
+          item={hero.equipment.weapon}
+          isSelected={selectedSlot === 'weapon'}
+          onClick={() => handleSlotClick('weapon')}
+        />
+
+        {/* Large hero portrait */}
+        <div className="w-24 h-24 rounded-lg border-2 border-gray-600 bg-gray-900/50 flex items-center justify-center">
+          <HeroIcon classId={hero.classId} equipment={hero.equipment} size={72} />
         </div>
+
+        <EquipSlot
+          slot="accessory"
+          item={hero.equipment.accessory}
+          isSelected={selectedSlot === 'accessory'}
+          onClick={() => handleSlotClick('accessory')}
+        />
       </div>
 
-      {/* Equipment slots arranged around portrait */}
-      <div className="grid grid-cols-3 gap-2 items-center">
-        {/* Weapon - left */}
-        <div className="flex flex-col items-center gap-0.5">
-          <EquipSlot
-            slot="weapon"
-            item={hero.equipment.weapon}
-            isSelected={selectedSlot === 'weapon'}
-            onClick={() => handleSlotClick('weapon')}
-          />
-          <span className="text-[9px] text-gray-500 uppercase">Weapon</span>
-        </div>
-
-        {/* Armor - center */}
-        <div className="flex flex-col items-center gap-0.5">
-          <EquipSlot
-            slot="armor"
-            item={hero.equipment.armor}
-            isSelected={selectedSlot === 'armor'}
-            onClick={() => handleSlotClick('armor')}
-          />
-          <span className="text-[9px] text-gray-500 uppercase">Armor</span>
-        </div>
-
-        {/* Accessory - right */}
-        <div className="flex flex-col items-center gap-0.5">
-          <EquipSlot
-            slot="accessory"
-            item={hero.equipment.accessory}
-            isSelected={selectedSlot === 'accessory'}
-            onClick={() => handleSlotClick('accessory')}
-          />
-          <span className="text-[9px] text-gray-500 uppercase">Accessory</span>
-        </div>
-      </div>
+      {/* Armor centered below */}
+      <EquipSlot
+        slot="armor"
+        item={hero.equipment.armor}
+        isSelected={selectedSlot === 'armor'}
+        onClick={() => handleSlotClick('armor')}
+      />
 
       {/* Unequip button */}
       {selectedSlot && hero.equipment[selectedSlot] && (
         <button
           onClick={() => { onUnequip(hero.id, selectedSlot); onSelectSlot(null); }}
-          className="w-full bg-red-600/80 hover:bg-red-600 text-white py-1.5 rounded text-xs font-medium transition-colors"
+          className="bg-red-600/80 hover:bg-red-600 text-white py-1.5 px-6 rounded text-xs font-medium transition-colors"
         >
           Unequip {SLOT_LABELS[selectedSlot]}
         </button>

@@ -1,7 +1,18 @@
 import { useMemo } from 'react';
 import { RARITY } from '../../data/equipment';
+import { ITEM_AFFIXES } from '../../data/itemAffixes';
 import ItemIcon from '../icons/ItemIcon';
 import { ArrowUpIcon, ArrowDownIcon } from '../icons/ui';
+
+// Trigger display labels
+const TRIGGER_LABELS = {
+  on_hit: 'On Hit',
+  on_crit: 'On Crit',
+  on_kill: 'On Kill',
+  on_damage_taken: 'On Hit Taken',
+  passive: 'Passive',
+  on_turn_start: 'Turn Start',
+};
 
 // Stat display names
 const STAT_NAMES = {
@@ -22,7 +33,7 @@ const getStatColor = (stat) => {
   }
 };
 
-const EquipmentTooltip = ({ item, comparedItem = null, showComparison = true }) => {
+const EquipmentTooltip = ({ item, comparedItem = null, showComparison = true, hideHeader = false }) => {
   const rarityData = RARITY[item?.rarity] || RARITY.common;
 
   // Calculate stat differences if comparing
@@ -58,27 +69,29 @@ const EquipmentTooltip = ({ item, comparedItem = null, showComparison = true }) 
   return (
     <div className="min-w-[200px]">
       {/* Header with rarity gradient */}
-      <div
-        className="px-3 py-2 rounded-t-lg -mx-3 -mt-2 mb-2"
-        style={{
-          background: `linear-gradient(135deg, ${rarityData.color}40 0%, ${rarityData.color}10 100%)`,
-          borderBottom: `2px solid ${rarityData.color}`,
-        }}
-      >
-        <div className="flex items-center gap-2">
-          <ItemIcon item={item} size={24} />
-          <div>
-            <div className="font-bold" style={{ color: rarityData.color }}>
-              {item.name}
-            </div>
-            <div className="text-xs text-gray-400 capitalize">
-              {item.slot} - {rarityData.name}
-              {item.quality === 'infused' && <span style={{ color: '#34d399' }}> [Infused]</span>}
-              {item.quality === 'ascended' && <span style={{ color: '#f472b6' }}> [Ascended]</span>}
+      {!hideHeader && (
+        <div
+          className="px-3 py-2 rounded-t-lg -mx-3 -mt-2 mb-2"
+          style={{
+            background: `linear-gradient(135deg, ${rarityData.color}40 0%, ${rarityData.color}10 100%)`,
+            borderBottom: `2px solid ${rarityData.color}`,
+          }}
+        >
+          <div className="flex items-center gap-2">
+            <ItemIcon item={item} size={24} />
+            <div>
+              <div className="font-bold" style={{ color: rarityData.color }}>
+                {item.name}
+              </div>
+              <div className="text-xs text-gray-400 capitalize">
+                {item.slot} - {rarityData.name}
+                {item.quality === 'infused' && <span style={{ color: '#34d399' }}> [Infused]</span>}
+                {item.quality === 'ascended' && <span style={{ color: '#f472b6' }}> [Ascended]</span>}
+              </div>
             </div>
           </div>
         </div>
-      </div>
+      )}
 
       {/* Stats */}
       <div className="space-y-1">
@@ -91,6 +104,29 @@ const EquipmentTooltip = ({ item, comparedItem = null, showComparison = true }) 
           </div>
         ))}
       </div>
+
+      {/* Affixes */}
+      {item.affixes?.length > 0 && (
+        <div className="mt-2 pt-2 border-t border-gray-700 space-y-1.5">
+          {item.affixes.map(affixId => {
+            const affix = ITEM_AFFIXES[affixId];
+            if (!affix) return null;
+            return (
+              <div key={affixId}>
+                <div className="flex items-center gap-1.5">
+                  <span className="text-sm font-medium" style={{ color: '#a855f7' }}>
+                    {affix.name}
+                  </span>
+                  <span className="text-[9px] px-1 py-px rounded bg-gray-700 text-gray-400">
+                    {TRIGGER_LABELS[affix.trigger] || affix.trigger}
+                  </span>
+                </div>
+                <div className="text-xs text-gray-400">{affix.description}</div>
+              </div>
+            );
+          })}
+        </div>
+      )}
 
       {/* Comparison section */}
       {statDiffs && (

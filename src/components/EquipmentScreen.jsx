@@ -3,10 +3,8 @@ import { useGameStore, calculateHeroStats } from '../store/gameStore';
 import { canClassUseEquipment } from '../data/equipment';
 import { PartyIcon } from './icons/ui';
 import HeroSelector from './equipment/HeroSelector';
-import PaperDoll from './equipment/PaperDoll';
-import StatsSummary from './equipment/StatsSummary';
+import CharacterTab from './equipment/CharacterTab';
 import InventoryGrid from './equipment/InventoryGrid';
-import EquipmentSettings from './equipment/EquipmentSettings';
 
 const EquipmentScreen = () => {
   const {
@@ -24,6 +22,8 @@ const EquipmentScreen = () => {
 
   const [selectedHeroId, setSelectedHeroId] = useState(heroes[0]?.id || null);
   const [selectedSlot, setSelectedSlot] = useState(null);
+  const [activeTab, setActiveTab] = useState('character');
+  const [inventorySlotFilter, setInventorySlotFilter] = useState(null);
 
   const selectedHero = heroes.find(h => h.id === selectedHeroId);
   const stats = selectedHero ? calculateHeroStats(selectedHero, heroes) : null;
@@ -49,69 +49,72 @@ const EquipmentScreen = () => {
 
   return (
     <div className="flex flex-col h-[85vh] max-h-[85vh]">
-      {/* Hero tabs - top bar */}
+      {/* Hero tabs */}
       <HeroSelector
         heroes={heroes}
         selectedHeroId={selectedHeroId}
         onSelectHero={handleSelectHero}
       />
 
-      {/* Three-column layout */}
-      <div className="flex gap-3 mt-3 flex-1 min-h-0">
-        {/* LEFT: Stats + Settings */}
-        <div className="hidden md:flex w-48 flex-shrink-0 flex-col gap-2 overflow-y-auto">
-          <StatsSummary stats={stats} hero={selectedHero} allHeroes={heroes} />
+      {/* Tab switcher */}
+      <div className="flex gap-2 mt-2">
+        <button
+          onClick={() => setActiveTab('character')}
+          className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+            activeTab === 'character'
+              ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/50'
+              : 'bg-gray-800 text-gray-400 border border-gray-700 hover:text-white'
+          }`}
+        >
+          Character
+        </button>
+        <button
+          onClick={() => setActiveTab('inventory')}
+          className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
+            activeTab === 'inventory'
+              ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/50'
+              : 'bg-gray-800 text-gray-400 border border-gray-700 hover:text-white'
+          }`}
+        >
+          Inventory
+          <span className="text-gray-500 ml-1">({inventory.length})</span>
+        </button>
+      </div>
 
-          {/* Synergies placeholder for Phase 3 */}
-
-          <div className="mt-auto">
-            <EquipmentSettings
-              heroes={heroes}
-              equipmentSettings={equipmentSettings}
-              updateEquipmentSettings={updateEquipmentSettings}
-              setClassPriority={setClassPriority}
-            />
-          </div>
-        </div>
-
-        {/* CENTER: Paper Doll */}
-        <div className="hidden md:flex w-56 flex-shrink-0 flex-col items-center pt-2">
-          <PaperDoll
+      {/* Tab content */}
+      <div className="flex-1 min-h-0 mt-2">
+        {activeTab === 'character' ? (
+          <CharacterTab
             hero={selectedHero}
+            stats={stats}
+            allHeroes={heroes}
             selectedSlot={selectedSlot}
             onSelectSlot={setSelectedSlot}
             onUnequip={unequipItem}
+            inventory={inventory}
+            compareToEquipped={compareToEquipped}
+            canClassUseEquipment={canClassUseEquipment}
+            onEquip={handleEquip}
+            onSell={sellItem}
+            equipmentSettings={equipmentSettings}
+            updateEquipmentSettings={updateEquipmentSettings}
+            setClassPriority={setClassPriority}
+            highestPartyLevel={highestPartyLevel}
           />
-        </div>
-
-        {/* MOBILE: Combined stats + paper doll (visible only on small screens) */}
-        <div className="flex md:hidden flex-col gap-2 w-full mb-2">
-          <div className="flex gap-3">
-            <div className="flex-1">
-              <StatsSummary stats={stats} hero={selectedHero} allHeroes={heroes} />
-            </div>
-            <PaperDoll
-              hero={selectedHero}
-              selectedSlot={selectedSlot}
-              onSelectSlot={setSelectedSlot}
-              onUnequip={unequipItem}
-            />
-          </div>
-        </div>
-
-        {/* RIGHT: Inventory Grid */}
-        <InventoryGrid
-          inventory={inventory}
-          selectedSlot={selectedSlot}
-          onSelectSlot={setSelectedSlot}
-          selectedHero={selectedHero}
-          compareToEquipped={compareToEquipped}
-          canClassUseEquipment={canClassUseEquipment}
-          onEquip={handleEquip}
-          onSell={sellItem}
-          onSellAllJunk={sellAllJunk}
-          highestPartyLevel={highestPartyLevel}
-        />
+        ) : (
+          <InventoryGrid
+            inventory={inventory}
+            selectedSlot={inventorySlotFilter}
+            onSelectSlot={setInventorySlotFilter}
+            selectedHero={selectedHero}
+            compareToEquipped={compareToEquipped}
+            canClassUseEquipment={canClassUseEquipment}
+            onEquip={handleEquip}
+            onSell={sellItem}
+            onSellAllJunk={sellAllJunk}
+            highestPartyLevel={highestPartyLevel}
+          />
+        )}
       </div>
     </div>
   );

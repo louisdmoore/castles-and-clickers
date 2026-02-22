@@ -58,7 +58,10 @@
       "Bash(gh api:*)",
       "Bash(git pull:*)",
       "Bash(git merge:*)",
-      "Bash(npx playwright:*)"
+      "Bash(npx playwright:*)",
+      "WebFetch(domain:github.com)",
+      "Bash(powershell -Command:*)",
+      "Bash(start /B npx vite)"
     ]
   }
 }

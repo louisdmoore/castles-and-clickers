@@ -1,6 +1,6 @@
 import { useState, useMemo } from 'react';
 import { WeaponSlotIcon, ArmorSlotIcon, AccessorySlotIcon } from '../icons/ItemIcon';
-import ItemCard from './ItemCard';
+import ItemRow from './ItemRow';
 
 const SLOT_ICONS = {
   weapon: WeaponSlotIcon,
@@ -9,9 +9,9 @@ const SLOT_ICONS = {
 };
 
 const SLOT_CONFIG = [
-  { slot: 'weapon', label: 'Weapon' },
-  { slot: 'armor', label: 'Armor' },
-  { slot: 'accessory', label: 'Accessory' },
+  { slot: 'weapon', label: 'Weapon', short: 'Wpn' },
+  { slot: 'armor', label: 'Armor', short: 'Arm' },
+  { slot: 'accessory', label: 'Accessory', short: 'Acc' },
 ];
 
 const InventoryGrid = ({
@@ -27,6 +27,7 @@ const InventoryGrid = ({
   highestPartyLevel,
 }) => {
   const [sortBy, setSortBy] = useState('rarity');
+  const [expandedItemId, setExpandedItemId] = useState(null);
 
   const processedInventory = useMemo(() => {
     let items = [...inventory];
@@ -50,7 +51,7 @@ const InventoryGrid = ({
   }, [inventory, selectedSlot, sortBy, selectedHero, compareToEquipped]);
 
   return (
-    <div className="flex-1 flex flex-col min-w-0">
+    <div className="flex-1 flex flex-col min-w-0 min-h-0">
       {/* Header with filters */}
       <div className="flex items-center gap-2 mb-2 flex-wrap">
         <h4 className="text-white font-medium text-sm">
@@ -74,18 +75,19 @@ const InventoryGrid = ({
           >
             All
           </button>
-          {SLOT_CONFIG.map(({ slot }) => {
+          {SLOT_CONFIG.map(({ slot, short }) => {
             const SlotIcon = SLOT_ICONS[slot];
             return (
               <button
                 key={slot}
                 onClick={() => onSelectSlot(selectedSlot === slot ? null : slot)}
-                className={`px-1.5 py-0.5 rounded flex items-center justify-center transition-colors ${
+                className={`px-1.5 py-0.5 rounded flex items-center gap-1 transition-colors ${
                   selectedSlot === slot ? 'bg-blue-600 text-white' : 'bg-gray-700 text-gray-400 hover:text-white'
                 }`}
                 aria-label={`Filter ${slot}s`}
               >
                 <SlotIcon size={14} />
+                <span className="text-[10px]">{short}</span>
               </button>
             );
           })}
@@ -102,16 +104,16 @@ const InventoryGrid = ({
         </select>
       </div>
 
-      {/* Grid of items */}
+      {/* List of items */}
       <div className="flex-1 overflow-y-auto pr-1">
         {processedInventory.length === 0 ? (
           <div className="text-gray-500 text-center py-8 text-sm">
             {selectedSlot ? `No ${selectedSlot}s in inventory` : 'Inventory is empty'}
           </div>
         ) : (
-          <div className="grid grid-cols-3 md:grid-cols-4 gap-2">
+          <div className="flex flex-col gap-1">
             {processedInventory.map(item => (
-              <ItemCard
+              <ItemRow
                 key={item.id}
                 item={item}
                 canEquip={selectedHero && canClassUseEquipment(selectedHero.classId, item)}
@@ -119,6 +121,8 @@ const InventoryGrid = ({
                 onSell={onSell}
                 comparison={selectedHero ? compareToEquipped(item, selectedHero.id) : null}
                 highestPartyLevel={highestPartyLevel}
+                expanded={expandedItemId === item.id}
+                onToggleExpand={(id) => setExpandedItemId(prev => prev === id ? null : id)}
               />
             ))}
           </div>

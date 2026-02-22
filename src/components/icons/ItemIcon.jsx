@@ -194,6 +194,129 @@ const SkullAccessoryIcon = ({ size = 16, color = '#e5e5e5' }) => (
 );
 
 // =====================================================
+// ADDITIONAL BASE ICONS - More variety for equipment types
+// =====================================================
+
+// Greatsword icon - wider diagonal blade (3px vs SwordIcon's 2px)
+const GreatswordIcon = ({ size = 16, color = '#94a3b8' }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" style={pixelStyle}>
+    {/* Pommel */}
+    <rect x="2" y="2" width="3" height="2" fill="#f59e0b" />
+    {/* Blade - 3px wide segments */}
+    <rect x="4" y="4" width="3" height="2" fill={color} />
+    <rect x="6" y="6" width="3" height="2" fill={color} />
+    <rect x="8" y="8" width="3" height="2" fill={color} />
+    <rect x="10" y="10" width="3" height="2" fill={color} />
+    {/* Blade tip */}
+    <rect x="12" y="12" width="3" height="2" fill={color} />
+    <rect x="13" y="12" width="2" height="1" fill="#e2e8f0" />
+    {/* Edge highlights */}
+    <rect x="5" y="5" width="1" height="1" fill="#cbd5e1" />
+    <rect x="9" y="9" width="1" height="1" fill="#cbd5e1" />
+    {/* Handle */}
+    <rect x="3" y="10" width="2" height="2" fill="#78350f" />
+    <rect x="1" y="12" width="3" height="2" fill="#78350f" />
+  </svg>
+);
+
+// Wand icon - thin rod with glowing gem tip
+const WandIcon = ({ size = 16, color = '#a855f7' }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" style={pixelStyle}>
+    <rect x="6" y="1" width="4" height="3" fill={color} />
+    <rect x="7" y="1" width="2" height="1" fill="#e9d5ff" />
+    <rect x="5" y="2" width="1" height="1" fill={color} />
+    <rect x="10" y="2" width="1" height="1" fill={color} />
+    <rect x="7" y="4" width="2" height="9" fill="#78350f" />
+    <rect x="8" y="5" width="1" height="7" fill="#92400e" />
+    <rect x="6" y="13" width="4" height="1" fill="#78350f" />
+  </svg>
+);
+
+// Shield icon - kite/tower shield
+const ShieldIcon = ({ size = 16, color = '#94a3b8' }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" style={pixelStyle}>
+    <rect x="4" y="2" width="8" height="2" fill={color} />
+    <rect x="3" y="4" width="10" height="5" fill={color} />
+    <rect x="4" y="9" width="8" height="2" fill={color} />
+    <rect x="5" y="11" width="6" height="2" fill={color} />
+    <rect x="7" y="13" width="2" height="1" fill={color} />
+    <rect x="5" y="4" width="6" height="4" fill="#64748b" />
+    <rect x="7" y="3" width="2" height="7" fill="#cbd5e1" />
+    <rect x="5" y="6" width="6" height="2" fill="#cbd5e1" />
+  </svg>
+);
+
+// Scepter icon - ornamental flanged head for holy/nature weapons
+const ScepterIcon = ({ size = 16, color = '#f59e0b' }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" style={pixelStyle}>
+    <rect x="5" y="1" width="6" height="2" fill={color} />
+    <rect x="4" y="3" width="3" height="2" fill={color} />
+    <rect x="9" y="3" width="3" height="2" fill={color} />
+    <rect x="6" y="2" width="4" height="3" fill="#fef3c7" />
+    <rect x="7" y="5" width="2" height="8" fill="#78350f" />
+    <rect x="8" y="6" width="1" height="6" fill="#92400e" />
+    <rect x="6" y="13" width="4" height="1" fill="#78350f" />
+  </svg>
+);
+
+// Totem icon - carved totem staff with face
+const TotemIcon = ({ size = 16, color = '#78350f' }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" style={pixelStyle}>
+    <rect x="5" y="1" width="6" height="5" fill={color} />
+    <rect x="4" y="2" width="2" height="3" fill={color} />
+    <rect x="10" y="2" width="2" height="3" fill={color} />
+    <rect x="6" y="2" width="2" height="1" fill="#fef3c7" />
+    <rect x="8" y="2" width="2" height="1" fill="#fef3c7" />
+    <rect x="7" y="4" width="2" height="1" fill="#ef4444" />
+    <rect x="7" y="6" width="2" height="8" fill="#92400e" />
+    <rect x="6" y="8" width="1" height="2" fill={color} />
+    <rect x="9" y="8" width="1" height="2" fill={color} />
+  </svg>
+);
+
+// Quiver icon - arrow container
+const QuiverIcon = ({ size = 16, color = '#78350f' }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" style={pixelStyle}>
+    <rect x="6" y="4" width="5" height="9" fill={color} />
+    <rect x="5" y="5" width="1" height="7" fill="#92400e" />
+    <rect x="7" y="5" width="1" height="7" fill="#92400e" />
+    <rect x="6" y="13" width="5" height="1" fill="#92400e" />
+    <rect x="6" y="1" width="1" height="3" fill="#94a3b8" />
+    <rect x="8" y="2" width="1" height="2" fill="#94a3b8" />
+    <rect x="10" y="1" width="1" height="3" fill="#94a3b8" />
+    <rect x="5" y="1" width="2" height="1" fill="#e5e7eb" />
+    <rect x="9" y="1" width="2" height="1" fill="#e5e7eb" />
+  </svg>
+);
+
+// Belt icon - studded warrior belt
+const BeltIcon = ({ size = 16, color = '#78350f' }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" style={pixelStyle}>
+    <rect x="1" y="6" width="14" height="4" fill={color} />
+    <rect x="2" y="7" width="12" height="2" fill="#92400e" />
+    <rect x="6" y="5" width="4" height="6" fill="#f59e0b" />
+    <rect x="7" y="6" width="2" height="4" fill="#ca8a04" />
+    <rect x="2" y="7" width="1" height="1" fill="#d4d4d4" />
+    <rect x="13" y="7" width="1" height="1" fill="#d4d4d4" />
+    <rect x="4" y="7" width="1" height="1" fill="#d4d4d4" />
+    <rect x="11" y="7" width="1" height="1" fill="#d4d4d4" />
+  </svg>
+);
+
+// Relic icon - holy chalice/symbol
+const RelicIcon = ({ size = 16, color = '#f59e0b' }) => (
+  <svg width={size} height={size} viewBox="0 0 16 16" style={pixelStyle}>
+    <rect x="4" y="2" width="8" height="2" fill={color} />
+    <rect x="3" y="4" width="10" height="3" fill={color} />
+    <rect x="5" y="3" width="6" height="2" fill="#fef3c7" />
+    <rect x="6" y="7" width="4" height="2" fill={color} />
+    <rect x="7" y="9" width="2" height="2" fill={color} />
+    <rect x="5" y="11" width="6" height="2" fill={color} />
+    <rect x="6" y="13" width="4" height="1" fill="#ca8a04" />
+  </svg>
+);
+
+// =====================================================
 // UNIQUE ITEM ICONS - Legendary items with special designs
 // =====================================================
 
@@ -679,70 +802,150 @@ const CrownOfCommandIcon = ({ size = 16, color = '#f59e0b' }) => (
   </svg>
 );
 
-// Generic weapon fallback
+// Generic weapon fallback - diagonal sword silhouette (matches SwordIcon direction)
 const GenericWeaponIcon = ({ size = 16, color = '#94a3b8' }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" style={pixelStyle}>
-    <rect x="7" y="2" width="2" height="10" fill={color} />
-    <rect x="4" y="12" width="8" height="2" fill="#78350f" />
+    {/* Pommel */}
+    <rect x="3" y="2" width="2" height="2" fill="#6b7280" />
+    {/* Blade diagonal */}
+    <rect x="5" y="4" width="2" height="2" fill={color} />
+    <rect x="7" y="6" width="2" height="2" fill={color} />
+    <rect x="9" y="8" width="2" height="2" fill={color} />
+    <rect x="11" y="10" width="2" height="2" fill={color} />
+    {/* Blade tip highlight */}
+    <rect x="13" y="12" width="2" height="2" fill="#9ca3af" />
+    {/* Handle */}
+    <rect x="4" y="10" width="2" height="2" fill="#374151" />
+    <rect x="2" y="12" width="2" height="2" fill="#374151" />
   </svg>
 );
 
-// Generic armor fallback
+// Generic armor fallback - detailed chestplate silhouette
 const GenericArmorIcon = ({ size = 16, color = '#6b7280' }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" style={pixelStyle}>
-    <rect x="4" y="4" width="8" height="8" fill={color} />
-    <rect x="3" y="5" width="2" height="4" fill={color} />
-    <rect x="11" y="5" width="2" height="4" fill={color} />
+    {/* Collar/neckline */}
+    <rect x="6" y="2" width="4" height="1" fill="#9ca3af" />
+    {/* Left shoulder plate */}
+    <rect x="2" y="3" width="5" height="3" fill={color} />
+    {/* Right shoulder plate */}
+    <rect x="9" y="3" width="5" height="3" fill={color} />
+    {/* Left shoulder highlight */}
+    <rect x="2" y="3" width="2" height="1" fill="#9ca3af" />
+    {/* Right shoulder shadow */}
+    <rect x="12" y="4" width="2" height="2" fill="#374151" />
+    {/* Main chest plate */}
+    <rect x="4" y="5" width="8" height="6" fill={color} />
+    {/* Chest highlight (light from upper-left) */}
+    <rect x="5" y="5" width="2" height="3" fill="#6b7280" />
+    {/* Center seam */}
+    <rect x="7" y="6" width="2" height="4" fill="#374151" />
+    {/* Belt */}
+    <rect x="3" y="11" width="10" height="2" fill="#374151" />
+    {/* Belt buckle */}
+    <rect x="7" y="11" width="2" height="1" fill="#9ca3af" />
+    {/* Bottom trim */}
+    <rect x="5" y="13" width="6" height="1" fill="#1f2937" />
   </svg>
 );
 
-// Generic accessory fallback
+// Generic accessory fallback - ring with faceted gem
 const GenericAccessoryIcon = ({ size = 16, color = '#f59e0b' }) => (
   <svg width={size} height={size} viewBox="0 0 16 16" style={pixelStyle}>
-    <rect x="5" y="4" width="6" height="2" fill={color} />
-    <rect x="4" y="6" width="2" height="4" fill={color} />
-    <rect x="10" y="6" width="2" height="4" fill={color} />
+    {/* Gem setting prongs */}
+    <rect x="5" y="3" width="1" height="2" fill="#6b7280" />
+    <rect x="10" y="3" width="1" height="2" fill="#6b7280" />
+    {/* Gem body */}
+    <rect x="6" y="2" width="4" height="3" fill="#6b7280" />
+    {/* Gem highlight (top-left catch light) */}
+    <rect x="7" y="2" width="1" height="1" fill="#9ca3af" />
+    {/* Gem facet shadow */}
+    <rect x="8" y="4" width="1" height="1" fill="#4b5563" />
+    {/* Ring band */}
+    <rect x="5" y="5" width="6" height="2" fill={color} />
+    <rect x="4" y="7" width="2" height="3" fill={color} />
+    <rect x="10" y="7" width="2" height="3" fill={color} />
     <rect x="5" y="10" width="6" height="2" fill={color} />
+    {/* Inner ring shadow (hole depth) */}
+    <rect x="6" y="7" width="4" height="2" fill="#374151" />
+    {/* Band highlight (light catch on left) */}
+    <rect x="4" y="7" width="1" height="2" fill="#6b7280" />
   </svg>
 );
 
 // Map equipment template IDs to icon components
 const EQUIPMENT_ICONS = {
-  // Weapons
+  // Weapons - Swords
   sword: SwordIcon,
-  greatsword: SwordIcon,
+  greatsword: GreatswordIcon,
+  titanBlade: GreatswordIcon,
   axe: AxeIcon,
-  titanBlade: SwordIcon,
+  // Weapons - Staves & Wands
   staff: StaffIcon,
-  wand: StaffIcon,
+  wand: WandIcon,
   archmageStaff: StaffIcon,
   soulStaff: StaffIcon,
   lichStaff: StaffIcon,
+  // Weapons - Orbs
   orb: OrbIcon,
   celestialOrb: OrbIcon,
+  // Weapons - Daggers
   dagger: DaggerIcon,
   assassinBlade: DaggerIcon,
   shadowDagger: DaggerIcon,
+  // Weapons - Bows
   shortbow: BowIcon,
   longbow: BowIcon,
   huntersBow: BowIcon,
+  // Weapons - Maces & Holy
   mace: MaceIcon,
   holySymbol: MaceIcon,
+  // Weapons - Paladin
+  holyBlade: SwordIcon,
+  crusaderSword: SwordIcon,
+  radiantBlade: GreatswordIcon,
+  // Weapons - Knight
+  knightsSword: SwordIcon,
+  towerShield: ShieldIcon,
+  bastionBlade: GreatswordIcon,
+  // Weapons - Druid
+  natureScepter: ScepterIcon,
+  oakStaff: StaffIcon,
+  worldtreeStaff: StaffIcon,
+  // Weapons - Shaman
+  totemStaff: TotemIcon,
+  spiritRod: WandIcon,
+  ancestralStaff: TotemIcon,
 
-  // Armor
+  // Armor - Heavy plate
   chainmail: ArmorIcon,
   plate: ArmorIcon,
   dragonscaleArmor: ArmorIcon,
+  // Armor - Paladin plate
+  paladinPlate: ArmorIcon,
+  crusaderArmor: ArmorIcon,
+  sanctifiedPlate: ArmorIcon,
+  // Armor - Knight plate
+  knightsPlate: ArmorIcon,
+  fortressArmor: ArmorIcon,
+  aegisPlate: ArmorIcon,
+  // Armor - Leather
   leather: LeatherIcon,
   shadowCloak: LeatherIcon,
   huntersCloak: LeatherIcon,
   forestguardVest: LeatherIcon,
+  barkArmor: LeatherIcon,
+  ancestralVest: LeatherIcon,
+  natureguardVest: LeatherIcon,
+  // Armor - Robes
   robes: RobesIcon,
   arcaneVestments: RobesIcon,
   holyRobes: RobesIcon,
   deathRobes: RobesIcon,
   shroudOfShadows: RobesIcon,
   divineVestments: RobesIcon,
+  groveRobes: RobesIcon,
+  shamanRobes: RobesIcon,
+  spiritwalkerRobes: RobesIcon,
 
   // Accessories
   ring: RingIcon,
@@ -752,11 +955,11 @@ const EQUIPMENT_ICONS = {
   soulGem: OrbIcon,
   boots: BootsIcon,
   crown: CrownIcon,
-  warriorBelt: LeatherIcon,
+  warriorBelt: BeltIcon,
   thiefGloves: GlovesIcon,
   spellbook: SpellbookIcon,
-  holyRelic: MaceIcon,
-  enchantedQuiver: BowIcon,
+  holyRelic: RelicIcon,
+  enchantedQuiver: QuiverIcon,
   phoenixFeather: AmuletIcon,
 
   // Unique Items - World Bosses
