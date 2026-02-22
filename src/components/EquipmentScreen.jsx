@@ -1,10 +1,12 @@
-import { useState } from 'react';
+import { useState, useEffect, useRef } from 'react';
 import { useGameStore, calculateHeroStats } from '../store/gameStore';
 import { canClassUseEquipment } from '../data/equipment';
 import { PartyIcon } from './icons/ui';
 import HeroSelector from './equipment/HeroSelector';
 import CharacterTab from './equipment/CharacterTab';
+import StatsSummary from './equipment/StatsSummary';
 import InventoryGrid from './equipment/InventoryGrid';
+import EquipmentSettings from './equipment/EquipmentSettings';
 
 const EquipmentScreen = () => {
   const {
@@ -18,12 +20,25 @@ const EquipmentScreen = () => {
     updateEquipmentSettings,
     setClassPriority,
     compareToEquipped,
+    isUpgradeForAnyHero,
   } = useGameStore();
 
   const [selectedHeroId, setSelectedHeroId] = useState(heroes[0]?.id || null);
   const [selectedSlot, setSelectedSlot] = useState(null);
-  const [activeTab, setActiveTab] = useState('character');
-  const [inventorySlotFilter, setInventorySlotFilter] = useState(null);
+  const [settingsOpen, setSettingsOpen] = useState(false);
+  const settingsRef = useRef(null);
+
+  // Click-outside to close settings dropdown
+  useEffect(() => {
+    if (!settingsOpen) return;
+    const handler = (e) => {
+      if (settingsRef.current && !settingsRef.current.contains(e.target)) {
+        setSettingsOpen(false);
+      }
+    };
+    document.addEventListener('mousedown', handler);
+    return () => document.removeEventListener('mousedown', handler);
+  }, [settingsOpen]);
 
   const selectedHero = heroes.find(h => h.id === selectedHeroId);
   const stats = selectedHero ? calculateHeroStats(selectedHero, heroes) : null;
@@ -48,64 +63,59 @@ const EquipmentScreen = () => {
   }
 
   return (
-    <div className="flex flex-col h-[85vh] max-h-[85vh]">
-      {/* Hero tabs */}
-      <HeroSelector
-        heroes={heroes}
-        selectedHeroId={selectedHeroId}
-        onSelectHero={handleSelectHero}
-      />
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 10rem)' }}>
+      {/* Top bar: Hero selector + settings toggle */}
+      <div className="flex items-start gap-2">
+        <div className="flex-1 min-w-0">
+          <HeroSelector
+            heroes={heroes}
+            selectedHeroId={selectedHeroId}
+            onSelectHero={handleSelectHero}
+          />
+        </div>
 
-      {/* Tab switcher */}
-      <div className="flex gap-2 mt-2">
-        <button
-          onClick={() => setActiveTab('character')}
-          className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-            activeTab === 'character'
-              ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/50'
-              : 'bg-gray-800 text-gray-400 border border-gray-700 hover:text-white'
-          }`}
-        >
-          Character
-        </button>
-        <button
-          onClick={() => setActiveTab('inventory')}
-          className={`px-3 py-1 text-xs font-medium rounded transition-colors ${
-            activeTab === 'inventory'
-              ? 'bg-yellow-400/20 text-yellow-400 border border-yellow-400/50'
-              : 'bg-gray-800 text-gray-400 border border-gray-700 hover:text-white'
-          }`}
-        >
-          Inventory
-          <span className="text-gray-500 ml-1">({inventory.length})</span>
-        </button>
+        {/* Settings gear toggle */}
+        <div className="relative flex-shrink-0" ref={settingsRef}>
+          <button
+            className={`settings-toggle ${settingsOpen ? 'settings-toggle-open' : ''}`}
+            onClick={() => setSettingsOpen(v => !v)}
+            aria-expanded={settingsOpen}
+            aria-label="Equipment settings"
+          >
+            &#9881; Settings
+            <span className="settings-toggle-chevron">&#9662;</span>
+          </button>
+
+          {/* Dropdown panel */}
+          {settingsOpen && (
+            <div className="absolute right-0 top-full mt-1 z-30 w-80 pixel-panel p-2 settings-dropdown-enter">
+              <EquipmentSettings
+                heroes={heroes}
+                equipmentSettings={equipmentSettings}
+                updateEquipmentSettings={updateEquipmentSettings}
+                setClassPriority={setClassPriority}
+              />
+            </div>
+          )}
+        </div>
       </div>
 
-      {/* Tab content */}
-      <div className="flex-1 min-h-0 mt-2">
-        {activeTab === 'character' ? (
-          <CharacterTab
-            hero={selectedHero}
-            stats={stats}
-            allHeroes={heroes}
-            selectedSlot={selectedSlot}
-            onSelectSlot={setSelectedSlot}
-            onUnequip={unequipItem}
-            inventory={inventory}
-            compareToEquipped={compareToEquipped}
-            canClassUseEquipment={canClassUseEquipment}
-            onEquip={handleEquip}
-            onSell={sellItem}
-            equipmentSettings={equipmentSettings}
-            updateEquipmentSettings={updateEquipmentSettings}
-            setClassPriority={setClassPriority}
-            highestPartyLevel={highestPartyLevel}
-          />
-        ) : (
+      {/* 3-column layout: Hero | Inventory | Stats */}
+      <div className="flex flex-1 min-h-0 mt-2 gap-0">
+        {/* LEFT: Hero showcase with atmosphere */}
+        <CharacterTab
+          hero={selectedHero}
+          selectedSlot={selectedSlot}
+          onSelectSlot={setSelectedSlot}
+          onUnequip={unequipItem}
+        />
+
+        {/* CENTER: Inventory — always visible */}
+        <div className="flex-1 min-w-0 min-h-0 flex flex-col border-x border-gray-700/20 bg-gray-900/20">
           <InventoryGrid
             inventory={inventory}
-            selectedSlot={inventorySlotFilter}
-            onSelectSlot={setInventorySlotFilter}
+            selectedSlot={selectedSlot}
+            onSelectSlot={setSelectedSlot}
             selectedHero={selectedHero}
             compareToEquipped={compareToEquipped}
             canClassUseEquipment={canClassUseEquipment}
@@ -113,8 +123,18 @@ const EquipmentScreen = () => {
             onSell={sellItem}
             onSellAllJunk={sellAllJunk}
             highestPartyLevel={highestPartyLevel}
+            isUpgradeForAnyHero={isUpgradeForAnyHero}
           />
-        )}
+        </div>
+
+        {/* RIGHT: Stats dashboard — always visible */}
+        <div className="w-[28%] min-w-[240px] flex-shrink-0 min-h-0 overflow-y-auto bg-gray-950/30 rounded-r-lg">
+          <StatsSummary
+            stats={stats}
+            hero={selectedHero}
+            allHeroes={heroes}
+          />
+        </div>
       </div>
     </div>
   );

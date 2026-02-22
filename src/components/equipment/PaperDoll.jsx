@@ -31,7 +31,7 @@ const EquipSlot = ({ slot, item, isSelected, onClick }) => {
         aria-label={`${SLOT_LABELS[slot]} slot${item ? `: ${item.name}` : ' (empty)'}`}
         className={`w-16 h-16 rounded flex items-center justify-center relative transition-all
           ${isSelected ? 'ring-2 ring-yellow-400 ring-offset-1 ring-offset-gray-900' : ''}
-          ${item ? rarityClass : 'border-2 border-dashed border-gray-600 bg-gray-900/50 hover:border-gray-400'}
+          ${item ? `${rarityClass} hover:brightness-110 hover:shadow-lg` : 'border-2 border-dashed border-gray-600 bg-gray-900/50 hover:border-gray-400'}
           ${item && !isUnique ? 'bg-gray-900/80' : ''}
           ${isUnique ? 'unique-shimmer' : ''}
         `}
@@ -54,17 +54,25 @@ const EquipSlot = ({ slot, item, isSelected, onClick }) => {
   );
 };
 
-const PaperDoll = ({ hero, selectedSlot, onSelectSlot, onUnequip }) => {
+const ROLE_ACCENT = { tank: '#60a5fa', healer: '#4ade80', dps: '#f87171' };
+
+const PaperDoll = ({ hero, selectedSlot, onSelectSlot, onUnequip, role, compact = false }) => {
   if (!hero) return null;
 
   const handleSlotClick = (slot) => {
     onSelectSlot(selectedSlot === slot ? null : slot);
   };
 
+  const accent = ROLE_ACCENT[role] || '#9ca3af';
+
+  const portraitSize = compact ? 'w-32 h-32' : 'w-48 h-48';
+  const iconSize = compact ? 96 : 144;
+  const haloSize = compact ? 200 : 280;
+
   return (
-    <div className="flex flex-col items-center gap-6">
+    <div className="flex flex-col items-center gap-3">
       {/* Top row: Weapon — Portrait — Accessory */}
-      <div className="flex items-center gap-6">
+      <div className="flex items-center gap-4">
         <EquipSlot
           slot="weapon"
           item={hero.equipment.weapon}
@@ -72,9 +80,29 @@ const PaperDoll = ({ hero, selectedSlot, onSelectSlot, onUnequip }) => {
           onClick={() => handleSlotClick('weapon')}
         />
 
-        {/* Large hero portrait */}
-        <div className="w-24 h-24 rounded-lg border-2 border-gray-600 bg-gray-900/50 flex items-center justify-center">
-          <HeroIcon classId={hero.classId} equipment={hero.equipment} size={72} />
+        {/* Portrait wrapper — contains halo + portrait, but NOT equip slots */}
+        <div className="relative flex items-center justify-center">
+          {/* Halo — behind portrait */}
+          <div
+            className="portrait-halo"
+            style={{
+              width: haloSize,
+              height: haloSize,
+              '--atmo-accent-strong': accent + '30',
+              '--atmo-accent-mid': accent + '20',
+            }}
+          />
+
+          {/* Portrait */}
+          <div
+            className={`${portraitSize} rounded-lg portrait-frame portrait-ambient flex items-center justify-center relative z-[1]`}
+            style={{
+              '--portrait-glow': accent + '40',
+              '--portrait-glow-soft': accent + '20',
+            }}
+          >
+            <HeroIcon classId={hero.classId} equipment={hero.equipment} size={iconSize} />
+          </div>
         </div>
 
         <EquipSlot

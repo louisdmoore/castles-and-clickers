@@ -59,7 +59,13 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 ## Open Priorities
 
 ### Priority 6: Reduce Modal Dependency
+- [ ] **Unified Hero Profile modal** — Combine Heroes, Equipment, and Skills into one tabbed modal. Shared hero selector at top, tabs for Party / Gear / Skills. Eliminates bouncing between 3 modals for hero management. Equipment already uses `size="full"`, Skills uses `size="xl"`, Heroes is small — a tabbed `full` modal fits all three. Key challenge: Equipment's 3-column layout needs the width; Skills has a 2-column tree layout. Both already have hero selectors that can be unified.
 - [ ] Surface more info inline — 18 total modals. Consider inline skill bar, sidebar panels, split-view layouts.
+
+### Bug Backlog
+- [ ] **Leave Dungeon / Change buttons off-screen during gameplay** — action buttons are clipped or pushed below the viewport during active dungeon runs. Likely a layout overflow issue in the combat view area.
+- [ ] **Party gets stuck walking in circles** — Rare bug where heroes loop between the same tiles and never advance. Likely a pathfinding issue in `combatMovement.js` (A* pathfinding) or room navigation logic in `useDungeon.js`. May be a tie-breaking issue where the next target keeps flipping, or an edge case where the exit path routes through a visited room. Needs reproduction and logging to diagnose.
+- [ ] **World boss prep screen says "Guaranteed legendary+ gear drop"** — World bosses drop uniques, not legendary gear. The prep screen / dungeon preview text doesn't distinguish between world boss levels and regular boss levels. Should say "Unique item drop" or similar for world boss floors.
 
 ### Priority 7: UI Polish Passes
 - [ ] Overview/stats screen layout
@@ -82,6 +88,8 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 
 ### Priority 10: Balance Pass
 - [ ] Party size question, monster scaling vs party size, difficulty curve audit, unique items underpowered
+- [ ] **Loot drop rate overhaul** — Common/uncommon drops are auto-sold noise (60-70% cut). Keep rare+ rates same or buff. Tie loot quality to difficulty (better table, not more drops). Audit current rates in mazeGenerator.js, inventorySlice.js, equipment.js, balanceConstants.js first.
+- [ ] **Remove auto-equip and auto-sell** — These are band-aids for over-generous drops. With reduced drop rates and a good equipment screen, players should evaluate loot manually. Remove auto-equip two-tier pipeline, auto-sell, suggest-equip notifications, and the notification verbosity setting (exists only to mute auto-action spam). Simplify `processLootDrop` to: drop → inventory. Add bulk "sell all below rare" action in equipment screen instead.
 
 ### Priority 11: Combat & Graphics
 - [ ] Boss mechanics depth, attack/skill animations, status effect VFX, equipment reflected on sprites

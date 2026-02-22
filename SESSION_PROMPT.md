@@ -105,18 +105,21 @@ Tell Claude: **"Work on Priority N"** — where N is one of the following.
 
 ### Priority 6: Reduce Modal Dependency
 
-**Goal:** Surface key information inline so players don't have to open full-screen modals for everything.
+**Goal:** Merge the three hero-management modals (Heroes, Equipment, Skills) into one unified Hero Profile modal, then surface key info inline.
 
-**From PROGRESS.md:**
-- 18 total modals. Every major feature requires a modal that hides the dungeon canvas.
+**Unified Hero Profile Modal (primary task):**
+- Combine Heroes (party roster), Equipment (gear/inventory/stats), and Skills (skill tree) into one `size="full"` tabbed modal
+- Shared hero selector bar at the top (already exists in Equipment and Skills separately)
+- Three tabs: **Party** (current HeroManagement — recruit/view roster), **Gear** (current EquipmentScreen — 3-column layout), **Skills** (current SkillTreeScreen — 2-column tree)
+- Equipment already uses `size="full"`. Skills uses `size="xl"`. Heroes is compact. All fit in `full`.
+- Each tab's content is mostly unchanged — this is a UI restructure, not a rewrite
+- Key detail: Equipment's CharacterTab (left column with portrait) could serve as the shared hero identity across all tabs
+- NavBar updates: replace 3 separate buttons with one "Heroes" button that opens the unified modal
+
+**Inline summaries (secondary, after merge):**
 - Consider: inline skill bar, sidebar panels, floating tooltips, split-view layouts
-
-**From UI_CRITIQUE.md:**
-- Every modal uses the same dark blue panel — they all blur together after 5
-- Equipment, Skills, Stats could show summaries inline
-- Heroes modal is a read-only stat dump — could be sidebar content
-
-**Approach:** Don't try to remove all modals. Pick the 2-3 most-opened modals (Heroes, Equipment, Skills) and add inline summaries/quick-actions that reduce how often players need the full modal.
+- Heroes modal was a read-only stat dump — sidebar content candidate
+- 18 total modals remain after merge (becomes 16). Further reduction is lower priority.
 
 ---
 
@@ -207,6 +210,14 @@ From critique: "Victory!" before doing anything, "CONTINUE" verb wrong, recruitm
 - Party size question (7 or 8 slots?)
 - No party-size scaling on monsters
 - Overall difficulty curve audit
+
+**Loot drop rate overhaul:**
+- Current state: drops are constant noise. The notification system needed a 3-level verbosity mute button — that's a symptom of over-generous drops. Common/uncommon items are auto-sold instantly. They're not loot, they're a gold faucet with extra steps.
+- **Slash common/uncommon drop rates by 60-70%.** They're auto-sold noise. Fewer drops that are more likely to matter.
+- **Keep rare+ rates the same or slightly buff them.** Every drop that survives should have a real chance of being an upgrade.
+- **Make surviving drops feel bigger.** A rare and a common currently get the same notification card. If rares drop less often, give them more visual punch when they do.
+- **Tie loot quality to difficulty.** Higher difficulty = better loot table, not more loot. Reward Hard mode with quality, not quantity.
+- **Audit the numbers first.** Before changing anything, map the current drop rates in `mazeGenerator.js` (monster loot tables), `inventorySlice.js` (processLootDrop), `equipment.js` (generateEquipment rarity weights), and `balanceConstants.js` (BOSS_LOOT_DROP_CHANCE, NORMAL_LOOT_DROP_CHANCE). Document the current rates, then propose new ones.
 
 ---
 

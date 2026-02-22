@@ -18,8 +18,10 @@ const SlotPanel = ({
   onClose,
   highestPartyLevel,
 }) => {
-  const [sortBy, setSortBy] = useState('rarity');
+  const [sortBy, setSortBy] = useState('upgrade');
   const [expandedItemId, setExpandedItemId] = useState(null);
+
+  const equippedItem = selectedHero?.equipment?.[slot] || null;
 
   const filteredItems = useMemo(() => {
     let items = inventory.filter(item => item.slot === slot);
@@ -32,9 +34,18 @@ const SlotPanel = ({
     items.sort((a, b) => {
       const aUp = getUpgradeStatus(a), bUp = getUpgradeStatus(b);
       if (aUp !== bUp) return aUp ? -1 : 1;
+      if (sortBy === 'upgrade') {
+        const getScoreDiff = (item) => {
+          if (!selectedHero) return 0;
+          return compareToEquipped(item, selectedHero.id)?.scoreDiff || 0;
+        };
+        return getScoreDiff(b) - getScoreDiff(a);
+      }
       if (sortBy === 'rarity') {
-        const order = { legendary: 0, epic: 1, rare: 2, uncommon: 3, common: 4 };
-        return (order[a.rarity] || 5) - (order[b.rarity] || 5);
+        const order = { unique: 0, legendary: 1, epic: 2, rare: 3, uncommon: 4, common: 5 };
+        const aKey = a.isUnique ? 'unique' : a.rarity;
+        const bKey = b.isUnique ? 'unique' : b.rarity;
+        return (order[aKey] ?? 6) - (order[bKey] ?? 6);
       }
       return 0;
     });
@@ -54,6 +65,7 @@ const SlotPanel = ({
           onChange={(e) => setSortBy(e.target.value)}
           className="bg-gray-700 text-white text-[10px] rounded px-1.5 py-0.5 border-none"
         >
+          <option value="upgrade">Upgrade</option>
           <option value="rarity">Rarity</option>
         </select>
         <button
@@ -67,6 +79,28 @@ const SlotPanel = ({
 
       {/* Item list */}
       <div className="flex-1 overflow-y-auto p-2 space-y-1">
+        {/* Pinned equipped item */}
+        {equippedItem && (
+          <div className="mb-1">
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 px-1">Equipped</div>
+            <ItemRow
+              item={equippedItem}
+              canEquip={false}
+              onEquip={onEquip}
+              onSell={onSell}
+              comparison={null}
+              highestPartyLevel={highestPartyLevel}
+              expanded={expandedItemId === equippedItem.id}
+              onToggleExpand={(id) => setExpandedItemId(prev => prev === id ? null : id)}
+              isEquipped={true}
+            />
+            <div className="border-b border-gray-700/50 mt-2 mb-1" />
+            <div className="text-[10px] text-gray-500 uppercase tracking-wider mb-1 px-1">
+              Candidates ({filteredItems.length})
+            </div>
+          </div>
+        )}
+
         {filteredItems.length === 0 ? (
           <div className="text-gray-500 text-center py-8 text-sm">
             No {SLOT_LABELS[slot]?.toLowerCase() || 'items'} in inventory

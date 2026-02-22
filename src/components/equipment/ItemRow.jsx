@@ -47,7 +47,7 @@ const getItemDisplayStats = (item, highestPartyLevel) => {
   return item?.stats || {};
 };
 
-const ItemRow = ({ item, canEquip, onEquip, onSell, comparison, highestPartyLevel, expanded, onToggleExpand }) => {
+const ItemRow = ({ item, canEquip, onEquip, onSell, comparison, highestPartyLevel, expanded, onToggleExpand, isEquipped }) => {
   const isUnique = item?.isUnique;
   const isBetter = comparison?.isBetter;
   const displayStats = getItemDisplayStats(item, highestPartyLevel);
@@ -70,7 +70,8 @@ const ItemRow = ({ item, canEquip, onEquip, onSell, comparison, highestPartyLeve
           ${expanded ? 'rounded-b-none item-row-expanded' : ''}
         `}
         style={{
-          ...(!isBetter ? rarityRowStyle : {}),
+          ...(!isBetter && !isEquipped ? rarityRowStyle : {}),
+          ...(isEquipped ? { borderLeft: '3px solid #eab308', background: 'rgba(234, 179, 8, 0.06)' } : {}),
           position: 'relative',
         }}
         onClick={() => onToggleExpand(item.id)}
@@ -153,32 +154,34 @@ const ItemRow = ({ item, canEquip, onEquip, onSell, comparison, highestPartyLeve
           })}
         </div>
 
-        {/* Action buttons */}
-        <div className="flex gap-1 flex-shrink-0">
-          {canEquip && (
+        {/* Action buttons — hidden for equipped items */}
+        {!isEquipped && (
+          <div className="flex gap-1 flex-shrink-0">
+            {canEquip && (
+              <button
+                onClick={(e) => { e.stopPropagation(); onEquip(item); }}
+                className={`px-2 py-1 text-white text-[10px] rounded font-medium transition-colors ${
+                  isBetter ? 'bg-green-600 hover:bg-green-500' : 'bg-blue-600 hover:bg-blue-500'
+                }`}
+                aria-label={`Equip ${item.name}`}
+              >
+                Equip
+              </button>
+            )}
             <button
-              onClick={(e) => { e.stopPropagation(); onEquip(item); }}
-              className={`px-2 py-1 text-white text-[10px] rounded font-medium transition-colors ${
-                isBetter ? 'bg-green-600 hover:bg-green-500' : 'bg-blue-600 hover:bg-blue-500'
+              onClick={(e) => { e.stopPropagation(); !isUnique && onSell(item.id); }}
+              className={`px-1.5 py-1 text-[10px] rounded flex items-center gap-0.5 transition-colors ${
+                isUnique
+                  ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
+                  : 'bg-gray-700 hover:bg-orange-600 text-gray-300'
               }`}
-              aria-label={`Equip ${item.name}`}
+              title={isUnique ? 'Unique items cannot be sold' : `Sell for ${calculateSellValue(item)} gold`}
+              aria-label={isUnique ? 'Cannot sell unique items' : `Sell ${item.name} for ${calculateSellValue(item)} gold`}
             >
-              Equip
+              <GoldIcon size={10} />{isUnique ? '-' : calculateSellValue(item)}
             </button>
-          )}
-          <button
-            onClick={(e) => { e.stopPropagation(); !isUnique && onSell(item.id); }}
-            className={`px-1.5 py-1 text-[10px] rounded flex items-center gap-0.5 transition-colors ${
-              isUnique
-                ? 'bg-gray-800 text-gray-600 cursor-not-allowed'
-                : 'bg-gray-700 hover:bg-orange-600 text-gray-300'
-            }`}
-            title={isUnique ? 'Unique items cannot be sold' : `Sell for ${calculateSellValue(item)} gold`}
-            aria-label={isUnique ? 'Cannot sell unique items' : `Sell ${item.name} for ${calculateSellValue(item)} gold`}
-          >
-            <GoldIcon size={10} />{isUnique ? '-' : calculateSellValue(item)}
-          </button>
-        </div>
+          </div>
+        )}
 
         {/* Expand chevron */}
         <span className={`item-row-chevron flex-shrink-0 ml-0.5 text-gray-500 ${expanded ? 'item-row-chevron-open' : ''}`}>

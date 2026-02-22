@@ -61,7 +61,8 @@
       "Bash(npx playwright:*)",
       "WebFetch(domain:github.com)",
       "Bash(powershell -Command:*)",
-      "Bash(start /B npx vite)"
+      "Bash(start /B npx vite)",
+      "Bash(git grep:*)"
     ]
   }
 }
