@@ -40,7 +40,7 @@ const EquipSlot = ({ slot, item, isSelected, onClick }) => {
             ${item && !isUnique ? 'bg-gray-900/80' : ''}
             ${isUnique ? 'unique-shimmer' : ''}
           `}
-          style={item && !isUnique && !item.quality ? { backgroundColor: (item.rarityColor || '#9ca3af') + '10' } : {}}
+          style={item && !isUnique ? { backgroundColor: (item.rarityColor || '#9ca3af') + '10' } : {}}
         >
           {item ? (
             <>

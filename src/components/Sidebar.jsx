@@ -374,7 +374,7 @@ const Sidebar = memo(({
   const ascensionCount = useGameStore(state => state.ascension?.count || 0);
 
   return (
-    <aside className="w-48 pixel-panel-dark flex flex-col h-full" style={{ borderRadius: 0 }}>
+    <aside className="w-48 pixel-panel-dark flex flex-col h-full min-h-0" style={{ borderRadius: 0 }}>
       {/* Scrollable content area */}
       <div className="flex-1 overflow-y-auto min-h-0">
       {/* Party Status */}

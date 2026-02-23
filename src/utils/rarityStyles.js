@@ -2,10 +2,6 @@
 export const getRarityBorderClass = (item) => {
   if (!item) return '';
 
-  // Quality overrides rarity visual
-  if (item.quality === 'ascended') return 'rarity-border-ascended';
-  if (item.quality === 'infused') return 'rarity-border-infused';
-
   // Unique items use the existing unique-shimmer system
   if (item.isUnique) return 'unique-shimmer';
 
@@ -21,7 +17,5 @@ export const getRarityBorderClass = (item) => {
 // Get just the rarity color for inline styles
 export const getRarityColor = (item) => {
   if (!item) return '#4b5563';
-  if (item.quality === 'ascended') return '#f472b6';
-  if (item.quality === 'infused') return '#34d399';
   return item.rarityColor || '#9ca3af';
 };

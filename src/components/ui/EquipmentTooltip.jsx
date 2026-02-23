@@ -107,8 +107,6 @@ const EquipmentTooltip = ({ item, comparedItem = null, showComparison = true, hi
               </div>
               <div className="text-xs text-gray-400 capitalize">
                 {item.slot} - {rarityData.name}
-                {item.quality === 'infused' && <span style={{ color: '#34d399' }}> [Infused]</span>}
-                {item.quality === 'ascended' && <span style={{ color: '#f472b6' }}> [Ascended]</span>}
               </div>
             </div>
           </div>

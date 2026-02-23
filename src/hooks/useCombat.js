@@ -196,6 +196,7 @@ export const useCombat = ({ addEffect }) => {
     const crownMultiplier = crownBonus.statMultiplier;
 
     // === Build ctx object ===
+    const killsByHero = {};
     const ctx = {
       // Mutable state
       newHeroes, newMonsters, newBuffs, newStatusEffects,
@@ -207,7 +208,13 @@ export const useCombat = ({ addEffect }) => {
       findHeroIndex: (id) => heroIndexMap.get(id) ?? -1,
       findMonsterIndex: (id) => monsterIndexMap.get(id) ?? -1,
       // Callbacks
-      addEffect, addCombatLog, incrementStat,
+      addEffect, addCombatLog,
+      incrementStat: (stat, amount, meta) => {
+        incrementStat(stat, amount, meta);
+        if (stat === 'totalMonstersKilled' && meta?.heroId) {
+          killsByHero[meta.heroId] = (killsByHero[meta.heroId] || 0) + amount;
+        }
+      },
       addGold, addXpToHero, processLootDrop, handleUniqueDrop, addConsumable,
       syncHeroHp, hasResurrectionScroll, consumeResurrectionScroll, updateRoomCombat,
       defeatWingBoss: (id) => useGameStore.getState().defeatWingBoss(id),
@@ -226,6 +233,7 @@ export const useCombat = ({ addEffect }) => {
       damageTakenByHero: {},
       healingDoneByHero: {},
       healingReceivedByHero: {},
+      killsByHero,
       heroDeaths: [], // { heroId, heroName, classId, killerName }
       regenHealAmount: 0,
       regenHeroId: null,
@@ -529,6 +537,12 @@ export const useCombat = ({ addEffect }) => {
       if (healing > 0) {
         incrementStat('totalHealingReceived', healing, { heroId });
         updateRunStats(heroId, { healingReceived: healing });
+      }
+    }
+
+    for (const [heroId, kills] of Object.entries(ctx.killsByHero)) {
+      if (kills > 0) {
+        updateRunStats(heroId, { kills });
       }
     }
 

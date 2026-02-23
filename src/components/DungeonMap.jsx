@@ -214,12 +214,13 @@ const DungeonMap = ({ onStart }) => {
                 </div>
                 <div className="text-right text-xs">
                   <div className="text-gray-400">Level {nextLevel}</div>
-                  <div className="text-amber-400">{worldBoss.guaranteedRarity || 'epic'}+ loot</div>
-                  {worldBoss.uniqueDrop && (
-                    <div className="flex items-center gap-1 justify-end text-yellow-300">
+                  {worldBoss.uniqueDrop ? (
+                    <div className="flex items-center gap-1 justify-end text-cyan-400">
                       <StarIcon size={10} />
-                      <span>Unique Drop!</span>
+                      <span>Unique Drop</span>
                     </div>
+                  ) : (
+                    <div className="text-amber-400">{worldBoss.guaranteedRarity || 'epic'}+ loot</div>
                   )}
                 </div>
               </div>

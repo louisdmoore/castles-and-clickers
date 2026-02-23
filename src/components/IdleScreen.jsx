@@ -218,7 +218,11 @@ const IdleScreen = ({
                   </div>
                 </div>
               </div>
-              {worldBoss.guaranteedRarity && (
+              {worldBoss.uniqueDrop ? (
+                <div className="mt-1.5 text-[10px] text-center text-cyan-400">
+                  Unique item drop
+                </div>
+              ) : worldBoss.guaranteedRarity && (
                 <div className="mt-1.5 text-[10px] text-center text-purple-400">
                   Guaranteed {worldBoss.guaranteedRarity}+ gear drop
                 </div>

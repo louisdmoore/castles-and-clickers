@@ -129,6 +129,9 @@ Tell Claude: **"Work on Priority N"** — where N is one of the following.
 
 **This is a BIG priority. Break it into sub-sessions, one screen at a time:**
 
+#### 7-pre: App-Wide Color Pass (do this before other 7x sub-sessions)
+289 Tailwind color class usages across 40 files, dozens of inline hex values, no central palette. Zone theme colors duplicated in 3 files. Stat colors (green=HP, red=ATK) clash with comparison colors (green=better, red=worse). Rarity colors defined in 3+ places. Create a single `src/data/colors.js` or CSS custom properties palette. Define semantic color roles: stat identity, comparison feedback, rarity, zone theme, UI feedback. Ensure no role conflicts (e.g. red can't mean both "attack stat" and "bad/worse"). Kill inline hex values. This unblocks every other 7x sub-session.
+
 #### 7a: Idle Screen
 From critique: massive dead space, redundant hero info, placeholder text, warning noise, no new-player experience. Also fix: "Victory!" shown to new players, "CONTINUE TO LEVEL 1" verb wrong, locked nav buttons anxiety.
 
@@ -227,6 +230,12 @@ From critique: "Victory!" before doing anything, "CONTINUE" verb wrong, recruitm
 - **Make surviving drops feel bigger.** A rare and a common currently get the same notification card. If rares drop less often, give them more visual punch when they do.
 - **Tie loot quality to difficulty.** Higher difficulty = better loot table, not more loot. Reward Hard mode with quality, not quantity.
 - **Audit the numbers first.** Before changing anything, map the current drop rates in `mazeGenerator.js` (monster loot tables), `inventorySlice.js` (processLootDrop), `equipment.js` (generateEquipment rarity weights), and `balanceConstants.js` (BOSS_LOOT_DROP_CHANCE, NORMAL_LOOT_DROP_CHANCE). Document the current rates, then propose new ones.
+
+**Rarity level-gating:**
+- Current state: `generateEquipment` in `equipment.js` (line 714) rolls rarity as `Math.random() * 100 + dungeonLevel * 2`. There are NO minimum level gates. At dungeon level 1, there's ~4% legendary and ~12% epic chance. Players get purples and oranges on floor 1, which breaks progression feel — everything after feels like a downgrade.
+- **Add hard level gates per rarity tier.** E.g., rare unlocks at D5, epic at D10-15, legendary at D20+. Each new rarity tier should feel like a milestone, not a random accident.
+- **Keep the soft `dungeonLevel * 2` bonus** within unlocked tiers so higher floors still feel rewarding.
+- **Consider the difficulty multiplier interaction.** Higher difficulty already improves loot quality — level gates should stack with that, not conflict.
 
 ---
 

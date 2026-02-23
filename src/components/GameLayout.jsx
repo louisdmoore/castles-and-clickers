@@ -225,7 +225,7 @@ const GameLayout = () => {
       {/* Main content — flex on small/medium, CSS grid on wide (1440px+) */}
       <div className={`flex-1 flex overflow-hidden game-content-area${rightPanelOpen ? ' right-panel-open' : ''}`}>
         {/* Sidebar - hidden on mobile, shown as drawer */}
-        <div className="hidden md:block">
+        <div className="hidden md:block h-full">
           <Sidebar
             heroes={heroes}
             dungeon={dungeon}

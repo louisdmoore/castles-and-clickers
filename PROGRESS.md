@@ -1,6 +1,6 @@
 # Progress
 
-**Current Version: v0.3.4**
+**Current Version: v0.3.5**
 **Current: Equipment Screen Overhaul — critique-driven passes**
 
 ---
@@ -63,14 +63,14 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 - [ ] Surface more info inline — 18 total modals. Consider inline skill bar, sidebar panels, split-view layouts.
 
 ### Bug Backlog
-- [ ] **Leave Dungeon / Change buttons off-screen during gameplay** — action buttons are clipped or pushed below the viewport during active dungeon runs. Likely a layout overflow issue in the combat view area.
+- [x] ~~**Leave Dungeon / Change buttons off-screen during gameplay**~~ (v0.3.5: Added `h-full` to sidebar wrapper div and `min-h-0` to aside element for proper flex height chain)
 - [ ] **Party gets stuck walking in circles** — Rare bug where heroes loop between the same tiles and never advance. Likely a pathfinding issue in `combatMovement.js` (A* pathfinding) or room navigation logic in `useDungeon.js`. May be a tie-breaking issue where the next target keeps flipping, or an edge case where the exit path routes through a visited room. Needs reproduction and logging to diagnose.
-- [ ] **World boss prep screen says "Guaranteed legendary+ gear drop"** — World bosses drop uniques, not legendary gear. The prep screen / dungeon preview text doesn't distinguish between world boss levels and regular boss levels. Should say "Unique item drop" or similar for world boss floors.
+- [x] ~~**World boss prep screen says "Guaranteed legendary+ gear drop"**~~ (v0.3.5: Shows "Unique item drop" for bosses with uniqueDrop, keeps rarity text for early bosses without uniques. Fixed in IdleScreen and DungeonMap)
 - [ ] **Stat color / comparison color clash** — HP uses green, ATK uses red as their stat identity colors. But comparison tooltips also use green = better, red = worse. So "+10 ATK" shows as red (stat color) even though it's an upgrade. Confusing. Fix: stat identity colors should NOT be red/green, OR comparisons should use a different indicator (arrows, +/- symbols, background tint) instead of relying on red/green which conflicts.
 - [x] ~~**Unique item powers not visible in gear screen**~~ (v0.3.4: unique power section added to EquipmentTooltip — shows power name, trigger type, and description in amber-styled block. Visible in both ItemRow accordion and PaperDoll hover tooltip)
-- [ ] **Remove Infused/Ascended item quality tiers for now** — Difficulty-gated quality tiers in `equipment.js` (Infused at 2.0x+, Ascended at 3.0x). Bonus affixes and 1.3x stat multiplier. Has CSS shimmer animations, tooltip badges, color overrides. But: never explained to the player anywhere, adds complexity on top of an already cluttered rarity system (common/uncommon/rare/epic/legendary + unique + now infused/ascended). Remove until core loot loop, drop rates, and equipment UI are solid. Can reintroduce as a meaningful endgame reward later. Files: `equipment.js` (generation), `rarityStyles.js` (colors), `index.css` (shimmer animations), `EquipmentTooltip.jsx` (badges).
+- [x] ~~**Remove Infused/Ascended item quality tiers for now**~~ (v0.3.6: Removed quality tier generation from equipment.js, quality CSS classes from index.css, quality checks from rarityStyles.js, badge labels from EquipmentTooltip.jsx, quality guard from PaperDoll.jsx. Existing items with quality field are inert — no code reads it anymore.)
 - [ ] **Rogue dual daggers don't render correctly in dungeons** — Canvas sprite rendering issue for rogue's dual dagger weapon type. Check `SkillSprites.js` / canvas sprite system for the rogue weapon drawing logic.
-- [ ] **Kills not tracked in Recent Runs** — Per-hero kill counts missing or always zero in the Recent Runs tab of StatsScreen. Check `endDungeon` in `dungeonSlice.js` where the run snapshot is built — likely `kills` field isn't being pulled from `runStats.heroStats` or the combat system isn't incrementing kill counters. Also check `combatSlice.js` `saveRunToHistory()` and `runSnapshotHelper.js`.
+- [x] ~~**Kills not tracked in Recent Runs**~~ (v0.3.5: Wrapped `incrementStat` in useCombat.js ctx to track kills per hero per tick via `killsByHero`, flushed to `updateRunStats` alongside damage/healing)
 
 ### Priority 7: UI Polish Passes
 - [ ] **App-wide color pass** — Colors are defined ad-hoc across 40+ files (289 Tailwind color class usages, dozens of inline hex values). No central palette. Same colors duplicated (zone theme colors in DungeonHeader, DungeonMap, CurrentZoneIndicator — all with identical hex maps). Stat colors (green HP, red ATK) clash with comparison colors (green better, red worse). Rarity colors defined in equipment.js, rarityStyles.js, and inline in LootNotifications/ShopScreen. Need: a single `src/data/colors.js` or CSS custom properties palette that all files import from. Define semantic color roles (stat identity, comparison, rarity, zone theme, UI feedback) that don't conflict. Kill inline hex values.
@@ -102,6 +102,7 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 - [ ] Party size question, monster scaling vs party size, difficulty curve audit, unique items underpowered
 - [ ] **Loot drop rate overhaul** — Common/uncommon drops are auto-sold noise (60-70% cut). Keep rare+ rates same or buff. Tie loot quality to difficulty (better table, not more drops). Audit current rates in mazeGenerator.js, inventorySlice.js, equipment.js, balanceConstants.js first.
 - [ ] **Remove auto-equip and auto-sell** — These are band-aids for over-generous drops. With reduced drop rates and a good equipment screen, players should evaluate loot manually. Remove auto-equip two-tier pipeline, auto-sell, suggest-equip notifications, and the notification verbosity setting (exists only to mute auto-action spam). Simplify `processLootDrop` to: drop → inventory. Add bulk "sell all below rare" action in equipment screen instead.
+- [ ] **Rarity drop level-gating** — Epic (purple) and legendary (orange) items can drop on dungeon level 1. The rarity formula in `generateEquipment` (`Math.random() * 100 + dungeonLevel * 2`) has no minimum level gates — just a slight +2% per level. At level 1: ~4% legendary, ~12% epic chance. This breaks progression feel — getting a legendary on floor 1 makes everything after feel like a downgrade. Fix: add hard level gates (e.g., rare unlocks at D5, epic at D10-15, legendary at D20+) so each rarity tier feels like a milestone. The `dungeonLevel * 2` soft bonus can stay within unlocked tiers. See `src/data/equipment.js` line 714.
 
 ### Priority 11: Combat & Graphics
 - [ ] Boss mechanics depth, attack/skill animations, status effect VFX, equipment reflected on sprites
@@ -109,6 +110,12 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 ---
 
 ## Handoff Notes
+
+### Session 22 (2026-02-22) — v0.3.5: Bug Fixes
+
+- **Kills not tracked in Recent Runs**: Wrapped `incrementStat` callback in useCombat.js ctx — when `totalMonstersKilled` is called, also increments `killsByHero[heroId]`. Flush loop added alongside damage/healing tracking calls `updateRunStats(heroId, { kills })`. Zero changes needed in combatDamageResolution.js or combatSkillExecution.js.
+- **World boss prep screen text**: IdleScreen.jsx and DungeonMap.jsx now check `worldBoss.uniqueDrop` — if present, show "Unique item drop" (cyan) instead of "legendary+ gear drop". Early bosses (level 5, 10) without uniques still show their guaranteedRarity text.
+- **Sidebar buttons off-screen**: Added `h-full` to the `hidden md:block` wrapper div in GameLayout.jsx and `min-h-0` to the sidebar aside in Sidebar.jsx. Ensures the flex height chain resolves correctly so buttons stay pinned at the bottom.
 
 ### Session 21 (2026-02-22) — v0.3.4: Unique Power Visibility
 

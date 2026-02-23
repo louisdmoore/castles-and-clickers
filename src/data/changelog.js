@@ -1,9 +1,19 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.3.4';
+export const CURRENT_VERSION = '0.3.5';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.3.5',
+    title: 'Bug Fixes',
+    date: '2026-02-22',
+    changes: [
+      { type: 'fix', text: 'Per-hero kill counts now tracked correctly in Recent Runs history' },
+      { type: 'fix', text: 'World boss preview now correctly shows "Unique item drop" instead of misleading "legendary+ gear drop"' },
+      { type: 'fix', text: 'Sidebar action buttons (Change Dungeon, Exit Dungeon) no longer clip off-screen with large parties' },
+    ],
+  },
   {
     version: '0.3.4',
     title: 'Unique Power Visibility',
