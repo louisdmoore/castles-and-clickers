@@ -683,6 +683,26 @@ If inventory is full, falls through to silent auto-equip (don't lose the upgrade
 
 `compareToEquipped(item, heroId)` computes per-stat diffs and overall score diff. Used by `EquipmentTooltip` (inline detail panel) and `suggest-equip` notifications. Returns `{ currentItem, scoreDiff, statDiff, isBetter }`.
 
+### Equipment Screen Layout (v0.3.3)
+
+The equipment screen uses a permanent 3-column layout (no tabs):
+
+| Column | Component | Width | Content |
+|--------|-----------|-------|---------|
+| Left | `CharacterTab` | 28% min 240px | Atmospheric hero showcase: portrait with halo, class identity title, equipment slot list |
+| Center | `InventoryGrid` | flex-1 | Filterable inventory with equipped item pinning when slot selected |
+| Right | `StatsSummary` | 28% min 240px | 2x2 stat pillar grid with full breakdowns always visible |
+
+**CharacterTab** — Full-column atmospheric backdrop (`character-atmosphere` CSS class) with role-themed gradients, vignette, light beam pseudo-elements, and 12 CSS-only floating particles. Class identity: role label + class title (4xl uppercase) + level. Equipment slots stacked vertically below 224px portrait with breathing halo.
+
+**InventoryGrid** — When a slot is selected via PaperDoll click, the equipped item pins at the top ("Equipped" label) with candidates below. `expandedItemId` state controls single-expand accordion on item rows.
+
+**StatsSummary** — 2x2 grid of `StatPillar` components (HP/ATK/DEF/SPD). Each pillar shows the stat value and full breakdown with tree connectors. `SOURCE_ICONS` and `SOURCE_COLORS` are defined here. Uses `calculateHeroStatsWithBreakdown()` from statCalculator.
+
+**Settings** — Dropdown in `EquipmentScreen` top bar (next to `HeroSelector`), click-outside dismiss via `useRef` + `mousedown` listener.
+
+**Dead code**: `SlotPanel.jsx` and `StatBreakdown.jsx` are no longer imported.
+
 ### Item Row Detail (v0.3.1)
 
 `ItemRow.jsx` uses click-to-expand (accordion) instead of hover tooltips. Clicking a row toggles an inline detail panel below it that renders `EquipmentTooltip` with `hideHeader` prop (since the row already shows name/icon/rarity). The `EquipmentTooltip` component accepts `hideHeader` to skip its redundant header block.

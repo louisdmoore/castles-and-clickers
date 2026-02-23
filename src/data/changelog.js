@@ -1,9 +1,23 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.3.2';
+export const CURRENT_VERSION = '0.3.3';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.3.3',
+    title: 'Equipment Screen Overhaul',
+    date: '2026-02-22',
+    changes: [
+      { type: 'improvement', text: 'Equipment screen redesigned with permanent 3-column layout — hero showcase, inventory, and stat breakdown all visible at once' },
+      { type: 'improvement', text: 'Dramatic hero showcase with atmospheric backdrop, floating particles, and large portrait with breathing halo effect' },
+      { type: 'improvement', text: 'Class identity display — each class has a unique title treatment with role label and glowing level number' },
+      { type: 'improvement', text: 'Equipment slots arranged as a clean vertical list with item names visible at a glance' },
+      { type: 'improvement', text: 'Stat breakdowns always visible — see exactly where your HP, ATK, DEF, and SPD come from' },
+      { type: 'improvement', text: 'Selecting an equipment slot now pins your equipped item at the top of the inventory for easy comparison' },
+      { type: 'improvement', text: 'Settings moved to a compact dropdown in the header, out of the way' },
+    ],
+  },
   {
     version: '0.3.2',
     title: 'Equipment Icon Variety',

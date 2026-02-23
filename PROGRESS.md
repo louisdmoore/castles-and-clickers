@@ -1,6 +1,6 @@
 # Progress
 
-**Current Version: v0.3.2**
+**Current Version: v0.3.3**
 **Current: Equipment Screen Overhaul — critique-driven passes**
 
 ---
@@ -17,14 +17,14 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 - [x] **#10 No rarity moment** → Legendary rows have amber shimmer sweep, epic/rare icon cells pulse, unique items keep cyan glow + text shimmer (v0.3.1)
 
 ### Remaining
-- [ ] **#1 Paper doll is anemic** — 72px sprite with three empty squares. Needs to feel like a character showcase, not a form layout.
-- [ ] **#2 Vertical scroll / settings clipping** — Stat breakdowns push settings below fold at 1440x900. Settings panel clips at bottom.
-- [ ] **#3 Slot panel squishes hero side** — 40/60 split when slot panel opens compresses hero column too much.
-- [ ] **#4 No equipped vs candidates hierarchy** — Equipped item tooltip floats ambiguously. No clear visual relationship between current gear and replacements.
+- [x] **#1 Paper doll is anemic** → Dramatic hero showcase: 224px portrait with 340px breathing halo, CSS particle system (12 floating motes), full-column atmospheric backdrop with role-themed gradients/vignette/light beam, class identity title (e.g. "WARRIOR") with epithet + role label + glowing level display (v0.3.3)
+- [x] **#2 Vertical scroll / settings clipping** → Settings moved to dropdown in top bar with click-outside dismiss. Stats always visible in dedicated right column. No scroll needed (v0.3.3)
+- [x] **#3 Slot panel squishes hero side** → Eliminated SlotPanel entirely. Clicking equipment slot filters inventory in center column instead. 3-column layout stays stable (v0.3.3)
+- [x] **#4 No equipped vs candidates hierarchy** → When slot selected, equipped item pinned at top of inventory with "Equipped" label, candidates listed below with count. Clear visual separation (v0.3.3)
 - [x] **#9 Equipment slot icons are placeholder** — Replaced with detailed sword/chestplate/ring silhouettes + 8 new item type icons + mapped 25 unmapped class items (v0.3.2)
 - [ ] **#11 Mobile barely functional** — Paper doll takes half viewport, stat breakdowns require scrolling, no way to see slot panel without pushing everything off-screen.
-- [ ] **#12 Two tabs isn't enough** — Character tab has hero info + paper doll + stat breakdown + settings + slot panel. Too much for one tab.
-- [ ] **#13 Sell Junk easy to miss** — Tiny 10px orange button next to inventory count. Primary action buried.
+- [x] **#12 Two tabs isn't enough** → Eliminated tabs entirely. Permanent 3-column layout: Hero showcase (left) | Inventory (center) | Stats dashboard (right). All content visible simultaneously (v0.3.3)
+- [x] **#13 Sell Junk easy to miss** → Sell Junk button always visible in inventory header when showing all items. Promoted to prominent position (v0.3.3)
 - [ ] **#14 No best-upgrade flow** — No auto-select best upgrade, sort dropdown only has "Rarity." Manual scanning for green arrows.
 
 ### Earlier Equipment Phases (completed before critique)
@@ -66,6 +66,10 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 - [ ] **Leave Dungeon / Change buttons off-screen during gameplay** — action buttons are clipped or pushed below the viewport during active dungeon runs. Likely a layout overflow issue in the combat view area.
 - [ ] **Party gets stuck walking in circles** — Rare bug where heroes loop between the same tiles and never advance. Likely a pathfinding issue in `combatMovement.js` (A* pathfinding) or room navigation logic in `useDungeon.js`. May be a tie-breaking issue where the next target keeps flipping, or an edge case where the exit path routes through a visited room. Needs reproduction and logging to diagnose.
 - [ ] **World boss prep screen says "Guaranteed legendary+ gear drop"** — World bosses drop uniques, not legendary gear. The prep screen / dungeon preview text doesn't distinguish between world boss levels and regular boss levels. Should say "Unique item drop" or similar for world boss floors.
+- [ ] **Stat color / comparison color clash** — HP uses green, ATK uses red as their stat identity colors. But comparison tooltips also use green = better, red = worse. So "+10 ATK" shows as red (stat color) even though it's an upgrade. Confusing. Fix: stat identity colors should NOT be red/green, OR comparisons should use a different indicator (arrows, +/- symbols, background tint) instead of relying on red/green which conflicts.
+- [ ] **Unique item powers not visible in gear screen** — Unique items have special powers (`uniquePower`) but they're buried or invisible in the equipment screen. The equipped slot and inventory row should prominently display the power name and effect, not just stats. Uniques are the most exciting items in the game — they should look and feel special at a glance, not require a tooltip hover to see what makes them unique.
+- [ ] **Remove Infused/Ascended item quality tiers for now** — Difficulty-gated quality tiers in `equipment.js` (Infused at 2.0x+, Ascended at 3.0x). Bonus affixes and 1.3x stat multiplier. Has CSS shimmer animations, tooltip badges, color overrides. But: never explained to the player anywhere, adds complexity on top of an already cluttered rarity system (common/uncommon/rare/epic/legendary + unique + now infused/ascended). Remove until core loot loop, drop rates, and equipment UI are solid. Can reintroduce as a meaningful endgame reward later. Files: `equipment.js` (generation), `rarityStyles.js` (colors), `index.css` (shimmer animations), `EquipmentTooltip.jsx` (badges).
+- [ ] **Rogue dual daggers don't render correctly in dungeons** — Canvas sprite rendering issue for rogue's dual dagger weapon type. Check `SkillSprites.js` / canvas sprite system for the rogue weapon drawing logic.
 
 ### Priority 7: UI Polish Passes
 - [ ] Overview/stats screen layout
@@ -97,6 +101,24 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 ---
 
 ## Handoff Notes
+
+### Session 20 (2026-02-22) — v0.3.3: Equipment Screen Layout Overhaul
+
+**Major structural redesign of the equipment screen:**
+
+- **Eliminated tab system** — Character/Inventory tabs replaced with permanent 3-column layout (Hero showcase | Inventory | Stats dashboard). All content visible simultaneously.
+- **Hero showcase column** — Full-column atmospheric backdrop (`character-atmosphere` CSS) with role-themed radial gradients, vignette, vertical light beam, and 12 CSS-only floating particles. 224px portrait with 340px breathing halo. Class identity title system: role label ("TANK"), class name ("WARRIOR") in dramatic 4xl uppercase with triple-layer glow, glowing level number. Per-class epithets defined but not displayed (future use).
+- **Equipment slots refactored** — Triangle pattern (weapon—portrait—accessory row + armor below) replaced with vertical stack below portrait. Each slot is a full-width row: 48px icon box + slot label + item name. Tooltips repositioned from bottom to right.
+- **Stats dashboard (right column)** — `StatsSummary` rewritten as 2x2 grid of "stat pillars" with breakdowns always visible. SOURCE_ICONS/SOURCE_COLORS moved from StatBreakdown.jsx (now dead code). Each pillar has colored left border, gradient divider, tree connectors for breakdown entries.
+- **Inventory column (center)** — Equipped item pinning: when a slot is selected and hero has gear in that slot, the equipped item pins at top with "Equipped" label and candidates listed below. Slot filter chips sync with paper doll selection.
+- **Settings moved to dropdown** — Settings button in top bar next to HeroSelector, click-outside dismiss via useRef + mousedown listener. `pixel-panel` styled dropdown with slide-down animation.
+- **Dead code created**: `SlotPanel.jsx` (no longer imported), `StatBreakdown.jsx` (logic moved to StatsSummary)
+
+**Files changed:** EquipmentScreen.jsx, CharacterTab.jsx, PaperDoll.jsx, StatsSummary.jsx, InventoryGrid.jsx, ItemRow.jsx, index.css
+
+**Critique points resolved:** #1 (paper doll anemic), #2 (scroll/settings clipping), #3 (slot panel squish), #4 (no equipped hierarchy), #12 (two tabs insufficient), #13 (sell junk buried)
+
+**Remaining:** #11 (mobile), #14 (best-upgrade flow)
 
 ### Session 19 (2026-02-21) — v0.2.9-v0.3.1: Equipment Screen Visual Overhaul
 

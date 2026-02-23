@@ -3,6 +3,21 @@ import PaperDoll from './PaperDoll';
 
 const ROLE_ACCENT = { tank: '#60a5fa', healer: '#4ade80', dps: '#f87171' };
 
+const CLASS_TITLE = {
+  warrior:     { title: 'Warrior',     epithet: 'Ironclad Vanguard' },
+  paladin:     { title: 'Paladin',     epithet: 'Oathbound Sentinel' },
+  knight:      { title: 'Knight',      epithet: 'Bulwark of Steel' },
+  mage:        { title: 'Mage',        epithet: 'Arcane Conduit' },
+  rogue:       { title: 'Rogue',       epithet: 'Phantom Blade' },
+  ranger:      { title: 'Ranger',      epithet: 'Deadeye Stalker' },
+  necromancer: { title: 'Necromancer', epithet: 'Harbinger of Ruin' },
+  cleric:      { title: 'Cleric',      epithet: 'Divine Shepherd' },
+  druid:       { title: 'Druid',       epithet: 'Voice of the Wild' },
+  shaman:      { title: 'Shaman',      epithet: 'Ancestral Conduit' },
+};
+
+const ROLE_LABEL = { tank: 'Tank', healer: 'Healer', dps: 'Damage' };
+
 // 12 particle configs — staggered positions, sizes, speeds
 const PARTICLES = [
   { left: '12%', bottom: '5%',  size: 3, duration: 7,  delay: 0,   drift: '8px' },
@@ -59,18 +74,35 @@ const CharacterTab = ({
 
       {/* Content above particles */}
       <div className="relative z-10 flex flex-col items-center gap-4 w-full px-3 py-4 h-full justify-center">
-        {/* Hero name / class / level */}
+        {/* Class identity */}
         <div className="text-center">
+          {/* Role label above title */}
+          <div
+            className="text-[10px] uppercase tracking-[4px] font-medium mb-1"
+            style={{ color: accent + 'aa' }}
+          >
+            {ROLE_LABEL[classData?.role] || ''}
+          </div>
+
+          {/* Class title */}
           <h2
-            className="text-white font-bold leading-tight text-2xl"
+            className="text-white font-bold leading-none text-4xl tracking-widest uppercase"
             style={{
-              textShadow: `0 0 20px ${accent}80, 0 0 40px ${accent}40`,
+              textShadow: `0 0 30px ${accent}90, 0 0 60px ${accent}50, 0 2px 4px rgba(0,0,0,0.9)`,
+              letterSpacing: '0.15em',
             }}
           >
-            {hero.name}
+            {CLASS_TITLE[hero.classId]?.title || classData?.name || hero.classId}
           </h2>
-          <div className="text-gray-400 text-xs mt-0.5">
-            Lv{hero.level} {classData?.name || hero.classId}
+
+          {/* Level */}
+          <div className="mt-2">
+            <span
+              className="text-base font-bold tabular-nums"
+              style={{ color: accent, textShadow: `0 0 12px ${accent}70` }}
+            >
+              Level {hero.level}
+            </span>
           </div>
         </div>
 

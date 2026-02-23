@@ -35,6 +35,17 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] TotemIcon face details at 14px — carved eyes and mouth may blur together on filter buttons
 - [ ] GenericWeaponIcon at 14px filter buttons — blade bevels and fuller groove are 1px details that may not render at small sizes
 
+## Equipment Screen Layout (v0.3.3)
+
+- [ ] 3-column layout on narrow screens (< 1280px) — min-w-[240px] on left and right columns may cause horizontal overflow
+- [ ] SlotPanel.jsx and StatBreakdown.jsx are dead code — should be deleted when confirmed not needed
+- [ ] CLASS_TITLE epithets defined in CharacterTab but not displayed — remove or use in future
+- [ ] Portrait halo at 340px may overflow the 28% column on small screens — verify clipping
+- [ ] Equipped item pinning in InventoryGrid — when unequipping an item, does the pinned section clear properly?
+- [ ] Settings dropdown z-index (z-30) — verify it renders above inventory content and doesn't clip behind stat column
+- [ ] Particle animation performance — 12 CSS-animated divs with box-shadow. Test on low-end devices
+- [ ] EquipSlot tooltip position="right" — may clip off-screen when left column is narrow or at screen edge
+
 ## Equipment Comparison Tooltips
 
 - [x] ~~Tooltip positioning — does it clip off-screen when hovering items near edges?~~ (v0.3.1: replaced hover tooltip with click-to-expand inline panel)
