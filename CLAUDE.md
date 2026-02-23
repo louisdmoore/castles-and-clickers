@@ -119,7 +119,8 @@ Combat uses initiative-based turn order with A* pathfinding for movement. Speed 
 - `src/data/statusEffects.js` - Status effect definitions; add combo table
 - `src/store/helpers/statCalculator.js` - `calculateHeroStats`; trait bonuses, affix synergies, ascension multipliers apply here. Has module-level `currentAscensionCount` — call `clearStatCache()` when anything affecting stats changes.
 - `src/store/helpers/migrations.js` - Versioned save migrations. Increment `SAVE_VERSION` and add migration function when adding new persistent state.
-- `src/components/GameLayout.jsx` - Main layout (~857 lines, 12+ modals); avoid refactoring until Phase 7
+- `src/components/GameLayout.jsx` - Main layout (~857 lines, modals delegated to ModalManager.jsx); avoid refactoring until Phase 7
+- `src/components/HeroProfileModal.jsx` - Unified hero management modal (Gear/Skills tabs, persistent paper doll, shared hero selector with inline recruitment). Routes via `heroes`/`heroes-gear`/`heroes-skills` modal IDs
 - `src/components/PrepScreen.jsx` - Between-dungeon screen; new pre-combat features (difficulty, ascension button) go here
 
 ## Performance Patterns

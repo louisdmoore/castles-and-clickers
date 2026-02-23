@@ -1,7 +1,7 @@
 # Progress
 
-**Current Version: v0.3.5**
-**Current: Equipment Screen Overhaul — critique-driven passes**
+**Current Version: v0.3.6**
+**Current: UI Polish & Modal Consolidation**
 
 ---
 
@@ -58,9 +58,9 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 
 ## Open Priorities
 
-### Priority 6: Reduce Modal Dependency
-- [ ] **Unified Hero Profile modal** — Combine Heroes, Equipment, and Skills into one tabbed modal. Shared hero selector at top, tabs for Party / Gear / Skills. Eliminates bouncing between 3 modals for hero management. Equipment already uses `size="full"`, Skills uses `size="xl"`, Heroes is small — a tabbed `full` modal fits all three. Key challenge: Equipment's 3-column layout needs the width; Skills has a 2-column tree layout. Both already have hero selectors that can be unified.
-- [ ] Surface more info inline — 18 total modals. Consider inline skill bar, sidebar panels, split-view layouts.
+### Priority 6: Reduce Modal Dependency ✅
+- [x] **Unified Hero Profile modal** — Heroes, Equipment, and Skills combined into `HeroProfileModal.jsx` with Gear/Skills tabs. Shared `HeroSelector` at top with inline recruitment ("+"). Persistent `CharacterTab` (paper doll) visible across both tabs. SkillTreeScreen uses compact header bar in embedded mode. NavBar consolidated 3 buttons → 1 "Heroes" button with priority badges (SP > recruit > uniques). Modal routing via `heroes`/`heroes-gear`/`heroes-skills` IDs. (v0.3.6)
+- [ ] Surface more info inline — 17 total modals (was 18, now Heroes/Equipment/Skills are 1). Consider inline skill bar, sidebar panels, split-view layouts.
 
 ### Bug Backlog
 - [x] ~~**Leave Dungeon / Change buttons off-screen during gameplay**~~ (v0.3.5: Added `h-full` to sidebar wrapper div and `min-h-0` to aside element for proper flex height chain)
@@ -68,9 +68,13 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 - [x] ~~**World boss prep screen says "Guaranteed legendary+ gear drop"**~~ (v0.3.5: Shows "Unique item drop" for bosses with uniqueDrop, keeps rarity text for early bosses without uniques. Fixed in IdleScreen and DungeonMap)
 - [ ] **Stat color / comparison color clash** — HP uses green, ATK uses red as their stat identity colors. But comparison tooltips also use green = better, red = worse. So "+10 ATK" shows as red (stat color) even though it's an upgrade. Confusing. Fix: stat identity colors should NOT be red/green, OR comparisons should use a different indicator (arrows, +/- symbols, background tint) instead of relying on red/green which conflicts.
 - [x] ~~**Unique item powers not visible in gear screen**~~ (v0.3.4: unique power section added to EquipmentTooltip — shows power name, trigger type, and description in amber-styled block. Visible in both ItemRow accordion and PaperDoll hover tooltip)
-- [x] ~~**Remove Infused/Ascended item quality tiers for now**~~ (v0.3.6: Removed quality tier generation from equipment.js, quality CSS classes from index.css, quality checks from rarityStyles.js, badge labels from EquipmentTooltip.jsx, quality guard from PaperDoll.jsx. Existing items with quality field are inert — no code reads it anymore.)
+- [x] ~~**Remove Infused/Ascended item quality tiers for now**~~ (v0.3.5: Removed quality tier generation from equipment.js. v0.3.6: Cleaned up difficulty descriptions referencing removed tiers, renamed CSS keyframe, updated changelog entry. Existing items with quality field are inert — no code reads it anymore.)
 - [ ] **Rogue dual daggers don't render correctly in dungeons** — Canvas sprite rendering issue for rogue's dual dagger weapon type. Check `SkillSprites.js` / canvas sprite system for the rogue weapon drawing logic.
 - [x] ~~**Kills not tracked in Recent Runs**~~ (v0.3.5: Wrapped `incrementStat` in useCombat.js ctx to track kills per hero per tick via `killsByHero`, flushed to `updateRunStats` alongside damage/healing)
+- [ ] **Duplicate classes allowed in party** — No guard against recruiting the same class twice. `addHero` in heroSlice.js only checks if the slot is empty, not whether the class already exists in the party. Tavern generates random heroes by role with no dedup. Fix: add a check in `addHero` that rejects if `heroes.some(h => h && h.classId === classId)`. Also filter tavern offerings to exclude already-recruited classes.
+- [ ] **Hero Profile modal too large** — The unified Hero Profile modal (HeroProfileModal.jsx, `size="full"`) takes up too much screen. Needs a compacting pass: tighter spacing, smaller elements, reduce chrome so it doesn't feel like it dominates the entire viewport. Review CharacterTab (paper doll), HeroSelector bar, tab content areas for space savings.
+- [ ] **Consolidate changelog** — Everything from v0.2.0 through current (v0.3.6) should be repackaged as a single v0.2.0 with a cleaner, grouped changelog. 17 micro-versions of internal iteration don't make sense as player-facing entries. Group by theme (equipment, hero management, combat feedback, difficulty, QoL, balance) into ~15-20 concise bullets.
+- [ ] **Recruit button needs "new" badge** — The "+" recruit button in HeroSelector should show a notification indicator when a new party slot has opened up (via Barracks upgrade or Ascension) and the player hasn't recruited into it yet. Draws attention to the new slot so players don't miss it.
 
 ### Priority 7: UI Polish Passes
 - [ ] **App-wide color pass** — Colors are defined ad-hoc across 40+ files (289 Tailwind color class usages, dozens of inline hex values). No central palette. Same colors duplicated (zone theme colors in DungeonHeader, DungeonMap, CurrentZoneIndicator — all with identical hex maps). Stat colors (green HP, red ATK) clash with comparison colors (green better, red worse). Rarity colors defined in equipment.js, rarityStyles.js, and inline in LootNotifications/ShopScreen. Need: a single `src/data/colors.js` or CSS custom properties palette that all files import from. Define semantic color roles (stat identity, comparison, rarity, zone theme, UI feedback) that don't conflict. Kill inline hex values.
@@ -110,6 +114,27 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 ---
 
 ## Handoff Notes
+
+### Session 23 (2026-02-22) — v0.3.6: Unified Hero Profile
+
+**Merged 3 hero-management modals (Heroes, Equipment, Skills) into one tabbed `HeroProfileModal`:**
+
+- **`HeroProfileModal.jsx`** (new) — Top-level container with Gear/Skills tabs. Manages `activeTab`, `selectedHeroId`, `selectedSlot` state. Persistent `CharacterTab` (paper doll) in left column visible on both tabs. Tab bar uses `pixel-btn`/`pixel-btn-primary` inside right content area.
+- **`HeroSelector.jsx`** — Added skill point badges (+N green circles) on hero chips. Added inline "+" recruit button with class picker popover (positioned outside scroll container via `getBoundingClientRect()`).
+- **`EquipmentScreen.jsx`** — Accepts `embedded`, `selectedHeroId`, `onSelectHero`, `selectedSlot`, `onSelectSlot` props. When embedded: hides top bar (HeroSelector), hides CharacterTab (parent renders it), shows inline Settings toggle.
+- **`SkillTreeScreen.jsx`** — Accepts `embedded`, `selectedHeroId`, `onSelectHero` props. When embedded: replaces left panel with compact header bar (class icon, tree name, SP count+bar, respec button, help tooltip, inline legend).
+- **`ModalManager.jsx`** — 3 modal entries replaced with 1 using `isHeroModal()`/`heroModalTab()` helpers. Routes `heroes`/`heroes-gear`/`heroes-skills` to correct tab.
+- **`NavBar.jsx`** — 3 hero buttons merged into 1. Badge priority: skill points (number) > recruit available (!) > new uniques (NEW).
+- **`GameLayout.jsx`** — Side effects updated: `modalId?.startsWith('heroes')` for uniques-read.
+- **`IdleScreen.jsx`** — Modal links use `heroes-skills`/`heroes-gear` for tab routing.
+- **`HeroManagement.jsx`** — Now unused/dead code (Party tab removed; recruitment moved to HeroSelector).
+
+**Iterative design refinements through user feedback:**
+- Dropped Party tab as redundant, moved recruitment to HeroSelector inline
+- Lifted CharacterTab to parent for persistent paper doll across tabs
+- Compact skill bar header replaces full left panel in embedded mode
+- Tab buttons moved inside right content area as header row
+- Skills badge shows per-selected-hero SP only (not total)
 
 ### Session 22 (2026-02-22) — v0.3.5: Bug Fixes
 

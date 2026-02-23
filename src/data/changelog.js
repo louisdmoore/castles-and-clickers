@@ -1,9 +1,18 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.3.5';
+export const CURRENT_VERSION = '0.3.6';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.3.6',
+    title: 'Unified Hero Profile',
+    date: '2026-02-22',
+    changes: [
+      { type: 'improvement', text: 'Heroes, Gear, and Skills combined into one tabbed Hero Profile modal — switch between Gear and Skills tabs without losing your selected hero, with persistent paper doll and inline recruitment' },
+      { type: 'improvement', text: 'Nav bar streamlined: 3 hero-related buttons merged into a single "Heroes" button with smart badge priority (skill points > recruit available > new uniques)' },
+    ],
+  },
   {
     version: '0.3.5',
     title: 'Bug Fixes',
@@ -91,7 +100,7 @@ export const CHANGELOG = [
       { type: 'feature', text: 'Rarity glow effects — rare items pulse blue, epic glows purple, legendary shines gold' },
       { type: 'improvement', text: 'Items now display as visual cards in a grid instead of a scrolling list' },
       { type: 'improvement', text: 'Equipment slots shown as clickable tiles around your hero portrait' },
-      { type: 'improvement', text: 'Infused and Ascended quality items have shimmering border effects' },
+      { type: 'improvement', text: 'Rarity-based shimmering border effects on equipment' },
     ],
   },
   {

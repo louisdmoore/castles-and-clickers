@@ -189,7 +189,7 @@ const GameLayout = () => {
     if (modalId === 'raids') {
       state.markFeatureSeen('lastSeenRaidsAt');
     }
-    if (modalId === 'equipment' && (state.unreadUniques || []).length > 0) {
+    if (modalId?.startsWith('heroes') && (state.unreadUniques || []).length > 0) {
       state.markAllUniquesRead();
     }
   }, []);

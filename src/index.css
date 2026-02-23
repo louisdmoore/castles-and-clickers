@@ -849,8 +849,8 @@ svg {
   animation: rarity-glow-legendary 2s ease-in-out infinite;
 }
 
-/* Quality tier overlays */
-@keyframes quality-shimmer-infused {
+/* Legendary shimmer sweep animation */
+@keyframes legendary-shimmer {
   0% { background-position: -200% center; }
   100% { background-position: 200% center; }
 }
@@ -877,7 +877,7 @@ svg {
   inset: 0;
   background: linear-gradient(90deg, transparent 30%, rgba(245, 158, 11, 0.06) 50%, transparent 70%);
   background-size: 200% 100%;
-  animation: quality-shimmer-infused 4s linear infinite;
+  animation: legendary-shimmer 4s linear infinite;
   pointer-events: none;
 }
 

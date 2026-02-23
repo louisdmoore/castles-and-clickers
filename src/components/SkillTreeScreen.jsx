@@ -10,7 +10,7 @@ import ClassIcon from './icons/ClassIcon';
 import HelpTooltip from './ui/HelpTooltip';
 import ModalOverlay from './ModalOverlay';
 
-const SkillTreeScreen = () => {
+const SkillTreeScreen = ({ selectedHeroId: externalHeroId, onSelectHero: externalSelectHero, embedded } = {}) => {
   const {
     heroes,
     gold,
@@ -20,7 +20,9 @@ const SkillTreeScreen = () => {
     specializeHero,
   } = useGameStore();
 
-  const [selectedHeroId, setSelectedHeroId] = useState(heroes[0]?.id || null);
+  const [internalHeroId, setInternalHeroId] = useState(heroes[0]?.id || null);
+  const selectedHeroId = externalHeroId ?? internalHeroId;
+  const setSelectedHeroId = externalSelectHero ?? setInternalHeroId;
   const [showRespecConfirm, setShowRespecConfirm] = useState(false);
   const [specConfirm, setSpecConfirm] = useState(null);
 
@@ -88,7 +90,7 @@ const SkillTreeScreen = () => {
   };
 
   return (
-    <div className="pixel-panel p-4">
+    <div className={embedded ? 'p-4' : 'pixel-panel p-4'}>
       {heroes.length === 0 ? (
         <div className="text-gray-500 text-center py-12">
           <div className="flex justify-center mb-4">
@@ -97,144 +99,189 @@ const SkillTreeScreen = () => {
           Recruit heroes first!
         </div>
       ) : (
-        <div className="flex gap-6">
-          {/* Left Panel: Hero Selection & Info */}
-          <div className="w-72 flex-shrink-0 space-y-4">
-            {/* Hero Tabs - Grid layout that wraps at 4 heroes */}
-            <div className="grid grid-cols-4 gap-1">
-              {heroes.filter(Boolean).map(hero => {
-                const heroPoints = getSkillPoints(hero.id);
-                return (
-                  <button
-                    key={hero.id}
-                    onClick={() => setSelectedHeroId(hero.id)}
-                    className={`p-2 rounded-lg border-2 transition-all relative ${
-                      hero.id === selectedHeroId
-                        ? 'border-yellow-400 bg-yellow-400/10'
-                        : 'border-gray-700 bg-gray-900 hover:border-gray-600'
-                    }`}
-                  >
-                    {heroPoints.available > 0 && (
-                      <div className="absolute -top-1.5 -right-1.5 bg-green-500 text-white text-[10px] font-bold
-                                      w-5 h-5 rounded-full flex items-center justify-center
-                                      animate-pulse shadow-lg shadow-green-500/50">
-                        +{heroPoints.available}
+        <div className={embedded ? '' : 'flex gap-6'}>
+          {/* Standalone: Left Panel with hero selector + info */}
+          {!embedded && (
+            <div className="w-72 flex-shrink-0 space-y-4">
+              <div className="grid grid-cols-4 gap-1">
+                {heroes.filter(Boolean).map(hero => {
+                  const heroPoints = getSkillPoints(hero.id);
+                  return (
+                    <button
+                      key={hero.id}
+                      onClick={() => setSelectedHeroId(hero.id)}
+                      className={`p-2 rounded-lg border-2 transition-all relative ${
+                        hero.id === selectedHeroId
+                          ? 'border-yellow-400 bg-yellow-400/10'
+                          : 'border-gray-700 bg-gray-900 hover:border-gray-600'
+                      }`}
+                    >
+                      {heroPoints.available > 0 && (
+                        <div className="absolute -top-1.5 -right-1.5 bg-green-500 text-white text-[10px] font-bold
+                                        w-5 h-5 rounded-full flex items-center justify-center
+                                        animate-pulse shadow-lg shadow-green-500/50">
+                          +{heroPoints.available}
+                        </div>
+                      )}
+                      <div className="flex justify-center"><HeroIcon classId={hero.classId} equipment={hero.equipment} size={24} /></div>
+                      <div className="text-xs text-gray-400 truncate">{hero.name}</div>
+                    </button>
+                  );
+                })}
+              </div>
+
+              {selectedHero && (
+                <div className="pixel-panel-dark p-4 space-y-4">
+                  <div className="flex items-center gap-3">
+                    <HeroIcon classId={selectedHero.classId} equipment={selectedHero.equipment} size={40} />
+                    <div>
+                      <div className="font-bold text-white">{selectedHero.name}</div>
+                      <div className="text-sm text-gray-400">Level {selectedHero.level} {CLASSES[selectedHero.classId].name}</div>
+                    </div>
+                  </div>
+
+                  <div className="pixel-panel p-3">
+                    <div className="flex justify-between items-center mb-2">
+                      <span className="text-gray-400">Skill Points</span>
+                      <span className={`text-lg font-bold ${skillPointInfo.available > 0 ? 'text-green-400' : 'text-gray-500'}`}>
+                        {skillPointInfo.available} / {skillPointInfo.total}
+                      </span>
+                    </div>
+                    <div className="w-full bg-gray-700 rounded-full h-2">
+                      <div
+                        className="bg-green-500 h-2 rounded-full transition-all"
+                        style={{ width: `${skillPointInfo.total > 0 ? (skillPointInfo.used / skillPointInfo.total) * 100 : 0}%` }}
+                      />
+                    </div>
+                    <div className="text-xs text-gray-500 mt-1">
+                      1 per 3 levels ({skillPointInfo.used} used, max 10)
+                    </div>
+                    <div className="text-xs text-yellow-400 mt-1">
+                      Choose wisely — only 10 skills total!
+                    </div>
+                  </div>
+
+                  {stats && (
+                    <div className="grid grid-cols-4 gap-2 text-center">
+                      <div>
+                        <div className="text-green-400 font-bold">{stats.maxHp}</div>
+                        <div className="text-[10px] text-gray-500">HP</div>
                       </div>
-                    )}
-                    <div className="flex justify-center"><HeroIcon classId={hero.classId} equipment={hero.equipment} size={24} /></div>
-                    <div className="text-xs text-gray-400 truncate">{hero.name}</div>
-                  </button>
-                );
-              })}
-            </div>
+                      <div>
+                        <div className="text-red-400 font-bold">{stats.attack}</div>
+                        <div className="text-[10px] text-gray-500">ATK</div>
+                      </div>
+                      <div>
+                        <div className="text-blue-400 font-bold">{stats.defense}</div>
+                        <div className="text-[10px] text-gray-500">DEF</div>
+                      </div>
+                      <div>
+                        <div className="text-yellow-400 font-bold">{stats.speed}</div>
+                        <div className="text-[10px] text-gray-500">SPD</div>
+                      </div>
+                    </div>
+                  )}
 
-            {/* Hero Info */}
-            {selectedHero && (
-              <div className="pixel-panel-dark p-4 space-y-4">
-                <div className="flex items-center gap-3">
-                  <HeroIcon classId={selectedHero.classId} equipment={selectedHero.equipment} size={40} />
-                  <div>
-                    <div className="font-bold text-white">{selectedHero.name}</div>
-                    <div className="text-sm text-gray-400">Level {selectedHero.level} {CLASSES[selectedHero.classId].name}</div>
-                  </div>
+                  {skillPointInfo.used > 0 && (
+                    <button
+                      onClick={() => setShowRespecConfirm(true)}
+                      disabled={gold < respecCost}
+                      className={`w-full pixel-btn text-sm ${
+                        gold >= respecCost ? 'pixel-btn-danger' : 'opacity-50 cursor-not-allowed'
+                      }`}
+                    >
+                      Respec Skills ({respecCost} gold)
+                    </button>
+                  )}
                 </div>
+              )}
 
-                {/* Skill Points */}
-                <div className="pixel-panel p-3">
-                  <div className="flex justify-between items-center mb-2">
-                    <span className="text-gray-400">Skill Points</span>
-                    <span className={`text-lg font-bold ${skillPointInfo.available > 0 ? 'text-green-400' : 'text-gray-500'}`}>
-                      {skillPointInfo.available} / {skillPointInfo.total}
-                    </span>
-                  </div>
-                  <div className="w-full bg-gray-700 rounded-full h-2">
-                    <div
-                      className="bg-green-500 h-2 rounded-full transition-all"
-                      style={{ width: `${skillPointInfo.total > 0 ? (skillPointInfo.used / skillPointInfo.total) * 100 : 0}%` }}
-                    />
-                  </div>
-                  <div className="text-xs text-gray-500 mt-1">
-                    1 per 3 levels ({skillPointInfo.used} used, max 10)
-                  </div>
-                  <div className="text-xs text-yellow-400 mt-1">
-                    Choose wisely — only 10 skills total!
-                  </div>
+              <div className="pixel-panel-dark p-3 space-y-2">
+                <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Legend</div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-4 h-4 rounded bg-yellow-500/20 border-2 border-yellow-400" />
+                  <span className="text-gray-400">Unlocked</span>
                 </div>
-
-                {/* Stats with skill bonuses */}
-                {stats && (
-                  <div className="grid grid-cols-4 gap-2 text-center">
-                    <div>
-                      <div className="text-green-400 font-bold">{stats.maxHp}</div>
-                      <div className="text-[10px] text-gray-500">HP</div>
-                    </div>
-                    <div>
-                      <div className="text-red-400 font-bold">{stats.attack}</div>
-                      <div className="text-[10px] text-gray-500">ATK</div>
-                    </div>
-                    <div>
-                      <div className="text-blue-400 font-bold">{stats.defense}</div>
-                      <div className="text-[10px] text-gray-500">DEF</div>
-                    </div>
-                    <div>
-                      <div className="text-yellow-400 font-bold">{stats.speed}</div>
-                      <div className="text-[10px] text-gray-500">SPD</div>
-                    </div>
-                  </div>
-                )}
-
-                {/* Respec Button */}
-                {skillPointInfo.used > 0 && (
-                  <button
-                    onClick={() => setShowRespecConfirm(true)}
-                    disabled={gold < respecCost}
-                    className={`w-full pixel-btn text-sm ${
-                      gold >= respecCost ? 'pixel-btn-danger' : 'opacity-50 cursor-not-allowed'
-                    }`}
-                  >
-                    Respec Skills ({respecCost} gold)
-                  </button>
-                )}
-
-              </div>
-            )}
-
-            {/* Legend */}
-            <div className="pixel-panel-dark p-3 space-y-2">
-              <div className="text-xs text-gray-500 uppercase tracking-wider mb-2">Legend</div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-4 h-4 rounded bg-yellow-500/20 border-2 border-yellow-400" />
-                <span className="text-gray-400">Unlocked</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-4 h-4 rounded bg-blue-500/20 border-2 border-blue-400" />
-                <span className="text-gray-400">Available</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-4 h-4 rounded bg-gray-800/50 border-2 border-gray-600" />
-                <span className="text-gray-400">Locked</span>
-              </div>
-              <div className="flex items-center gap-2 text-sm">
-                <div className="w-4 h-4 rounded bg-blue-600 flex items-center justify-center text-[8px] text-white font-bold">A</div>
-                <span className="text-gray-400">Active Skill</span>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-4 h-4 rounded bg-blue-500/20 border-2 border-blue-400" />
+                  <span className="text-gray-400">Available</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-4 h-4 rounded bg-gray-800/50 border-2 border-gray-600" />
+                  <span className="text-gray-400">Locked</span>
+                </div>
+                <div className="flex items-center gap-2 text-sm">
+                  <div className="w-4 h-4 rounded bg-blue-600 flex items-center justify-center text-[8px] text-white font-bold">A</div>
+                  <span className="text-gray-400">Active Skill</span>
+                </div>
               </div>
             </div>
-          </div>
+          )}
 
-          {/* Right Panel: Skill Tree by Tiers */}
+          {/* Embedded: Compact skill bar above full-width tree */}
+          {embedded && selectedHero && (
+            <div className="flex items-center gap-3 mb-3 px-1">
+              <ClassIcon classId={selectedHero.classId} size={20} />
+              <span className="text-white font-bold text-sm">{skillTree?.name} Skills</span>
+
+              <div className="flex items-center gap-2 ml-2">
+                <span className="text-xs text-gray-400">SP</span>
+                <span className={`text-sm font-bold ${skillPointInfo.available > 0 ? 'text-green-400' : 'text-gray-500'}`}>
+                  {skillPointInfo.available}/{skillPointInfo.total}
+                </span>
+                <div className="w-20 bg-gray-700 rounded-full h-1.5">
+                  <div
+                    className="bg-green-500 h-1.5 rounded-full transition-all"
+                    style={{ width: `${skillPointInfo.total > 0 ? (skillPointInfo.used / skillPointInfo.total) * 100 : 0}%` }}
+                  />
+                </div>
+              </div>
+
+              {skillPointInfo.used > 0 && (
+                <button
+                  onClick={() => setShowRespecConfirm(true)}
+                  disabled={gold < respecCost}
+                  className={`pixel-btn text-xs px-2 py-0.5 ${
+                    gold >= respecCost ? 'pixel-btn-danger' : 'opacity-50 cursor-not-allowed'
+                  }`}
+                >
+                  Respec ({respecCost}g)
+                </button>
+              )}
+
+              <HelpTooltip content={
+                <div className="space-y-1">
+                  <div>Earn 1 skill point every 3 levels.</div>
+                  <div>Tier 1 requires 2 Tier 0 skills, Tier 2 requires 3 Tier 1, Tier 3 (capstone) requires 4 Tier 2.</div>
+                  <div>Respec cost: 250g per allocated point.</div>
+                </div>
+              } />
+
+              {/* Inline legend */}
+              <div className="flex items-center gap-2 ml-auto text-[10px] text-gray-500">
+                <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 rounded-sm bg-yellow-500/20 border border-yellow-400" /><span>Learned</span></div>
+                <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 rounded-sm bg-blue-500/20 border border-blue-400" /><span>Available</span></div>
+                <div className="flex items-center gap-1"><div className="w-2.5 h-2.5 rounded-sm bg-gray-800/50 border border-gray-600" /><span>Locked</span></div>
+              </div>
+            </div>
+          )}
+
+          {/* Skill Tree by Tiers */}
           <div className="flex-1">
             {skillTree && (
               <>
-                <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
-                  <ClassIcon classId={selectedHero.classId} size={24} /> {skillTree.name} Skills
-                  <HelpTooltip content={
-                    <div className="space-y-1">
-                      <div>Earn 1 skill point every 3 levels.</div>
-                      <div>Tier 1 requires 2 Tier 0 skills, Tier 2 requires 3 Tier 1 skills, Tier 3 (capstone) requires 4 Tier 2 skills.</div>
-                      <div>Respec cost: 250g per allocated point.</div>
-                    </div>
-                  } />
-                </h3>
+                {!embedded && (
+                  <h3 className="text-white font-bold text-lg mb-4 flex items-center gap-2">
+                    <ClassIcon classId={selectedHero.classId} size={24} /> {skillTree.name} Skills
+                    <HelpTooltip content={
+                      <div className="space-y-1">
+                        <div>Earn 1 skill point every 3 levels.</div>
+                        <div>Tier 1 requires 2 Tier 0 skills, Tier 2 requires 3 Tier 1 skills, Tier 3 (capstone) requires 4 Tier 2 skills.</div>
+                        <div>Respec cost: 250g per allocated point.</div>
+                      </div>
+                    } />
+                  </h3>
+                )}
 
                 <div className="space-y-6">
                   {[0, 1, 2, 3].map(tier => {

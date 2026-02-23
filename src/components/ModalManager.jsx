@@ -1,7 +1,5 @@
 import ModalOverlay from './ModalOverlay';
-import HeroManagement from './HeroManagement';
-import EquipmentScreen from './EquipmentScreen';
-import SkillTreeScreen from './SkillTreeScreen';
+import HeroProfileModal from './HeroProfileModal';
 import HomesteadScreen from './HomesteadScreen';
 import ShopScreen from './ShopScreen';
 import DungeonMap from './DungeonMap';
@@ -13,19 +11,14 @@ import UniqueCollectionScreen from './UniqueCollectionScreen';
 import AscensionModal from './AscensionModal';
 import AchievementScreen from './AchievementScreen';
 
+const isHeroModal = (modal) => modal === 'heroes' || modal === 'heroes-gear' || modal === 'heroes-skills';
+const heroModalTab = (modal) => modal === 'heroes-skills' ? 'skills' : 'gear';
+
 const ModalManager = ({ activeModal, onClose, onStartDungeon }) => {
   return (
     <>
-      <ModalOverlay isOpen={activeModal === 'heroes'} onClose={onClose} title="Heroes">
-        <HeroManagement />
-      </ModalOverlay>
-
-      <ModalOverlay isOpen={activeModal === 'skills'} onClose={onClose} title="Skill Trees" size="xl">
-        <SkillTreeScreen />
-      </ModalOverlay>
-
-      <ModalOverlay isOpen={activeModal === 'equipment'} onClose={onClose} title="Equipment" size="full">
-        <EquipmentScreen />
+      <ModalOverlay isOpen={isHeroModal(activeModal)} onClose={onClose} title="Hero Profile" size="full">
+        <HeroProfileModal initialTab={heroModalTab(activeModal)} />
       </ModalOverlay>
 
       <ModalOverlay isOpen={activeModal === 'homestead'} onClose={onClose} title="Homestead">

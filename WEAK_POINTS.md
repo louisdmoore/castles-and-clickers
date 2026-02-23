@@ -1,6 +1,6 @@
 # Castles & Clickers — Weak Points Analysis
 
-**Version:** v0.1.28 | **Date:** February 2026
+**Version:** v0.3.6 | **Date:** February 2026
 
 This document catalogs every verified weakness in the game across code quality, game balance, player experience, and accessibility. Each finding includes exact file locations, code evidence, and severity ratings.
 

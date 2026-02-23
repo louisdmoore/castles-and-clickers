@@ -19,13 +19,13 @@ const HeroReadinessRow = ({ hero, onOpenModal }) => {
     const usedSP = calculateUsedSkillPoints(hero);
     const availSP = totalSP - usedSP;
     if (availSP > 0) {
-      result.push({ type: 'skills', label: `${availSP} skill pt${availSP > 1 ? 's' : ''}`, color: 'text-yellow-400', symbol: '\u26A0', modal: 'skills' });
+      result.push({ type: 'skills', label: `${availSP} skill pt${availSP > 1 ? 's' : ''}`, color: 'text-yellow-400', symbol: '\u26A0', modal: 'heroes-skills' });
     }
     // Empty equipment slots
     const emptySlots = ['weapon', 'armor', 'accessory'].filter(s => !hero.equipment?.[s]);
     if (emptySlots.length > 0) {
       const shortLabel = emptySlots.length === 3 ? 'No gear' : `No ${emptySlots.join(', ')}`;
-      result.push({ type: 'emptySlot', label: shortLabel, color: 'text-red-400', symbol: '\u25CB', modal: 'equipment' });
+      result.push({ type: 'emptySlot', label: shortLabel, color: 'text-red-400', symbol: '\u25CB', modal: 'heroes-gear' });
     }
     // Upgrade available
     if (inventory && compareToEquipped) {
@@ -34,7 +34,7 @@ const HeroReadinessRow = ({ hero, onOpenModal }) => {
         return cmp?.isBetter;
       });
       if (hasUpgrade) {
-        result.push({ type: 'upgrade', label: 'Better gear in bags', color: 'text-green-400', symbol: '\u25B2', modal: 'equipment' });
+        result.push({ type: 'upgrade', label: 'Better gear in bags', color: 'text-green-400', symbol: '\u25B2', modal: 'heroes-gear' });
       }
     }
     return result;

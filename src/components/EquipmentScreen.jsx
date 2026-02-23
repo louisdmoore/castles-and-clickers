@@ -8,7 +8,7 @@ import StatsSummary from './equipment/StatsSummary';
 import InventoryGrid from './equipment/InventoryGrid';
 import EquipmentSettings from './equipment/EquipmentSettings';
 
-const EquipmentScreen = () => {
+const EquipmentScreen = ({ selectedHeroId: externalHeroId, onSelectHero: externalSelectHero, selectedSlot: externalSlot, onSelectSlot: externalSetSlot, embedded } = {}) => {
   const {
     heroes,
     inventory,
@@ -23,10 +23,15 @@ const EquipmentScreen = () => {
     isUpgradeForAnyHero,
   } = useGameStore();
 
-  const [selectedHeroId, setSelectedHeroId] = useState(heroes[0]?.id || null);
-  const [selectedSlot, setSelectedSlot] = useState(null);
+  const [internalHeroId, setInternalHeroId] = useState(heroes[0]?.id || null);
+  const [internalSlot, setInternalSlot] = useState(null);
   const [settingsOpen, setSettingsOpen] = useState(false);
   const settingsRef = useRef(null);
+
+  const selectedHeroId = externalHeroId ?? internalHeroId;
+  const setSelectedHeroId = externalSelectHero ?? setInternalHeroId;
+  const selectedSlot = externalSetSlot ? externalSlot : internalSlot;
+  const setSelectedSlot = externalSetSlot ?? setInternalSlot;
 
   // Click-outside to close settings dropdown
   useEffect(() => {
@@ -63,52 +68,84 @@ const EquipmentScreen = () => {
   }
 
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 10rem)' }}>
-      {/* Top bar: Hero selector + settings toggle */}
-      <div className="flex items-start gap-2">
-        <div className="flex-1 min-w-0">
-          <HeroSelector
-            heroes={heroes}
-            selectedHeroId={selectedHeroId}
-            onSelectHero={handleSelectHero}
-          />
+    <div className="flex flex-col" style={{ height: embedded ? '100%' : 'calc(100vh - 10rem)' }}>
+      {/* Top bar: Hero selector + settings toggle (hidden when embedded) */}
+      {!embedded && (
+        <div className="flex items-start gap-2">
+          <div className="flex-1 min-w-0">
+            <HeroSelector
+              heroes={heroes}
+              selectedHeroId={selectedHeroId}
+              onSelectHero={handleSelectHero}
+            />
+          </div>
+
+          {/* Settings gear toggle */}
+          <div className="relative flex-shrink-0" ref={settingsRef}>
+            <button
+              className={`settings-toggle ${settingsOpen ? 'settings-toggle-open' : ''}`}
+              onClick={() => setSettingsOpen(v => !v)}
+              aria-expanded={settingsOpen}
+              aria-label="Equipment settings"
+            >
+              &#9881; Settings
+              <span className="settings-toggle-chevron">&#9662;</span>
+            </button>
+
+            {/* Dropdown panel */}
+            {settingsOpen && (
+              <div className="absolute right-0 top-full mt-1 z-30 w-80 pixel-panel p-2 settings-dropdown-enter">
+                <EquipmentSettings
+                  heroes={heroes}
+                  equipmentSettings={equipmentSettings}
+                  updateEquipmentSettings={updateEquipmentSettings}
+                  setClassPriority={setClassPriority}
+                />
+              </div>
+            )}
+          </div>
         </div>
+      )}
 
-        {/* Settings gear toggle */}
-        <div className="relative flex-shrink-0" ref={settingsRef}>
-          <button
-            className={`settings-toggle ${settingsOpen ? 'settings-toggle-open' : ''}`}
-            onClick={() => setSettingsOpen(v => !v)}
-            aria-expanded={settingsOpen}
-            aria-label="Equipment settings"
-          >
-            &#9881; Settings
-            <span className="settings-toggle-chevron">&#9662;</span>
-          </button>
+      {/* Settings toggle when embedded (inline, no hero selector) */}
+      {embedded && (
+        <div className="flex justify-end mb-1">
+          <div className="relative flex-shrink-0" ref={settingsRef}>
+            <button
+              className={`settings-toggle ${settingsOpen ? 'settings-toggle-open' : ''}`}
+              onClick={() => setSettingsOpen(v => !v)}
+              aria-expanded={settingsOpen}
+              aria-label="Equipment settings"
+            >
+              &#9881; Settings
+              <span className="settings-toggle-chevron">&#9662;</span>
+            </button>
 
-          {/* Dropdown panel */}
-          {settingsOpen && (
-            <div className="absolute right-0 top-full mt-1 z-30 w-80 pixel-panel p-2 settings-dropdown-enter">
-              <EquipmentSettings
-                heroes={heroes}
-                equipmentSettings={equipmentSettings}
-                updateEquipmentSettings={updateEquipmentSettings}
-                setClassPriority={setClassPriority}
-              />
-            </div>
-          )}
+            {settingsOpen && (
+              <div className="absolute right-0 top-full mt-1 z-30 w-80 pixel-panel p-2 settings-dropdown-enter">
+                <EquipmentSettings
+                  heroes={heroes}
+                  equipmentSettings={equipmentSettings}
+                  updateEquipmentSettings={updateEquipmentSettings}
+                  setClassPriority={setClassPriority}
+                />
+              </div>
+            )}
+          </div>
         </div>
-      </div>
+      )}
 
-      {/* 3-column layout: Hero | Inventory | Stats */}
+      {/* Column layout: Hero (standalone only) | Inventory | Stats */}
       <div className="flex flex-1 min-h-0 mt-2 gap-0">
-        {/* LEFT: Hero showcase with atmosphere */}
-        <CharacterTab
-          hero={selectedHero}
-          selectedSlot={selectedSlot}
-          onSelectSlot={setSelectedSlot}
-          onUnequip={unequipItem}
-        />
+        {/* LEFT: Hero showcase (hidden when embedded — parent renders it) */}
+        {!embedded && (
+          <CharacterTab
+            hero={selectedHero}
+            selectedSlot={selectedSlot}
+            onSelectSlot={setSelectedSlot}
+            onUnequip={unequipItem}
+          />
+        )}
 
         {/* CENTER: Inventory — always visible */}
         <div className="flex-1 min-w-0 min-h-0 flex flex-col border-x border-gray-700/20 bg-gray-900/20">

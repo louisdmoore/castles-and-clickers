@@ -52,9 +52,9 @@ src/
 │   ├── GameLayout.jsx       # Main game container
 │   ├── Sidebar.jsx          # Party status, dungeon info
 │   ├── CombatLog.jsx        # Combat message display
-│   ├── HeroManagement.jsx   # Party composition UI
-│   ├── EquipmentScreen.jsx  # Item management
-│   ├── SkillTreeScreen.jsx  # Skill unlocking
+│   ├── HeroProfileModal.jsx # Unified hero management (Gear/Skills tabs, v0.3.6)
+│   ├── EquipmentScreen.jsx  # Item management (standalone or embedded in HeroProfile)
+│   ├── SkillTreeScreen.jsx  # Skill unlocking (standalone or embedded in HeroProfile)
 │   ├── HomesteadScreen.jsx  # Building upgrades
 │   ├── ShopScreen.jsx       # Item purchasing
 │   ├── ContributionMeter.jsx # Per-hero combat stats (v0.2.0)
@@ -683,9 +683,30 @@ If inventory is full, falls through to silent auto-equip (don't lose the upgrade
 
 `compareToEquipped(item, heroId)` computes per-stat diffs and overall score diff. Used by `EquipmentTooltip` (inline detail panel) and `suggest-equip` notifications. Returns `{ currentItem, scoreDiff, statDiff, isBetter }`.
 
+### Unified Hero Profile (v0.3.6)
+
+`HeroProfileModal.jsx` combines Equipment and Skills into one tabbed modal. It manages `activeTab`, `selectedHeroId`, and `selectedSlot` state shared across tabs.
+
+**Layout:**
+```
+Top:    HeroSelector (hero chips with SP badges + inline recruit button)
+─────────────────────────────────────────────────────────────────────
+Left:   CharacterTab (persistent paper doll, visible on both tabs)
+Right:  [Gear] [Skills] tab buttons
+        Tab content (EquipmentScreen or SkillTreeScreen, embedded)
+```
+
+**Key props pattern:** Both `EquipmentScreen` and `SkillTreeScreen` accept `embedded`, `selectedHeroId`, `onSelectHero` props. When `embedded` is truthy, they skip their own hero selectors and rely on the parent's shared state. `EquipmentScreen` also accepts `selectedSlot` and `onSelectSlot` for paper doll coordination.
+
+**HeroSelector** — Horizontal scroll row of hero chips. Each chip shows a skill point badge (+N green circle) when the hero has unspent SP. An inline "+" recruit button at the end opens a class picker popover (positioned outside the scroll container via `getBoundingClientRect()` to avoid overflow clipping).
+
+**Modal routing** — `ModalManager.jsx` uses `isHeroModal()`/`heroModalTab()` helpers. Modal IDs: `heroes` (default gear tab), `heroes-gear`, `heroes-skills`. `NavBar.jsx` has one "Heroes" button with priority badges: skill points (number) > recruit available (!) > new uniques (NEW).
+
+**Dead code:** `HeroManagement.jsx` is no longer imported (Party tab removed; recruitment lives in HeroSelector).
+
 ### Equipment Screen Layout (v0.3.3)
 
-The equipment screen uses a permanent 3-column layout (no tabs):
+The equipment screen uses a permanent 3-column layout (no tabs). When `embedded` in HeroProfileModal, the left column (`CharacterTab`) is rendered by the parent instead.
 
 | Column | Component | Width | Content |
 |--------|-----------|-------|---------|
@@ -699,9 +720,11 @@ The equipment screen uses a permanent 3-column layout (no tabs):
 
 **StatsSummary** — 2x2 grid of `StatPillar` components (HP/ATK/DEF/SPD). Each pillar shows the stat value and full breakdown with tree connectors. `SOURCE_ICONS` and `SOURCE_COLORS` are defined here. Uses `calculateHeroStatsWithBreakdown()` from statCalculator.
 
-**Settings** — Dropdown in `EquipmentScreen` top bar (next to `HeroSelector`), click-outside dismiss via `useRef` + `mousedown` listener.
+**Settings** — Dropdown in `EquipmentScreen` top bar (standalone) or inline toggle (embedded). Click-outside dismiss via `useRef` + `mousedown` listener.
 
-**Dead code**: `SlotPanel.jsx` and `StatBreakdown.jsx` are no longer imported.
+**SkillTreeScreen embedded mode** — When embedded in HeroProfileModal, replaces the full left panel (hero info, stats, skill points, legend) with a compact header bar: class icon, tree name, SP count+bar, respec button, help tooltip, inline legend dots.
+
+**Dead code**: `SlotPanel.jsx`, `StatBreakdown.jsx`, and `HeroManagement.jsx` are no longer imported.
 
 ### Item Row Detail (v0.3.1)
 

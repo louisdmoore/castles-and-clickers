@@ -1,10 +1,10 @@
 import { useMemo, useState, useEffect, useRef } from 'react';
 import { useGameStore, calculateSkillPoints, calculateUsedSkillPoints } from '../store/gameStore';
-import { PartyIcon, TreeIcon, BagIcon, HomeIcon, ChestIcon, CrownIcon, SkullIcon, ChartIcon, StarIcon, BookIcon, TrophyIcon } from './icons/ui';
+import { PartyIcon, HomeIcon, ChestIcon, CrownIcon, SkullIcon, ChartIcon, StarIcon, BookIcon, TrophyIcon } from './icons/ui';
 import { PARTY_SLOTS } from '../data/classes';
 import { getAllRaids } from '../data/raids';
 
-const CORE_IDS = ['heroes', 'skills', 'equipment', 'shop', 'homestead', 'raids', 'collection'];
+const CORE_IDS = ['heroes', 'shop', 'homestead', 'raids', 'collection'];
 
 const NavButton = ({ id, Icon, label, badge, isActive, isLocked, unlockAt, onClick }) => {
   return (
@@ -105,20 +105,10 @@ const NavBar = ({ activeModal, onOpenModal }) => {
       id: 'heroes',
       Icon: PartyIcon,
       label: 'Heroes',
-      badge: canRecruitHero ? '!' : null,
-    },
-    {
-      id: 'skills',
-      Icon: TreeIcon,
-      label: 'Skills',
-      badge: totalAvailableSkillPoints > 0 ? totalAvailableSkillPoints : null,
-      unlockAt: 2,
-    },
-    {
-      id: 'equipment',
-      Icon: BagIcon,
-      label: 'Gear',
-      badge: unreadUniques.length > 0 ? 'NEW' : null,
+      badge: totalAvailableSkillPoints > 0 ? totalAvailableSkillPoints
+           : canRecruitHero ? '!'
+           : unreadUniques.length > 0 ? 'NEW'
+           : null,
     },
     {
       id: 'shop',
@@ -199,7 +189,7 @@ const NavBar = ({ activeModal, onOpenModal }) => {
             Icon={btn.Icon}
             label={btn.label}
             badge={btn.badge}
-            isActive={activeModal === btn.id}
+            isActive={activeModal === btn.id || (btn.id === 'heroes' && activeModal?.startsWith('heroes-'))}
             isLocked={isLocked}
             unlockAt={btn.unlockAt}
             onClick={onOpenModal}

@@ -185,7 +185,7 @@ Things that shipped but need a second look. Add items as you go, check them off 
 
 - [ ] +3% per star balance — at 5 stars that's +15% all stats. Combined with ascension bonuses, how strong does a hero get?
 - [ ] Prestige resets to level 10 — hero loses all skills but keeps equipment. Is level 10 the right reset point?
-- [ ] Prestige button only in SkillTreeScreen — should it also be accessible from hero card or sidebar?
+- [ ] Prestige button only in SkillTreeScreen (now embedded in HeroProfileModal Skills tab) — should it also be accessible from hero card or sidebar?
 - [ ] Prestige disabled during dungeon — verified, but toast message could be more helpful (explain why)
 - [ ] Prestige confirmation modal — does it clearly communicate what's lost vs gained?
 - [ ] Prestige star display in sidebar/HeroCard/PrepScreen — ★ symbols. Do they scale well with 5 stars? Any alignment issues?
@@ -266,6 +266,17 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] `checkFeatureUnlocks` called only after endDungeon — should it also fire on game load for players who already passed milestones without the feature?
 - [ ] Celebration toasts use `addToast` — verify they don't conflict with other post-dungeon toasts (loot, level-up, etc.)
 - [ ] Ascension prompt at D30 — this fires even if the player has already ascended. Should it track whether the player has seen this message?
+
+## Unified Hero Profile (v0.3.6)
+
+- [ ] HeroProfileModal at `size="full"` — verify it doesn't feel too large on standard monitors (1080p, 1440p). May need compacting pass
+- [ ] Persistent CharacterTab (paper doll) across Gear/Skills tabs — verify slot selection state clears properly when switching tabs
+- [ ] HeroSelector recruit popover positioning — uses `getBoundingClientRect()`, test with varying scroll positions and screen widths
+- [ ] SkillTreeScreen compact header bar in embedded mode — verify respec button, help tooltip, and legend dots all work at compressed size
+- [ ] Tab badge (Skills tab shows per-hero SP) — switching heroes should update badge immediately
+- [ ] `HeroManagement.jsx` is dead code — should be deleted when confirmed not needed for any other flow
+- [ ] Equipment Settings dropdown in embedded mode — verify z-index doesn't clip behind CharacterTab or tab bar
+- [ ] Modal routing (`heroes`/`heroes-gear`/`heroes-skills`) — verify all entry points (NavBar, IdleScreen badges, keyboard shortcuts) route correctly
 
 ## General
 

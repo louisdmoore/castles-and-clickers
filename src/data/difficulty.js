@@ -8,9 +8,9 @@ export const DIFFICULTY_STOPS = [1.0, 1.5, 2.0, 2.5, 3.0];
 export const DIFFICULTY_INFO = {
   1.0: { label: 'Normal', color: '#9ca3af', desc: 'Standard difficulty and rewards' },
   1.5: { label: 'Hard', color: '#fbbf24', desc: '+50% enemy stats & rewards, faster enemies' },
-  2.0: { label: 'Brutal', color: '#f97316', desc: '+100% stats & rewards, more elites, Infused gear' },
-  2.5: { label: 'Nightmare', color: '#ef4444', desc: '+150% stats & rewards, many elites, higher Infused rate' },
-  3.0: { label: 'Infernal', color: '#a855f7', desc: '+200% stats & rewards, most elites, Ascended gear' },
+  2.0: { label: 'Brutal', color: '#f97316', desc: '+100% stats & rewards, more elites' },
+  2.5: { label: 'Nightmare', color: '#ef4444', desc: '+150% stats & rewards, many elites' },
+  3.0: { label: 'Infernal', color: '#a855f7', desc: '+200% stats & rewards, most elites' },
 };
 
 /** Per-stop speed bonus applied on top of base speed scaling */
