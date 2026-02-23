@@ -1,6 +1,7 @@
 import { useMemo } from 'react';
 import { RARITY } from '../../data/equipment';
 import { ITEM_AFFIXES } from '../../data/itemAffixes';
+import { UNIQUE_TRIGGER } from '../../data/uniqueItems';
 import ItemIcon from '../icons/ItemIcon';
 import { ArrowUpIcon, ArrowDownIcon } from '../icons/ui';
 
@@ -12,6 +13,27 @@ const TRIGGER_LABELS = {
   on_damage_taken: 'On Hit Taken',
   passive: 'Passive',
   on_turn_start: 'Turn Start',
+};
+
+// Get unique power trigger display name
+const getUniqueTriggerDisplay = (trigger) => {
+  switch (trigger) {
+    case UNIQUE_TRIGGER.PASSIVE: return 'Passive';
+    case UNIQUE_TRIGGER.ON_HIT: return 'On Hit';
+    case UNIQUE_TRIGGER.ON_CRIT: return 'On Critical Hit';
+    case UNIQUE_TRIGGER.ON_KILL: return 'On Kill';
+    case UNIQUE_TRIGGER.ON_DAMAGE_TAKEN: return 'On Damage Taken';
+    case UNIQUE_TRIGGER.ON_COMBAT_START: return 'Combat Start';
+    case UNIQUE_TRIGGER.ON_ROOM_START: return 'Room Start';
+    case UNIQUE_TRIGGER.ON_LOW_HP: return 'When Low HP';
+    case UNIQUE_TRIGGER.ON_DEATH: return 'Cheat Death';
+    case UNIQUE_TRIGGER.ON_HEAL: return 'On Heal';
+    case UNIQUE_TRIGGER.ON_SKILL: return 'On Skill Use';
+    case UNIQUE_TRIGGER.ON_PARTY_DAMAGE: return 'Party Damage';
+    case UNIQUE_TRIGGER.ON_LETHAL: return 'On Lethal Damage';
+    case UNIQUE_TRIGGER.ACTIVE: return 'Active Ability';
+    default: return trigger || 'Unknown';
+  }
 };
 
 // Stat display names
@@ -125,6 +147,30 @@ const EquipmentTooltip = ({ item, comparedItem = null, showComparison = true, hi
               </div>
             );
           })}
+        </div>
+      )}
+
+      {/* Unique Power */}
+      {item.isUnique && item.uniquePower && (
+        <div className="mt-2 pt-2" style={{ borderTop: '1px solid rgba(6, 182, 212, 0.3)' }}>
+          <div className="flex items-center gap-1.5 mb-1">
+            <div className="w-1.5 h-1.5 transform rotate-45" style={{ backgroundColor: '#06b6d4' }} />
+            <span className="font-bold uppercase text-[10px] tracking-wide" style={{ color: '#06b6d4' }}>
+              Unique Power: {item.uniquePower.name}
+            </span>
+          </div>
+          <div className="text-[10px] mb-1" style={{ color: 'rgba(6, 182, 212, 0.7)' }}>
+            <span className="text-gray-500">Trigger:</span>{' '}
+            <span className="font-medium">{getUniqueTriggerDisplay(item.uniquePower.trigger)}</span>
+            {item.uniquePower.cooldown && (
+              <span className="ml-1.5 text-gray-500">
+                ({item.uniquePower.cooldown}t CD)
+              </span>
+            )}
+          </div>
+          <div className="text-xs text-gray-300 leading-relaxed bg-gray-800/50 rounded px-2 py-1 border border-gray-700/50">
+            {item.uniquePower.description}
+          </div>
         </div>
       )}
 

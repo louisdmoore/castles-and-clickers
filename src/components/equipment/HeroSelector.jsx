@@ -15,7 +15,7 @@ const HeroSelector = ({ heroes, selectedHeroId, onSelectHero }) => {
         >
           <HeroIcon classId={hero.classId} equipment={hero.equipment} size={24} />
           <div className="text-left">
-            <div className="text-xs text-white font-medium leading-tight">{hero.name}</div>
+            <div className="text-xs text-white font-medium leading-tight truncate max-w-[7ch]" title={hero.name}>{hero.name}</div>
             <div className="text-[10px] text-gray-500 leading-tight">Lv{hero.level}</div>
           </div>
         </button>

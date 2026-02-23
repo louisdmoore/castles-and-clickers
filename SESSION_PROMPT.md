@@ -132,7 +132,16 @@ Tell Claude: **"Work on Priority N"** — where N is one of the following.
 #### 7a: Idle Screen
 From critique: massive dead space, redundant hero info, placeholder text, warning noise, no new-player experience. Also fix: "Victory!" shown to new players, "CONTINUE TO LEVEL 1" verb wrong, locked nav buttons anxiety.
 
-#### 7b: Statistics Screen
+#### 7b: Dungeon Combat View (full redesign)
+The entire in-game screen needs a relook. Current state:
+- **Sidebar**: Hero cards are tiny (16px icons, 5px HP bars). Status effects unreadable. DPS meter crammed below. Action buttons at bottom reported off-screen (see Bug Backlog).
+- **Canvas**: Shares vertical space with DungeonHeader (~35px) and CombatLog (96-160px). Gets squeezed on smaller viewports. Minimap (140x105) and boss panel (160px wide) overlay the gameplay.
+- **DungeonHeader**: Zone name, difficulty, phase, enemy progress, boss indicator all fighting for one row.
+- **Combat log**: 96px of tiny text-xs, hard to parse. Takes fixed space even when empty.
+- **Right panel**: 1440px+ only. Most players never see it.
+- **Overall**: Utilitarian data dump. Canvas is the star but hemmed in by chrome. No drama, no visual difference between exploring and boss fights. Consider: collapsible sidebar during combat, combat log as overlay, boss encounters that maximize canvas, mobile-first.
+
+#### 7c: Statistics Screen
 From critique: seven identical blue cards, no graphs/charts/trends, "Progression" panel wastes space, tab labels unclear. This is endgame content for idle players — it should be visually rich.
 
 #### 7c: Bestiary

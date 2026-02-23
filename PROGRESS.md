@@ -1,6 +1,6 @@
 # Progress
 
-**Current Version: v0.3.3**
+**Current Version: v0.3.4**
 **Current: Equipment Screen Overhaul — critique-driven passes**
 
 ---
@@ -67,13 +67,21 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 - [ ] **Party gets stuck walking in circles** — Rare bug where heroes loop between the same tiles and never advance. Likely a pathfinding issue in `combatMovement.js` (A* pathfinding) or room navigation logic in `useDungeon.js`. May be a tie-breaking issue where the next target keeps flipping, or an edge case where the exit path routes through a visited room. Needs reproduction and logging to diagnose.
 - [ ] **World boss prep screen says "Guaranteed legendary+ gear drop"** — World bosses drop uniques, not legendary gear. The prep screen / dungeon preview text doesn't distinguish between world boss levels and regular boss levels. Should say "Unique item drop" or similar for world boss floors.
 - [ ] **Stat color / comparison color clash** — HP uses green, ATK uses red as their stat identity colors. But comparison tooltips also use green = better, red = worse. So "+10 ATK" shows as red (stat color) even though it's an upgrade. Confusing. Fix: stat identity colors should NOT be red/green, OR comparisons should use a different indicator (arrows, +/- symbols, background tint) instead of relying on red/green which conflicts.
-- [ ] **Unique item powers not visible in gear screen** — Unique items have special powers (`uniquePower`) but they're buried or invisible in the equipment screen. The equipped slot and inventory row should prominently display the power name and effect, not just stats. Uniques are the most exciting items in the game — they should look and feel special at a glance, not require a tooltip hover to see what makes them unique.
+- [x] ~~**Unique item powers not visible in gear screen**~~ (v0.3.4: unique power section added to EquipmentTooltip — shows power name, trigger type, and description in amber-styled block. Visible in both ItemRow accordion and PaperDoll hover tooltip)
 - [ ] **Remove Infused/Ascended item quality tiers for now** — Difficulty-gated quality tiers in `equipment.js` (Infused at 2.0x+, Ascended at 3.0x). Bonus affixes and 1.3x stat multiplier. Has CSS shimmer animations, tooltip badges, color overrides. But: never explained to the player anywhere, adds complexity on top of an already cluttered rarity system (common/uncommon/rare/epic/legendary + unique + now infused/ascended). Remove until core loot loop, drop rates, and equipment UI are solid. Can reintroduce as a meaningful endgame reward later. Files: `equipment.js` (generation), `rarityStyles.js` (colors), `index.css` (shimmer animations), `EquipmentTooltip.jsx` (badges).
 - [ ] **Rogue dual daggers don't render correctly in dungeons** — Canvas sprite rendering issue for rogue's dual dagger weapon type. Check `SkillSprites.js` / canvas sprite system for the rogue weapon drawing logic.
+- [ ] **Kills not tracked in Recent Runs** — Per-hero kill counts missing or always zero in the Recent Runs tab of StatsScreen. Check `endDungeon` in `dungeonSlice.js` where the run snapshot is built — likely `kills` field isn't being pulled from `runStats.heroStats` or the combat system isn't incrementing kill counters. Also check `combatSlice.js` `saveRunToHistory()` and `runSnapshotHelper.js`.
 
 ### Priority 7: UI Polish Passes
+- [ ] **App-wide color pass** — Colors are defined ad-hoc across 40+ files (289 Tailwind color class usages, dozens of inline hex values). No central palette. Same colors duplicated (zone theme colors in DungeonHeader, DungeonMap, CurrentZoneIndicator — all with identical hex maps). Stat colors (green HP, red ATK) clash with comparison colors (green better, red worse). Rarity colors defined in equipment.js, rarityStyles.js, and inline in LootNotifications/ShopScreen. Need: a single `src/data/colors.js` or CSS custom properties palette that all files import from. Define semantic color roles (stat identity, comparison, rarity, zone theme, UI feedback) that don't conflict. Kill inline hex values.
 - [ ] Overview/stats screen layout
-- [ ] Dungeon view proportions
+- [ ] **Dungeon view full redesign** — The entire in-game combat screen needs a relook:
+  - **Sidebar during combat**: Hero cards are tiny (16px icons, 5px HP bars, 3px XP bars) with status effect icons crammed in. Status/buff/debuff icons are unreadable at this size. DPS meter wedged below party cards. "Exit Dungeon" and "Select Dungeon" buttons at the very bottom — reported as off-screen/clipped (see Bug Backlog).
+  - **Canvas area**: Takes flex-1 but shares vertical space with DungeonHeader (~35px) and CombatLog (96-160px). On smaller viewports the canvas gets squeezed. Minimap (140x105px) and boss panel (160px wide) overlay on the canvas, eating into the actual gameplay view.
+  - **DungeonHeader**: Cramped single row with zone name, difficulty badge, phase indicator, enemy progress bar, and boss indicator all fighting for space.
+  - **Combat log**: max-h-24 (96px) showing last 5 entries in text-xs. Click to expand to max-h-40. Tiny text, no icons, hard to parse during fast combat. Takes fixed vertical space even when empty.
+  - **Right panel**: Only shows on 1440px+. Contains per-hero run stats (DMG/Heal/Taken/Kills). Most players never see this.
+  - **Overall feel**: The combat view is a utilitarian data dump. Canvas is the star of the show but it's hemmed in by chrome on all sides. No sense of drama, no visual hierarchy between "exploring peacefully" and "fighting a boss." Consider: collapsible sidebar during combat, combat log as an overlay instead of fixed space, boss encounters that give the canvas more room, mobile-first thinking.
 - [ ] All modals audit (sizing, padding, scroll, mobile)
 - [ ] Homestead screen visual improvements
 - [ ] Achievement UI polish
@@ -101,6 +109,13 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 ---
 
 ## Handoff Notes
+
+### Session 21 (2026-02-22) — v0.3.4: Unique Power Visibility
+
+- Added unique power section to `EquipmentTooltip.jsx` — amber-bordered block with diamond icon, power name, trigger type label, and full description
+- Imports `UNIQUE_TRIGGER` from `uniqueItems.js`, adds `getUniqueTriggerDisplay()` covering all 14 trigger types
+- Renders between affixes and comparison sections, only for unique items (`isUnique && uniquePower`)
+- Fixes both ItemRow expanded panel and PaperDoll hover tooltip in one change
 
 ### Session 20 (2026-02-22) — v0.3.3: Equipment Screen Layout Overhaul
 

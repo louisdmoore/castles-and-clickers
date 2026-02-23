@@ -1,9 +1,17 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.3.3';
+export const CURRENT_VERSION = '0.3.4';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.3.4',
+    title: 'Unique Power Visibility',
+    date: '2026-02-22',
+    changes: [
+      { type: 'improvement', text: 'Unique item powers now display in the equipment screen — see the power name, trigger, and full description when expanding or hovering any unique item' },
+    ],
+  },
   {
     version: '0.3.3',
     title: 'Equipment Screen Overhaul',
