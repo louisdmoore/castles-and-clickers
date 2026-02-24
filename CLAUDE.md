@@ -83,9 +83,9 @@ The game uses a hook-based loop architecture:
 - `useThrottledDisplay` - Render throttling (~15 FPS) to reduce component updates
 
 ### Combat Phases
-`SETUP → EXPLORING → COMBAT → CLEARING → COMPLETE/DEFEAT → PrepScreen → next dungeon`
+`SETUP → EXPLORING → COMBAT → CLEARING → COMPLETE/DEFEAT → IdleScreen (prep card) → next dungeon`
 
-Combat uses initiative-based turn order with A* pathfinding for movement. Speed stat influences dodge chance and double attack probability. After dungeon ends, `prepPhase` state drives the PrepScreen (party overview, dungeon preview, milestones). The game loop no longer auto-starts the next dungeon — PrepScreen handles auto-advance via its own timer.
+Combat uses initiative-based turn order with A* pathfinding for movement. Speed stat influences dodge chance and double attack probability. After dungeon ends, `prepPhase` state drives a "Next Dungeon" card on `IdleScreen` (party power, dungeon preview, difficulty override, auto-advance). The game loop no longer auto-starts the next dungeon — IdleScreen handles auto-advance via its own timer when `prepPhase` is active.
 
 ## Key Directories
 
@@ -121,7 +121,7 @@ Combat uses initiative-based turn order with A* pathfinding for movement. Speed 
 - `src/store/helpers/migrations.js` - Versioned save migrations. Increment `SAVE_VERSION` and add migration function when adding new persistent state.
 - `src/components/GameLayout.jsx` - Main layout (~857 lines, modals delegated to ModalManager.jsx); avoid refactoring until Phase 7
 - `src/components/HeroProfileModal.jsx` - Unified hero management modal (Gear/Skills tabs, persistent paper doll, shared hero selector with inline recruitment). Routes via `heroes`/`heroes-gear`/`heroes-skills` modal IDs
-- `src/components/PrepScreen.jsx` - Between-dungeon screen; new pre-combat features (difficulty, ascension button) go here
+- `src/components/IdleScreen.jsx` - Between-dungeon idle view; shows "Next Dungeon" prep card when `prepPhase` active (difficulty override, auto-advance, party power, favored drops)
 
 ## Performance Patterns
 
@@ -417,7 +417,7 @@ Phase 0 created data definition files that later phases consume. Check these bef
 - **Monster scaling in `placeMonsters`**: `options.statMultiplier` scales HP/ATK/DEF (combines raid multiplier and difficulty). `options.difficultyMultiplier` is passed separately for speed bonus and elite count bonus — these use lookup tables, not linear scaling.
 - **XP/Gold rewards**: All monster types (regular, boss, corridor, raid boss) multiply rewards by `typeMultiplier` which includes the difficulty multiplier.
 - **Completion bonus**: Awarded in `endDungeon` for difficulty > 1.0. Formula: `floor(level * 10 * 1.09^(level-1) * (difficulty - 1) * 0.5)`. Patched onto `lastRunSummary.completionBonus`.
-- **UI**: HUD badge (GameHUD.jsx, dropdown picker), PrepScreen override panel, DungeonHeader named label, RunSummary difficulty label + bonus line.
+- **UI**: HUD badge (GameHUD.jsx, dropdown picker), IdleScreen difficulty override panel (in prep card), DungeonHeader named label, RunSummary difficulty label + bonus line.
 
 ## Known Technical Debt
 

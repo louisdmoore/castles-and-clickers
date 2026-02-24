@@ -11,7 +11,7 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Suggest-equip notification card is wider/taller than regular notifs — check it doesn't clip off-screen on narrow viewports
 - [ ] CombatLog at `max-h-24` — is 96px enough to be useful? May need to test with fast combat / many entries
 - [ ] Toast notifications (top-right) vs zone header — do they overlap on small screens?
-- [ ] PrepScreen layout — untested on mobile / narrow screens
+- [ ] IdleScreen prep card layout — untested on mobile / narrow screens
 - [ ] DeathRecap modal sizing — does the kill order + hero summary overflow on small screens with 6 heroes?
 
 ## Smart Auto-Equip
@@ -37,13 +37,13 @@ Things that shipped but need a second look. Add items as you go, check them off 
 
 ## Equipment Screen Layout (v0.3.3)
 
-- [ ] 3-column layout on narrow screens (< 1280px) — min-w-[240px] on left and right columns may cause horizontal overflow
+- [ ] 3-column layout on narrow screens (< 1280px) — min-w-[200px] left and min-w-[280px] right columns may cause horizontal overflow
 - [ ] SlotPanel.jsx and StatBreakdown.jsx are dead code — should be deleted when confirmed not needed
 - [ ] CLASS_TITLE epithets defined in CharacterTab but not displayed — remove or use in future
-- [ ] Portrait halo at 340px may overflow the 28% column on small screens — verify clipping
+- [ ] Portrait halo may overflow the 22% column on small screens — verify clipping
 - [ ] Equipped item pinning in InventoryGrid — when unequipping an item, does the pinned section clear properly?
 - [ ] Settings dropdown z-index (z-30) — verify it renders above inventory content and doesn't clip behind stat column
-- [ ] Particle animation performance — 12 CSS-animated divs with box-shadow. Test on low-end devices
+- [ ] Particle animation performance — 6 CSS-animated divs with box-shadow. Test on low-end devices
 - [ ] EquipSlot tooltip position="right" — may clip off-screen when left column is narrow or at screen edge
 
 ## Equipment Comparison Tooltips
@@ -53,12 +53,12 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [x] ~~Tooltip on mobile — hover doesn't exist on touch, need tap-to-show or long-press~~ (v0.3.1: click-to-expand works on touch)
 - [ ] Expanded detail panel in long inventory lists — does expanding push items below the fold? May need scroll-into-view
 
-## Run Summary & Prep Screen
+## Run Summary & Prep Phase
 
-- [x] ~~RunSummary auto-dismiss 5s + PrepScreen auto-dismiss 5s — total 10s between runs feels long with auto-advance~~ (v0.5.1: reduced both to 3s, total 6s)
+- [x] ~~RunSummary auto-dismiss 5s + prep auto-dismiss 5s — total 10s between runs feels long with auto-advance~~ (v0.5.1: reduced both to 3s, total 6s)
 - [ ] MilestoneWidget goal priorities — are the "nearest goals" actually the most useful ones to show?
-- [ ] PrepScreen "favored drops" display — does it make sense to players who haven't seen the affix system yet?
-- [ ] PrepScreen dungeon preview — should it show monster types / difficulty info?
+- [ ] IdleScreen prep card "favored drops" display — does it make sense to players who haven't seen the affix system yet?
+- [ ] IdleScreen prep card dungeon preview — should it show monster types / difficulty info?
 
 ## Contribution Meter
 
@@ -87,7 +87,7 @@ Things that shipped but need a second look. Add items as you go, check them off 
 
 ## Loot Targeting
 
-- [ ] Favored affix display on PrepScreen — players see affix names but may not understand what they do. Tooltip or explanation needed?
+- [ ] Favored affix display on IdleScreen prep card — players see affix names but may not understand what they do. Tooltip or explanation needed?
 - [ ] 2x weight may not be noticeable enough — with 20 affixes in the pool, a favored affix goes from ~5% to ~9.5%. Increase to 3x?
 
 ## Infused / Ascended Gear
@@ -115,11 +115,11 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Tower effective level caps at 50 — `getTowerEffectiveLevel(floor) = min(9 + floor, 50)`. Floors above 41 all have the same difficulty. Should scale further?
 - [ ] Tower has no loot drops — heroes don't get gear from tower runs. Intentional (challenge mode) but may feel unrewarding
 - [ ] No healing at all in tower — passive exploration healing disabled, no healing springs. Healer classes become essential. Is this too restrictive?
-- [ ] Tower seed display — shown on TowerResult modal and PrepScreen best score. Seed is cosmetic only (no seed-based replay). Should explain what seed means
+- [ ] Tower seed display — shown on TowerResult modal. Seed is cosmetic only (no seed-based replay). Should explain what seed means
 - [ ] TowerResult auto-dismiss 8s — same as DeathRecap. If player is away, they won't see their score. Score is persisted though
-- [ ] Tower entry from PrepScreen only — no way to enter tower from main menu or when not in prep phase. UX may be confusing
+- [ ] Tower entry from IdleScreen prep card only — no way to enter tower from main menu or when not in prep phase. UX may be confusing
 - [ ] Tower floor display in zone header — shows "Tower Floor X" but no indication of effective dungeon level
-- [ ] Tower with auto-advance on — tower doesn't auto-advance (it's a separate flow), but auto-advance timer on PrepScreen still counts down. Verify no conflict
+- [ ] Tower with auto-advance on — tower doesn't auto-advance (it's a separate flow), but auto-advance timer on IdleScreen prep card still counts down. Verify no conflict
 
 ## Reforging
 
@@ -188,7 +188,7 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Prestige button only in SkillTreeScreen (now embedded in HeroProfileModal Skills tab) — should it also be accessible from hero card or sidebar?
 - [ ] Prestige disabled during dungeon — verified, but toast message could be more helpful (explain why)
 - [ ] Prestige confirmation modal — does it clearly communicate what's lost vs gained?
-- [ ] Prestige star display in sidebar/HeroCard/PrepScreen — ★ symbols. Do they scale well with 5 stars? Any alignment issues?
+- [ ] Prestige star display in sidebar/HeroCard/IdleScreen — ★ symbols. Do they scale well with 5 stars? Any alignment issues?
 - [x] ~~Prestige count has no cap — can prestige infinitely for +3% each time~~ (v0.5.1: capped at 10 stars, 30% max bonus)
 - [ ] Stars survive ascension — verified via spread operator. But test an actual ascension with prestiged heroes to confirm
 
@@ -222,7 +222,7 @@ Things that shipped but need a second look. Add items as you go, check them off 
 - [ ] Bolstering scaling applies at combat start — if monsters are pre-placed, their stats in the monsters array won't match the scaled stats shown in combat. Could confuse HP bar display
 - [ ] Bountiful +50% gold — does this feel impactful? Consider showing the bonus in gold drop combat log messages
 - [ ] Affix badges in DungeonHeader — are they visible enough? On narrow screens they may wrap or overlap other elements
-- [ ] Affix preview before entering — player doesn't see which affixes will roll until dungeon starts. Should PrepScreen show a preview?
+- [ ] Affix preview before entering — player doesn't see which affixes will roll until dungeon starts. Should IdleScreen prep card show a preview?
 - [ ] Affix interaction with raid difficulty tiers — Mythic raids already roll 2 affixes. If a Mythic raid has bountiful, verify gold calculations don't double-dip
 - [ ] No affix display in RunSummary or DeathRecap — player won't see what affixes were active after the run ends
 
@@ -269,7 +269,7 @@ Things that shipped but need a second look. Add items as you go, check them off 
 
 ## Unified Hero Profile (v0.3.6)
 
-- [ ] HeroProfileModal at `size="full"` — verify it doesn't feel too large on standard monitors (1080p, 1440p). May need compacting pass
+- [x] ~~HeroProfileModal at `size="full"` — verify it doesn't feel too large on standard monitors~~ (v0.3.8: changed to `size="xl"`, height reduced with `calc(100vh - 16rem)`)
 - [ ] Persistent CharacterTab (paper doll) across Gear/Skills tabs — verify slot selection state clears properly when switching tabs
 - [ ] HeroSelector recruit popover positioning — uses `getBoundingClientRect()`, test with varying scroll positions and screen widths
 - [ ] SkillTreeScreen compact header bar in embedded mode — verify respec button, help tooltip, and legend dots all work at compressed size

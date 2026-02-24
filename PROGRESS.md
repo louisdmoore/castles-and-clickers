@@ -1,6 +1,6 @@
 # Progress
 
-**Current Version: v0.3.6**
+**Current Version: v0.3.8**
 **Current: UI Polish & Modal Consolidation**
 
 ---
@@ -52,7 +52,7 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 - [x] Raid re-entry: "Run Again" button, per-raid difficulty persistence, Quick Raid on idle screen
 
 ### Priority 5: Difficulty System ✅
-- [x] Global persistent difficulty + per-run override. HUD badge, PrepScreen panel, monster scaling, reward scaling, completion bonus. Save migration v10→v11.
+- [x] Global persistent difficulty + per-run override. HUD badge, IdleScreen prep card override panel, monster scaling, reward scaling, completion bonus. Save migration v10→v11.
 
 ---
 
@@ -60,7 +60,7 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 
 ### Priority 6: Reduce Modal Dependency ✅
 - [x] **Unified Hero Profile modal** — Heroes, Equipment, and Skills combined into `HeroProfileModal.jsx` with Gear/Skills tabs. Shared `HeroSelector` at top with inline recruitment ("+"). Persistent `CharacterTab` (paper doll) visible across both tabs. SkillTreeScreen uses compact header bar in embedded mode. NavBar consolidated 3 buttons → 1 "Heroes" button with priority badges (SP > recruit > uniques). Modal routing via `heroes`/`heroes-gear`/`heroes-skills` IDs. (v0.3.6)
-- [ ] Surface more info inline — 17 total modals (was 18, now Heroes/Equipment/Skills are 1). Consider inline skill bar, sidebar panels, split-view layouts.
+- [x] **Surface more info inline** — Hero Profile compaction (tighter paper doll, fewer particles, smaller tab bar), sidebar milestone line + homestead upgrade indicator, idle screen journey progress bar + one-tap homestead upgrade + lifetime stats footer, native title tooltips on stat labels/difficulty badge/rarity names. (v0.3.7)
 
 ### Bug Backlog
 - [x] ~~**Leave Dungeon / Change buttons off-screen during gameplay**~~ (v0.3.5: Added `h-full` to sidebar wrapper div and `min-h-0` to aside element for proper flex height chain)
@@ -72,9 +72,12 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 - [ ] **Rogue dual daggers don't render correctly in dungeons** — Canvas sprite rendering issue for rogue's dual dagger weapon type. Check `SkillSprites.js` / canvas sprite system for the rogue weapon drawing logic.
 - [x] ~~**Kills not tracked in Recent Runs**~~ (v0.3.5: Wrapped `incrementStat` in useCombat.js ctx to track kills per hero per tick via `killsByHero`, flushed to `updateRunStats` alongside damage/healing)
 - [ ] **Duplicate classes allowed in party** — No guard against recruiting the same class twice. `addHero` in heroSlice.js only checks if the slot is empty, not whether the class already exists in the party. Tavern generates random heroes by role with no dedup. Fix: add a check in `addHero` that rejects if `heroes.some(h => h && h.classId === classId)`. Also filter tavern offerings to exclude already-recruited classes.
-- [ ] **Hero Profile modal too large** — The unified Hero Profile modal (HeroProfileModal.jsx, `size="full"`) takes up too much screen. Needs a compacting pass: tighter spacing, smaller elements, reduce chrome so it doesn't feel like it dominates the entire viewport. Review CharacterTab (paper doll), HeroSelector bar, tab content areas for space savings.
+- [x] ~~**Hero Profile modal too large**~~ (v0.3.7: CharacterTab width 28%→22%, PaperDoll compact mode, particles 12→6, class title text-4xl→text-2xl, tab bar py-2.5→py-1.5. v0.3.8: ModalOverlay size="full"→"xl", inner height 10rem→16rem padding)
+- [x] ~~**PrepScreen/IdleScreen duplication**~~ (v0.3.8: PrepScreen merged into IdleScreen — "Next Dungeon" card with difficulty override, auto-advance, party power, favored drops. PrepScreen import removed from GameLayout)
+- [x] ~~**Skill tooltips clip under hero panel**~~ (v0.3.8: SkillNode tooltip converted from absolute positioning to createPortal with fixed positioning, escaping overflow containers)
 - [ ] **Consolidate changelog** — Everything from v0.2.0 through current (v0.3.6) should be repackaged as a single v0.2.0 with a cleaner, grouped changelog. 17 micro-versions of internal iteration don't make sense as player-facing entries. Group by theme (equipment, hero management, combat feedback, difficulty, QoL, balance) into ~15-20 concise bullets.
 - [ ] **Recruit button needs "new" badge** — The "+" recruit button in HeroSelector should show a notification indicator when a new party slot has opened up (via Barracks upgrade or Ascension) and the player hasn't recruited into it yet. Draws attention to the new slot so players don't miss it.
+- [ ] **Overall text size too small** — App-wide font sizes are undersized. Most UI text is 10-11px (`text-[10px]`, `text-[11px]`, `text-xs`). Stat breakdown rows, sidebar labels, tooltip content, modal headers, and button text all need a bump. Target minimum 12px for body text, 14px for interactive elements. Audit all components for sub-12px text and increase systematically.
 
 ### Priority 7: UI Polish Passes
 - [ ] **App-wide color pass** — Colors are defined ad-hoc across 40+ files (289 Tailwind color class usages, dozens of inline hex values). No central palette. Same colors duplicated (zone theme colors in DungeonHeader, DungeonMap, CurrentZoneIndicator — all with identical hex maps). Stat colors (green HP, red ATK) clash with comparison colors (green better, red worse). Rarity colors defined in equipment.js, rarityStyles.js, and inline in LootNotifications/ShopScreen. Need: a single `src/data/colors.js` or CSS custom properties palette that all files import from. Define semantic color roles (stat identity, comparison, rarity, zone theme, UI feedback) that don't conflict. Kill inline hex values.
@@ -114,6 +117,17 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 ---
 
 ## Handoff Notes
+
+### Session 24 (2026-02-23) — v0.3.7: Inline Info & Compaction
+
+**Priority 6 Phase 2: Surface more info inline — completed.**
+
+- **Hero Profile compaction** — `CharacterTab.jsx`: width 28%/240px → 22%/200px, PaperDoll set to compact mode (128px portrait), particles reduced from 12 to 6 (removed odd-indexed), class title text-4xl → text-2xl, gap-4 → gap-2, level text-base → text-sm. `HeroProfileModal.jsx`: tab bar py-2.5 → py-1.5, text-sm → text-xs.
+- **Sidebar enhancement** — `Sidebar.jsx`: Added milestone line ("Next → D24: Sky Fortress") in Progress section using `upcomingUnlocks` prop. Added homestead upgrade indicator ("Upgrade available") when affordable, clickable → homestead modal. `GameLayout.jsx`: passed `onOpenModal` + `upcomingUnlocks` to both Sidebar instances.
+- **Idle screen enrichment** — `IdleScreen.jsx`: Journey progress bar (clickable → dungeon map), homestead quick upgrade widget (direct Upgrade button + "View All →"), lifetime stats footer ("42 dungeons · 1,247 monsters · 89,432g earned"). Fixed scroll container to `overflow-y-auto` for small viewports. Added store selectors for gold, homestead, upgradeBuilding, stats, ascensionCount.
+- **Context tooltips** — `StatsSummary.jsx`: title attributes on HP/ATK/DEF/SPD labels with gameplay explanations. `GameHUD.jsx`: enhanced difficulty badge title with monster stats/rewards/speed/elite bonuses. `EquipmentTooltip.jsx`: rarity name shows multiplier on hover ("Legendary — 2.5× base stat multiplier").
+
+**Design principle applied:** "Show signals, not data." Each inline addition answers ONE player question they'd otherwise need a modal for. Native title attributes for tooltips (zero visual change, discoverable on hover).
 
 ### Session 23 (2026-02-22) — v0.3.6: Unified Hero Profile
 
@@ -205,7 +219,7 @@ Tracking against `EQUIPMENT_SCREEN_CRITIQUE.md`. Each critique point is a discre
 - `globalDifficulty` (persistent) + `difficultyOverride` (transient per-run) state
 - Monster scaling via `statMultiplier` + `difficultyMultiplier` in `placeMonsters`
 - XP/Gold rewards multiply by difficulty. Completion bonus in `endDungeon`
-- HUD badge, PrepScreen override panel, DungeonHeader label, RunSummary bonus line
+- HUD badge, IdleScreen prep card override panel, DungeonHeader label, RunSummary bonus line
 - Save migration v10→v11
 
 **v0.2.7: Equipment Phase 1 — Paper Doll + Component Architecture**

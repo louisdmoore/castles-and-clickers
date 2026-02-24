@@ -3,7 +3,7 @@ import { useGameStore } from '../store/gameStore';
 import NavBar from './NavBar';
 import { GoldIcon, BagIcon, MenuIcon, WarningIcon, SettingsIcon } from './icons/ui';
 import { CURRENT_VERSION } from '../data/changelog';
-import { DIFFICULTY_STOPS, getDifficultyInfo } from '../data/difficulty';
+import { DIFFICULTY_STOPS, getDifficultyInfo, DIFFICULTY_SPEED_BONUS, DIFFICULTY_ELITE_BONUS } from '../data/difficulty';
 
 const SaveIndicator = () => {
   const saveStatus = useGameStore(state => state.saveStatus);
@@ -170,7 +170,7 @@ const GameHUD = ({
                   borderColor: getDifficultyInfo(globalDifficulty).color + '60',
                   backgroundColor: getDifficultyInfo(globalDifficulty).color + '15',
                 }}
-                title={`Difficulty: ${getDifficultyInfo(globalDifficulty).label} (${globalDifficulty}x)`}
+                title={`${getDifficultyInfo(globalDifficulty).label} (${globalDifficulty}x)\nMonster stats: \u00D7${globalDifficulty}\nRewards: \u00D7${globalDifficulty}${DIFFICULTY_SPEED_BONUS[globalDifficulty] ? `\nSpeed bonus: +${Math.round(DIFFICULTY_SPEED_BONUS[globalDifficulty] * 100)}%` : ''}${DIFFICULTY_ELITE_BONUS[globalDifficulty] ? `\nExtra elites: +${DIFFICULTY_ELITE_BONUS[globalDifficulty]}` : ''}`}
                 aria-label={`Difficulty: ${getDifficultyInfo(globalDifficulty).label}`}
                 aria-expanded={difficultyOpen}
               >

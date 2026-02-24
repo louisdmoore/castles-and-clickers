@@ -104,7 +104,7 @@ const HeroProfileModal = ({ initialTab = 'gear' }) => {
   }, []);
 
   return (
-    <div className="flex flex-col" style={{ height: 'calc(100vh - 10rem)' }}>
+    <div className="flex flex-col" style={{ height: 'calc(100vh - 16rem)' }}>
       {/* Hero Selector + Recruit */}
       <div className="flex-shrink-0 mb-1">
         <HeroSelector
@@ -139,7 +139,7 @@ const HeroProfileModal = ({ initialTab = 'gear' }) => {
                 <button
                   key={tab.id}
                   onClick={() => handleSwitchTab(tab.id)}
-                  className={`relative flex-1 flex items-center justify-center gap-2 px-4 py-2.5 text-sm font-medium transition-colors pixel-btn
+                  className={`relative flex-1 flex items-center justify-center gap-2 px-4 py-1.5 text-xs font-medium transition-colors pixel-btn
                     ${isActive
                       ? 'pixel-btn-primary'
                       : ''

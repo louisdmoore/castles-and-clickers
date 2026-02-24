@@ -17,7 +17,7 @@ const heroModalTab = (modal) => modal === 'heroes-skills' ? 'skills' : 'gear';
 const ModalManager = ({ activeModal, onClose, onStartDungeon }) => {
   return (
     <>
-      <ModalOverlay isOpen={isHeroModal(activeModal)} onClose={onClose} title="Hero Profile" size="full">
+      <ModalOverlay isOpen={isHeroModal(activeModal)} onClose={onClose} title="Hero Profile" size="xl">
         <HeroProfileModal initialTab={heroModalTab(activeModal)} />
       </ModalOverlay>
 

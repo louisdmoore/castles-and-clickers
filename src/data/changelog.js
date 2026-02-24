@@ -1,9 +1,30 @@
 // Single source of truth for the app version
-export const CURRENT_VERSION = '0.3.6';
+export const CURRENT_VERSION = '0.3.8';
 
 // Changelog entries, newest first
 // always write for player, not developer
 export const CHANGELOG = [
+  {
+    version: '0.3.8',
+    title: 'Streamlined Flow & Fixes',
+    date: '2026-02-23',
+    changes: [
+      { type: 'improvement', text: 'Prep screen merged into the idle screen — after each dungeon you see a "Next Dungeon" card with party power, favored drops, and difficulty override, all in one place' },
+      { type: 'improvement', text: 'Hero Profile modal shrunk so more of the game stays visible behind it' },
+      { type: 'fix', text: 'Skill tooltips on the left side of the Skills tab no longer clip behind the hero panel' },
+    ],
+  },
+  {
+    version: '0.3.7',
+    title: 'Inline Info & Compaction',
+    date: '2026-02-23',
+    changes: [
+      { type: 'improvement', text: 'Hero Profile modal compacted — tighter paper doll, smaller tab bar, and fewer particles so the game stays visible behind the modal' },
+      { type: 'improvement', text: 'Sidebar now shows your next milestone unlock and a homestead upgrade indicator when you can afford one' },
+      { type: 'improvement', text: 'Idle screen gains a clickable journey progress bar, one-tap homestead upgrades, and a lifetime stats footer' },
+      { type: 'improvement', text: 'Hover stat labels (HP/ATK/DEF/SPD), difficulty badges, and rarity names to see explanations' },
+    ],
+  },
   {
     version: '0.3.6',
     title: 'Unified Hero Profile',

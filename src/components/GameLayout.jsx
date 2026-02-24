@@ -14,7 +14,6 @@ import DungeonHeader from './DungeonHeader';
 import ModalManager from './ModalManager';
 import DungeonTransition from './DungeonTransition';
 import IdleScreen from './IdleScreen';
-import PrepScreen from './PrepScreen';
 import RightPanel from './RightPanel';
 import { ChartIcon } from './icons/ui';
 
@@ -49,7 +48,6 @@ const GameLayout = () => {
   const maxDungeonLevel = useGameStore(state => state.maxDungeonLevel);
   const lastDungeonSuccess = useGameStore(state => state.lastDungeonSuccess);
   const raidState = useGameStore(state => state.raidState);
-  const prepPhase = useGameStore(state => state.prepPhase);
   const setLastSeenVersion = useGameStore(state => state.setLastSeenVersion);
   const pendingModal = useGameStore(state => state.pendingModal);
   const clearPendingModal = useGameStore(state => state.clearPendingModal);
@@ -231,6 +229,8 @@ const GameLayout = () => {
             dungeon={dungeon}
             onOpenSelector={() => setActiveModal('dungeonSelect')}
             onAbandon={abandonDungeon}
+            onOpenModal={openModal}
+            upcomingUnlocks={upcomingUnlocks}
           />
         </div>
 
@@ -244,6 +244,8 @@ const GameLayout = () => {
                 dungeon={dungeon}
                 onOpenSelector={() => { setActiveModal('dungeonSelect'); setSidebarOpen(false); }}
                 onAbandon={() => { abandonDungeon(); setSidebarOpen(false); }}
+                onOpenModal={(id) => { openModal(id); setSidebarOpen(false); }}
+                upcomingUnlocks={upcomingUnlocks}
               />
             </div>
           </div>
@@ -275,8 +277,6 @@ const GameLayout = () => {
             </>
           ) : dungeonTransition ? (
             <div className="flex-1" />
-          ) : prepPhase ? (
-            <PrepScreen onOpenAscension={() => setActiveModal('ascension')} />
           ) : raidState?.active && !displayRoomCombat ? (
             <div className="flex-1 flex items-center justify-center">
               <div className="text-center pixel-panel p-8">

@@ -1,4 +1,5 @@
-import { useState, useCallback } from 'react';
+import { useState, useCallback, useRef } from 'react';
+import { createPortal } from 'react-dom';
 import { SKILL_TYPE } from '../data/skillTrees';
 import { SkillIcon } from './icons/skills';
 import { StarIcon } from './icons/ui';
@@ -7,6 +8,7 @@ const SkillNode = ({ skill, tier, isUnlocked, isAvailable, onUnlock, canAfford }
   const [showTooltip, setShowTooltip] = useState(false);
   const [justUnlocked, setJustUnlocked] = useState(false);
   const [touchActive, setTouchActive] = useState(false); // tracks if tooltip was shown by touch
+  const nodeRef = useRef(null);
 
   const isActive = skill.type === SKILL_TYPE.ACTIVE;
   const isStarter = skill.starterSkill;
@@ -98,8 +100,30 @@ const SkillNode = ({ skill, tier, isUnlocked, isAvailable, onUnlock, canAfford }
     return skill.description;
   };
 
+  const getTooltipPosition = useCallback(() => {
+    if (!nodeRef.current) return { top: 0, left: 0 };
+    const rect = nodeRef.current.getBoundingClientRect();
+    const tooltipWidth = 224; // w-56 = 14rem = 224px
+    const gap = 8;
+
+    // Horizontal: center on node, clamp to viewport
+    let left = rect.left + rect.width / 2 - tooltipWidth / 2;
+    left = Math.max(8, Math.min(left, window.innerWidth - tooltipWidth - 8));
+
+    // Vertical: below for tier 0-1, above for tier 2-3
+    let top;
+    if (tier >= 2) {
+      top = rect.top - gap; // positioned above, bottom-anchored via CSS
+    } else {
+      top = rect.bottom + gap;
+    }
+
+    return { top, left };
+  }, [tier]);
+
   return (
     <div
+      ref={nodeRef}
       className="relative"
       onMouseEnter={() => setShowTooltip(true)}
       onMouseLeave={() => { setShowTooltip(false); setTouchActive(false); }}
@@ -137,61 +161,63 @@ const SkillNode = ({ skill, tier, isUnlocked, isAvailable, onUnlock, canAfford }
         )}
       </button>
 
-      {/* Tooltip - bottom tiers open upward to avoid clipping */}
-      {showTooltip && (
-        <div className={`absolute z-[100] left-1/2 -translate-x-1/2 w-56 pointer-events-none ${
-          tier >= 2 ? 'bottom-full mb-2' : 'top-full mt-2'
-        }`}>
-          {/* Arrow */}
-          {tier >= 2 ? (
-            <div className="absolute top-full left-1/2 -translate-x-1/2 mt-[-1px]">
-              <div className="border-8 border-transparent border-t-gray-600" />
-            </div>
-          ) : (
-            <div className="absolute bottom-full left-1/2 -translate-x-1/2 mb-[-1px]">
-              <div className="border-8 border-transparent border-b-gray-600" />
-            </div>
-          )}
-          <div className="pixel-panel-dark p-3 shadow-xl">
-            <div className="flex items-center gap-2 mb-1">
-              <SkillIcon skillId={skill.id} size={24} />
-              <span className={`font-bold ${textColor}`}>{skill.name}</span>
-              <span className={`text-xs px-1.5 py-0.5 rounded ${
-                isActive ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white'
-              }`}>
-                {isActive ? 'Active' : 'Passive'}
-              </span>
-            </div>
+      {/* Tooltip — rendered via portal to escape overflow containers */}
+      {showTooltip && createPortal(
+        (() => {
+          const pos = getTooltipPosition();
+          return (
+            <div
+              className="fixed z-[9999] w-56 pointer-events-none"
+              style={{
+                left: pos.left,
+                ...(tier >= 2
+                  ? { top: 0, transform: `translateY(${pos.top}px) translateY(-100%)` }
+                  : { top: pos.top }),
+              }}
+            >
+              <div className="pixel-panel-dark p-3 shadow-xl">
+                <div className="flex items-center gap-2 mb-1">
+                  <SkillIcon skillId={skill.id} size={24} />
+                  <span className={`font-bold ${textColor}`}>{skill.name}</span>
+                  <span className={`text-xs px-1.5 py-0.5 rounded ${
+                    isActive ? 'bg-blue-600 text-white' : 'bg-purple-600 text-white'
+                  }`}>
+                    {isActive ? 'Active' : 'Passive'}
+                  </span>
+                </div>
 
-            <p className="text-sm text-gray-300 mb-2">{getEffectDescription()}</p>
+                <p className="text-sm text-gray-300 mb-2">{getEffectDescription()}</p>
 
-            {isActive && (
-              <div className="text-xs text-gray-400 flex gap-3">
-                <span>Cooldown: {skill.cooldown}</span>
-                <span>Target: {skill.targetType?.replace(/_/g, ' ')}</span>
+                {isActive && (
+                  <div className="text-xs text-gray-400 flex gap-3">
+                    <span>Cooldown: {skill.cooldown}</span>
+                    <span>Target: {skill.targetType?.replace(/_/g, ' ')}</span>
+                  </div>
+                )}
+
+                {skill.tier !== undefined && (
+                  <div className="text-xs text-gray-500 mt-2 border-t border-gray-700 pt-2">
+                    {skill.tier === 3 ? 'Capstone Skill' : `Tier ${skill.tier}`}
+                  </div>
+                )}
+
+                {/* Status message */}
+                <div className={`text-xs mt-2 font-medium ${
+                  isUnlocked ? 'text-yellow-400' :
+                  isAvailable && canAfford ? 'text-green-400' :
+                  isAvailable && !canAfford ? 'text-orange-400' :
+                  'text-gray-500'
+                }`}>
+                  {isUnlocked && 'Unlocked'}
+                  {!isUnlocked && isAvailable && canAfford && (touchActive ? 'Tap again to unlock' : 'Click to unlock')}
+                  {!isUnlocked && isAvailable && !canAfford && 'No skill points'}
+                  {!isUnlocked && !isAvailable && 'Locked - unlock prerequisites'}
+                </div>
               </div>
-            )}
-
-            {skill.tier !== undefined && (
-              <div className="text-xs text-gray-500 mt-2 border-t border-gray-700 pt-2">
-                {skill.tier === 3 ? 'Capstone Skill' : `Tier ${skill.tier}`}
-              </div>
-            )}
-
-            {/* Status message */}
-            <div className={`text-xs mt-2 font-medium ${
-              isUnlocked ? 'text-yellow-400' :
-              isAvailable && canAfford ? 'text-green-400' :
-              isAvailable && !canAfford ? 'text-orange-400' :
-              'text-gray-500'
-            }`}>
-              {isUnlocked && 'Unlocked'}
-              {!isUnlocked && isAvailable && canAfford && (touchActive ? 'Tap again to unlock' : 'Click to unlock')}
-              {!isUnlocked && isAvailable && !canAfford && 'No skill points'}
-              {!isUnlocked && !isAvailable && 'Locked - unlock prerequisites'}
             </div>
-          </div>
-        </div>
+          );
+        })(),
+        document.body
       )}
     </div>
   );

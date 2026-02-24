@@ -165,7 +165,7 @@ const EquipmentScreen = ({ selectedHeroId: externalHeroId, onSelectHero: externa
         </div>
 
         {/* RIGHT: Stats dashboard — always visible */}
-        <div className="w-[28%] min-w-[240px] flex-shrink-0 min-h-0 overflow-y-auto bg-gray-950/30 rounded-r-lg">
+        <div className="w-[38%] min-w-[320px] flex-shrink-0 min-h-0 overflow-y-auto bg-gray-950/30 rounded-r-lg">
           <StatsSummary
             stats={stats}
             hero={selectedHero}

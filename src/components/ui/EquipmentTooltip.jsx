@@ -106,7 +106,7 @@ const EquipmentTooltip = ({ item, comparedItem = null, showComparison = true, hi
                 {item.name}
               </div>
               <div className="text-xs text-gray-400 capitalize">
-                {item.slot} - {rarityData.name}
+                {item.slot} - <span title={`${rarityData.name} \u2014 ${rarityData.multiplier}\u00D7 base stat multiplier`}>{rarityData.name}</span>
               </div>
             </div>
           </div>

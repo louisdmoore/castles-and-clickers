@@ -65,10 +65,10 @@ Tell Claude: **"Work on Priority N"** — where N is one of the following.
 
 ### Priority 5: Difficulty System
 
-**Goal:** Move difficulty from a buried PrepScreen slider to a visible, persistent global setting.
+**Goal:** Move difficulty from a buried slider to a visible, persistent global setting.
 
 **From PROGRESS.md:**
-- Currently per-dungeon slider on PrepScreen (5 stops, 1.0x-3.0x, unlocks at D10)
+- Was per-dungeon slider on PrepScreen (now merged into IdleScreen prep card). 5 stops, 1.0x-3.0x, unlocks at D10
 - Backed by `dungeonSettings.difficultyMultiplier` in dungeonSlice
 - Move to a "set and forget" global setting accessible from HUD, with optional per-run override
 
@@ -108,10 +108,10 @@ Tell Claude: **"Work on Priority N"** — where N is one of the following.
 **Goal:** Merge the three hero-management modals (Heroes, Equipment, Skills) into one unified Hero Profile modal, then surface key info inline.
 
 **Unified Hero Profile Modal (primary task):**
-- Combine Heroes (party roster), Equipment (gear/inventory/stats), and Skills (skill tree) into one `size="full"` tabbed modal
+- Combine Heroes (party roster), Equipment (gear/inventory/stats), and Skills (skill tree) into one `size="xl"` tabbed modal
 - Shared hero selector bar at the top (already exists in Equipment and Skills separately)
-- Three tabs: **Party** (current HeroManagement — recruit/view roster), **Gear** (current EquipmentScreen — 3-column layout), **Skills** (current SkillTreeScreen — 2-column tree)
-- Equipment already uses `size="full"`. Skills uses `size="xl"`. Heroes is compact. All fit in `full`.
+- Two tabs: **Gear** (EquipmentScreen — 3-column layout), **Skills** (SkillTreeScreen — 2-column tree). Recruitment is inline via HeroSelector "+" button.
+- Modal uses `size="xl"` (capped at 1152px). Height: `calc(100vh - 16rem)`.
 - Each tab's content is mostly unchanged — this is a UI restructure, not a rewrite
 - Key detail: Equipment's CharacterTab (left column with portrait) could serve as the shared hero identity across all tabs
 - NavBar updates: replace 3 separate buttons with one "Heroes" button that opens the unified modal

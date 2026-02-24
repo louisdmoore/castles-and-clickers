@@ -9,6 +9,8 @@ import { GhostIcon, FireIcon, ShieldBuffIcon, TauntIcon, EvasionIcon, HasteIcon,
 import { SkillIcon } from './icons/skills';
 import { StatusEffectIcon } from './icons/statusEffects';
 import DPSMeter from './DPSMeter';
+import { getBuildingList, getUpgradeCost } from '../data/homestead';
+import { HomeIcon } from './icons/ui';
 
 // OPTIMIZATION: Stable defaults to prevent re-renders
 const EMPTY_OBJECT = {};
@@ -354,6 +356,8 @@ const Sidebar = memo(({
   dungeon,
   onOpenSelector,
   onAbandon,
+  onOpenModal,
+  upcomingUnlocks,
 }) => {
   const raidState = useGameStore(state => state.raidState);
   const isInRaid = raidState?.active;
@@ -372,6 +376,23 @@ const Sidebar = memo(({
   const dungeonUnlocked = useGameStore(state => state.dungeonUnlocked);
   const maxDungeonLevel = useGameStore(state => state.maxDungeonLevel);
   const ascensionCount = useGameStore(state => state.ascension?.count || 0);
+  const gold = useGameStore(state => state.gold);
+  const homestead = useGameStore(state => state.homestead);
+
+  // Find cheapest affordable homestead upgrade
+  const cheapestUpgrade = useMemo(() => {
+    if (highestDungeonCleared < 3) return null;
+    const buildings = getBuildingList();
+    let cheapest = null;
+    for (const building of buildings) {
+      const level = homestead?.[building.id] || 0;
+      const cost = getUpgradeCost(building, level);
+      if (cost <= gold && (!cheapest || cost < cheapest.cost)) {
+        cheapest = { building, cost, level };
+      }
+    }
+    return cheapest;
+  }, [highestDungeonCleared, homestead, gold]);
 
   return (
     <aside className="w-48 pixel-panel-dark flex flex-col h-full min-h-0" style={{ borderRadius: 0 }}>
@@ -429,8 +450,32 @@ const Sidebar = memo(({
             <span className="pixel-label">Unlocked</span>
             <span className="text-[var(--color-text)]">{Math.min(dungeonUnlocked, maxDungeonLevel)}</span>
           </div>
+          {upcomingUnlocks && (
+            <div className="flex items-center gap-1 mt-1 text-[10px]">
+              <span className="text-gray-500">Next</span>
+              <span className="text-gray-500">{'\u2192'}</span>
+              <span className="text-blue-300 truncate">
+                D{upcomingUnlocks.dungeonRequired}: {upcomingUnlocks.unlocks.map(u => u.name).join(', ')}
+              </span>
+            </div>
+          )}
         </div>
       </div>
+
+      {/* Homestead upgrade indicator */}
+      {cheapestUpgrade && onOpenModal && (
+        <div className="px-2 py-1.5 border-b-2 border-[var(--color-border)]">
+          <button
+            onClick={() => onOpenModal('homestead')}
+            className="w-full flex items-center gap-1.5 text-[10px] text-amber-400 hover:text-amber-300 transition-colors"
+            title={`Cheapest: ${cheapestUpgrade.building.name} Lv${cheapestUpgrade.level + 1} (${cheapestUpgrade.cost.toLocaleString()}g)`}
+          >
+            <HomeIcon size={12} />
+            <span className="truncate">Upgrade available</span>
+            <span className="text-gray-500 ml-auto">{'\u2192'}</span>
+          </button>
+        </div>
+      )}
 
       </div>
 

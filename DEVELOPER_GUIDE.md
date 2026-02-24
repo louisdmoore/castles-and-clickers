@@ -59,7 +59,7 @@ src/
 │   ├── ShopScreen.jsx       # Item purchasing
 │   ├── ContributionMeter.jsx # Per-hero combat stats (v0.2.0)
 │   ├── RunSummary.jsx       # Post-dungeon summary popup (v0.2.0)
-│   ├── PrepScreen.jsx       # Between-dungeon prep phase (v0.2.0)
+│   ├── IdleScreen.jsx       # Between-dungeon idle + prep card (v0.3.8, was PrepScreen)
 │   ├── MilestoneWidget.jsx  # Nearest goals tracker (v0.2.0)
 │   ├── DeathRecap.jsx       # Party wipe breakdown (v0.2.1)
 │   └── LootNotifications.jsx # Loot drop notifications (v0.2.1)
@@ -215,8 +215,8 @@ const { isRunning, dungeon } = useGameStore();
 ### Phase Flow
 
 ```
-SETUP → EXPLORING → COMBAT → CLEARING → COMPLETE → PrepScreen → next dungeon
-         ↑______________|                DEFEAT  → PrepScreen → retry dungeon
+SETUP → EXPLORING → COMBAT → CLEARING → COMPLETE → IdleScreen (prep card) → next dungeon
+         ↑______________|                DEFEAT  → IdleScreen (prep card) → retry dungeon
 ```
 
 ### useGameLoop (250-500ms tick rate)
@@ -231,7 +231,7 @@ Located in `src/hooks/useGameLoop.js`.
 | CLEARING | 2 ticks | Pause, check for remaining monsters |
 | COMPLETE | 3 ticks | Award gold/XP, set `prepPhase`, show RunSummary |
 | DEFEAT | 3 ticks | Increment deaths, set `prepPhase`, show DeathRecap |
-| PrepScreen | 5s auto | Party overview, dungeon preview, milestones (v0.2.0) |
+| IdleScreen prep | 5s auto | "Next Dungeon" card with party power, difficulty override, auto-advance (v0.3.8) |
 
 ### Tick Rate Calculation
 
@@ -710,11 +710,11 @@ The equipment screen uses a permanent 3-column layout (no tabs). When `embedded`
 
 | Column | Component | Width | Content |
 |--------|-----------|-------|---------|
-| Left | `CharacterTab` | 28% min 240px | Atmospheric hero showcase: portrait with halo, class identity title, equipment slot list |
+| Left | `CharacterTab` | 22% min 200px | Atmospheric hero showcase: portrait with halo, class identity title, equipment slot list |
 | Center | `InventoryGrid` | flex-1 | Filterable inventory with equipped item pinning when slot selected |
-| Right | `StatsSummary` | 28% min 240px | 2x2 stat pillar grid with full breakdowns always visible |
+| Right | `StatsSummary` | 34% min 280px | 2x2 stat pillar grid with full breakdowns always visible |
 
-**CharacterTab** — Full-column atmospheric backdrop (`character-atmosphere` CSS class) with role-themed gradients, vignette, light beam pseudo-elements, and 12 CSS-only floating particles. Class identity: role label + class title (4xl uppercase) + level. Equipment slots stacked vertically below 224px portrait with breathing halo.
+**CharacterTab** — Full-column atmospheric backdrop (`character-atmosphere` CSS class) with role-themed gradients, vignette, light beam pseudo-elements, and 6 CSS-only floating particles. Class identity: role label + class title (2xl uppercase) + level. Equipment slots stacked vertically below compact portrait with breathing halo.
 
 **InventoryGrid** — When a slot is selected via PaperDoll click, the equipped item pins at the top ("Equipped" label) with candidates below. `expandedItemId` state controls single-expand accordion on item rows.
 
@@ -848,17 +848,16 @@ Excluded from persistence (reset every run). `lastRunSummary` snapshots `runStat
 | `ContributionMeter` | During combat | N/A (live) | `ContributionMeter.jsx` |
 | `RunSummary` | Dungeon complete | 5s (auto-advance) | `RunSummary.jsx` |
 | `DeathRecap` | Party wipe | 8s (auto-advance) | `DeathRecap.jsx` |
-| `PrepScreen` | After dungeon end | 5s (auto-advance) | `PrepScreen.jsx` |
-| `MilestoneWidget` | On PrepScreen | N/A (embedded) | `MilestoneWidget.jsx` |
+| `IdleScreen prep card` | After dungeon end | 5s (auto-advance) | `IdleScreen.jsx` |
 
-### Preparation Phase Flow (v0.2.0)
+### Preparation Phase Flow (v0.2.0, merged into IdleScreen v0.3.8)
 
-`endDungeon` sets `prepPhase: { nextLevel, success, dungeonType }` in `dungeonSlice.js`. The game loop no longer auto-starts the next dungeon — `PrepScreen` handles auto-advance via its own 5s timer. `startFromPrepPhase()` clears `prepPhase` and calls `startDungeon`.
+`endDungeon` sets `prepPhase: { nextLevel, success, dungeonType }` in `dungeonSlice.js`. The game loop no longer auto-starts the next dungeon — `IdleScreen` shows a "Next Dungeon" prep card when `prepPhase` is active, with a 5s auto-advance timer. `startFromPrepPhase()` clears `prepPhase` and calls `startDungeon`.
 
 ```
 dungeon COMPLETE/DEFEAT → endDungeon → set prepPhase + lastRunSummary/lastDeathRecap
-  → PrepScreen visible (RunSummary/DeathRecap modal on top)
-  → modal auto-dismisses → PrepScreen auto-dismisses (5s) → next dungeon starts
+  → IdleScreen with "Next Dungeon" card (RunSummary/DeathRecap modal on top)
+  → modal auto-dismisses → prep card auto-advances (5s) → next dungeon starts
 ```
 
 ### Death Tracking (v0.2.1)
@@ -974,10 +973,10 @@ endDungeon(success):
   ├─ Set prepPhase: { nextLevel, success, dungeonType }
   └─ Clear dungeon/combat state
   ↓
-GameLayout renders PrepScreen (prepPhase active)
+GameLayout renders IdleScreen (prepPhase active → "Next Dungeon" card)
   ├─ RunSummary modal (success) or DeathRecap modal (defeat) on top
   ├─ Modal auto-dismisses (5s/8s)
-  └─ PrepScreen auto-dismisses (5s when auto-advance on)
+  └─ Prep card auto-advances (5s when auto-advance on)
   ↓
 startFromPrepPhase() → clears prepPhase → startDungeon(nextLevel)
 ```
@@ -1029,7 +1028,7 @@ handleCombatTick():                          # useCombat.js (orchestrator)
 | `game/affixEngine.js` | 400+ lines | Affix triggers |
 | `game/monsterAI.js` | 300+ lines | AI behaviors |
 | `data/monsters.js` | 600+ lines | Monster definitions |
-| `components/PrepScreen.jsx` | ~180 lines | Between-dungeon preparation phase (v0.2.0) |
+| `components/IdleScreen.jsx` | ~450 lines | Idle view + "Next Dungeon" prep card (v0.3.8, was PrepScreen) |
 | `components/DeathRecap.jsx` | ~165 lines | Party wipe breakdown modal (v0.2.1) |
 | `components/LootNotifications.jsx` | ~300 lines | Loot drop notifications with suggest-equip (v0.2.1) |
 | `data/itemAffixes.js` | 800+ lines | Affix definitions |
